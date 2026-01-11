@@ -1,0 +1,26 @@
+api_version: v1
+kind: Agent
+metadata:
+  name: hello_world
+  version: 0.4.0
+  tags: [example, dev]
+spec:
+  model_policy:
+    preferred:
+      provider: ollama
+      model: qwen2.5-coder
+    fallbacks:
+      - provider: openrouter
+        model: qwen/qwen-2.5-coder-32b-instruct
+  prompts:
+    system: prompts/system/default.md
+  tools:
+    - id: echo
+      type: python
+      entrypoint: agents/tools/python/echo_tool.py:echo_tool
+  runtime:
+    supported: [local, pydanticai, langchain, crewai]
+  eval:
+    suites:
+      - id: hello_golden
+        path: agents/evals/golden/hello_world_cases.yaml

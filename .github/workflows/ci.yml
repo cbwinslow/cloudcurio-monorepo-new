@@ -1,0 +1,40 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check .
+      - name: Format check
+        run: ruff format --check .
+      - name: Type check
+        run: mypy src
+      - name: Tests
+        run: pytest -q
+      - name: Validate/Compile/Eval
+        run: |
+          ./bin/cbw-index
+          ./bin/cbw-agent validate agents/specs/examples/*.agent.yaml
+          ./bin/cbw-agent compile agents/specs/examples/*.agent.yaml --out dist/agents
+          ./bin/cbw-agent eval agents/evals/golden/*.yaml
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Shellcheck
+        run: shellcheck -x shell/lib/*.sh shell/init/*.sh scripts/*.sh bin/*

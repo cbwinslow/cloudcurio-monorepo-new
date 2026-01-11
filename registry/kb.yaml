@@ -1,0 +1,6 @@
+items:
+- kb/context/environment.md
+- kb/decisions/adr-0001-monorepo-structure.md
+- kb/index.md
+- kb/runbooks/adding_new_agent.md
+- kb/runbooks/using_the_repo.md

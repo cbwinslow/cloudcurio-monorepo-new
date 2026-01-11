@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cbw-foundry"
+version = "0.4.0"
+description = "CloudCurio monorepo tooling: agent registry, workflows, indexing, doctor, capture, runtimes."
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.7",
+  "PyYAML>=6.0.1",
+  "rich>=13.7.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "types-PyYAML>=6.0.12.20240808",
+  "pre-commit>=3.8",
+]
+langchain = ["langchain>=0.2.12"]
+crewai = ["crewai>=0.67.0"]
+pydanticai = ["pydantic-ai>=0.0.20"]
+otel = [
+  "opentelemetry-api>=1.26.0",
+  "opentelemetry-sdk>=1.26.0",
+  "opentelemetry-exporter-otlp>=1.26.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[project.scripts]
+cbw = "cbw_foundry.cli:main"
+cbw-agent = "cbw_foundry.agent_cli:main"
+cbw-index = "cbw_foundry.index_cli:main"
+cbw-doctor = "cbw_foundry.doctor_cli:main"
+cbw-workflow = "cbw_foundry.workflow_cli:main"
+cbw-capture = "cbw_foundry.capture_cli:main"

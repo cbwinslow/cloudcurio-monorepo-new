@@ -1,0 +1,7 @@
+[console_scripts]
+cbw = cbw_foundry.cli:main
+cbw-agent = cbw_foundry.agent_cli:main
+cbw-capture = cbw_foundry.capture_cli:main
+cbw-doctor = cbw_foundry.doctor_cli:main
+cbw-index = cbw_foundry.index_cli:main
+cbw-workflow = cbw_foundry.workflow_cli:main

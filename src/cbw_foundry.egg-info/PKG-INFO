@@ -1,0 +1,26 @@
+Metadata-Version: 2.4
+Name: cbw-foundry
+Version: 0.4.0
+Summary: CloudCurio monorepo tooling: agent registry, workflows, indexing, doctor, capture, runtimes.
+Requires-Python: >=3.11
+License-File: LICENSE
+Requires-Dist: pydantic>=2.7
+Requires-Dist: PyYAML>=6.0.1
+Requires-Dist: rich>=13.7.1
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: ruff>=0.6; extra == "dev"
+Requires-Dist: mypy>=1.10; extra == "dev"
+Requires-Dist: types-PyYAML>=6.0.12.20240808; extra == "dev"
+Requires-Dist: pre-commit>=3.8; extra == "dev"
+Provides-Extra: langchain
+Requires-Dist: langchain>=0.2.12; extra == "langchain"
+Provides-Extra: crewai
+Requires-Dist: crewai>=0.67.0; extra == "crewai"
+Provides-Extra: pydanticai
+Requires-Dist: pydantic-ai>=0.0.20; extra == "pydanticai"
+Provides-Extra: otel
+Requires-Dist: opentelemetry-api>=1.26.0; extra == "otel"
+Requires-Dist: opentelemetry-sdk>=1.26.0; extra == "otel"
+Requires-Dist: opentelemetry-exporter-otlp>=1.26.0; extra == "otel"
+Dynamic: license-file

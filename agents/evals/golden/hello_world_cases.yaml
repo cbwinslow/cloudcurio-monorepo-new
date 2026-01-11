@@ -1,0 +1,4 @@
+cases:
+  - id: basic
+    input: "hello"
+    expect_contains: "hello"
