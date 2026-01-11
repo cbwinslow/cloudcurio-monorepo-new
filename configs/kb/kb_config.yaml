@@ -1,0 +1,64 @@
+# Knowledge Base Configuration
+
+knowledge_base:
+  name: "Knowledge Base"
+  description: "A repository for documents, scripts, and configurations"
+  version: "1.0.0"
+  
+  folder_structure:
+    documents:
+      description: "Documentation files, guides, and manuals"
+      subcategories:
+        - "tutorials"
+        - "guides"
+        - "specifications"
+        - "meeting_notes"
+    
+    scripts:
+      description: "Executable scripts and code snippets"
+      subcategories:
+        - "bash"
+        - "python"
+        - "javascript"
+        - "utilities"
+    
+    configurations:
+      description: "Configuration files and templates"
+      subcategories:
+        - "development"
+        - "production"
+        - "testing"
+        - "templates"
+    
+    projects:
+      description: "Project-specific documentation and information"
+      subcategories:
+        - "active"
+        - "completed"
+        - "planned"
+    
+    tasks:
+      description: "Task management and tracking files"
+      subcategories:
+        - "pending"
+        - "in_progress"
+        - "completed"
+    
+    web:
+      description: "Web interface and indexing files"
+      subcategories:
+        - "assets"
+        - "templates"
+        - "styles"
+  
+  file_naming_convention: "lowercase_with_underscores"
+  
+  default_extensions:
+    - ".md"
+    - ".yaml"
+    - ".yml"
+    - ".sh"
+    - ".py"
+    - ".js"
+    - ".json"
+    - ".txt"

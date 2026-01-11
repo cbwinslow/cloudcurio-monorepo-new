@@ -1,0 +1,32 @@
+tasks:
+  - description: |
+      Research the following topic thoroughly:
+      {topic}
+      
+      Gather information from reliable sources and organize findings
+      by key themes and concepts. Include:
+      - Main concepts and definitions
+      - Current trends and developments
+      - Best practices
+      - Common challenges and solutions
+      - Relevant examples
+    agent: "researcher"
+    expected_output: |
+      A comprehensive research document with organized findings,
+      including sources and key insights.
+
+  - description: |
+      Based on the research provided, create clear and comprehensive
+      documentation that includes:
+      - Executive summary
+      - Detailed explanation of key concepts
+      - Best practices and recommendations
+      - Practical examples
+      - Conclusion and next steps
+      
+      Ensure the documentation is well-structured, easy to read,
+      and suitable for both technical and non-technical audiences.
+    agent: "writer"
+    expected_output: |
+      A well-written documentation file in Markdown format,
+      ready for publication or further review.

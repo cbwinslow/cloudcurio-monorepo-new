@@ -1,0 +1,22 @@
+{
+  "name": "content-optimizer-mcp-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for Content Optimization MCP Server",
+  "main": "src/index.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "wrangler dev --test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "axios": "^1.6.0",
+    "@google-cloud/vision": "^3.0.0",
+    "openai": "^4.0.0",
+    "unsplash-js": "^7.0.0",
+    "replicate": "^0.29.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

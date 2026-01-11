@@ -1,0 +1,13 @@
+name: "Research Crew"
+description: "A crew for researching topics and creating documentation"
+version: "1.0.0"
+process: "sequential"  # Can be "sequential" or "hierarchical"
+
+agents:
+  - researcher
+  - writer
+
+settings:
+  verbose: true
+  max_iterations: 5
+  memory: true
