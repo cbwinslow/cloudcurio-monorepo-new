@@ -41,18 +41,23 @@ class AudioProcessingTool(BaseTool):
                 - default_bit_rate: Default bit rate (default: 192k)
             **kwargs: Additional configuration options
         """
-        super().__init__(config, **kwargs)
+        # Set configuration attributes BEFORE calling super().__init__()
+        # This is needed because _validate_tool_config() is called during parent initialization
+        if config is None:
+            config = {}
         
-        # Set default configuration
-        self.ffmpeg_path = self.config.get('ffmpeg_path', 'ffmpeg')
-        self.temp_dir = Path(self.config.get('temp_dir', '/tmp/audio_processing'))
-        self.max_file_size_mb = self.config.get('max_file_size_mb', 1000)
-        self.supported_formats = self.config.get('supported_formats', ['mp3', 'wav', 'flac', 'm4a', 'aac'])
-        self.default_sample_rate = self.config.get('default_sample_rate', 48000)
-        self.default_bit_rate = self.config.get('default_bit_rate', '192k')
+        self.ffmpeg_path = config.get('ffmpeg_path', 'ffmpeg')
+        self.temp_dir = Path(config.get('temp_dir', '/tmp/audio_processing'))
+        self.max_file_size_mb = config.get('max_file_size_mb', 1000)
+        self.supported_formats = config.get('supported_formats', ['mp3', 'wav', 'flac', 'm4a', 'aac'])
+        self.default_sample_rate = config.get('default_sample_rate', 48000)
+        self.default_bit_rate = config.get('default_bit_rate', '192k')
         
         # Create temp directory if it doesn't exist
         self.temp_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Now call parent init
+        super().__init__(config, **kwargs)
         
         self.logger.info(f"AudioProcessingTool initialized with temp_dir: {self.temp_dir}")
     

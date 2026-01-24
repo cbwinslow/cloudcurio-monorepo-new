@@ -40,20 +40,25 @@ class ContentSchedulingTool(BaseTool):
                 - timezone: Timezone for scheduling (default: 'UTC')
             **kwargs: Additional configuration options
         """
-        super().__init__(config, **kwargs)
+        # Set configuration attributes BEFORE calling super().__init__()
+        # This is needed because _validate_tool_config() is called during parent initialization
+        if config is None:
+            config = {}
         
-        # Set default configuration
-        self.supported_platforms = self.config.get('supported_platforms', [
+        self.supported_platforms = config.get('supported_platforms', [
             'twitter', 'instagram', 'tiktok', 'youtube', 'linkedin', 'facebook'
         ])
-        self.max_posts_per_day = self.config.get('max_posts_per_day', 10)
-        self.min_interval_minutes = self.config.get('min_interval_minutes', 60)
-        self.working_hours_start = self.config.get('working_hours_start', 9)
-        self.working_hours_end = self.config.get('working_hours_end', 18)
-        self.timezone = self.config.get('timezone', 'UTC')
+        self.max_posts_per_day = config.get('max_posts_per_day', 10)
+        self.min_interval_minutes = config.get('min_interval_minutes', 60)
+        self.working_hours_start = config.get('working_hours_start', 9)
+        self.working_hours_end = config.get('working_hours_end', 18)
+        self.timezone = config.get('timezone', 'UTC')
         
         # Initialize schedule storage
         self.schedule = {}  # date -> list of scheduled posts
+        
+        # Now call parent init
+        super().__init__(config, **kwargs)
         
         self.logger.info(f"ContentSchedulingTool initialized with platforms: {self.supported_platforms}")
     

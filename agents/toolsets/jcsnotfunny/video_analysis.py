@@ -40,17 +40,22 @@ class VideoAnalysisTool(BaseTool):
                 - supported_formats: List of supported video formats (default: ['mp4', 'mov', 'avi', 'mkv'])
             **kwargs: Additional configuration options
         """
-        super().__init__(config, **kwargs)
+        # Set configuration attributes BEFORE calling super().__init__()
+        # This is needed because _validate_tool_config() is called during parent initialization
+        if config is None:
+            config = {}
         
-        # Set default configuration
-        self.ffmpeg_path = self.config.get('ffmpeg_path', 'ffmpeg')
-        self.ffprobe_path = self.config.get('ffprobe_path', 'ffprobe')
-        self.temp_dir = Path(self.config.get('temp_dir', '/tmp/video_analysis'))
-        self.max_file_size_mb = self.config.get('max_file_size_mb', 5000)
-        self.supported_formats = self.config.get('supported_formats', ['mp4', 'mov', 'avi', 'mkv'])
+        self.ffmpeg_path = config.get('ffmpeg_path', 'ffmpeg')
+        self.ffprobe_path = config.get('ffprobe_path', 'ffprobe')
+        self.temp_dir = Path(config.get('temp_dir', '/tmp/video_analysis'))
+        self.max_file_size_mb = config.get('max_file_size_mb', 5000)
+        self.supported_formats = config.get('supported_formats', ['mp4', 'mov', 'avi', 'mkv'])
         
         # Create temp directory if it doesn't exist
         self.temp_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Now call parent init
+        super().__init__(config, **kwargs)
         
         self.logger.info(f"VideoAnalysisTool initialized with temp_dir: {self.temp_dir}")
     
