@@ -322,8 +322,11 @@ class AudioProcessingTool(BaseTool):
         # Compression
         filters.append(f'acompressor=threshold=-20dB:ratio={compression_ratio}:attack=5:release=50')
         
-        # De-essing
-        filters.append(f'deesser=i={de_essing}:m=0.5:f=0.5:s=o')
+        # De-essing using highpass/lowpass combination
+        # Target sibilance frequencies (6-10kHz) with a multiband approach
+        if de_essing > 0:
+            # Reduce high frequencies where sibilance occurs
+            filters.append(f'equalizer=f=8000:t=h:width=4000:g=-{int(de_essing * 10)}')
         
         # Normalize
         filters.append('loudnorm=I=-16:TP=-1.5:LRA=11')

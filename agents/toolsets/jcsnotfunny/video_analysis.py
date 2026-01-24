@@ -365,7 +365,7 @@ class VideoAnalysisTool(BaseTool):
                 'codec': video_stream.get('codec_name', 'unknown'),
                 'width': video_stream.get('width', 0),
                 'height': video_stream.get('height', 0),
-                'fps': eval(video_stream.get('r_frame_rate', '0/1')),
+                'fps': self._parse_frame_rate(video_stream.get('r_frame_rate', '0/1')),
                 'aspect_ratio': video_stream.get('display_aspect_ratio', 'unknown')
             }
         
@@ -378,6 +378,29 @@ class VideoAnalysisTool(BaseTool):
             }
         
         return video_info
+    
+    def _parse_frame_rate(self, fps_str: str) -> float:
+        """
+        Safely parse frame rate string from ffprobe.
+        
+        Args:
+            fps_str: Frame rate string in format "num/den" (e.g., "30/1", "30000/1001")
+        
+        Returns:
+            Frame rate as float, or 0.0 if parsing fails
+        """
+        try:
+            if '/' in fps_str:
+                numerator, denominator = fps_str.split('/')
+                num = float(numerator)
+                den = float(denominator)
+                if den == 0:
+                    return 0.0
+                return num / den
+            else:
+                return float(fps_str)
+        except (ValueError, ZeroDivisionError):
+            return 0.0
     
     def _calculate_engagement_scores(self, video_path: str) -> Dict[str, Any]:
         """Calculate engagement scores for video segments."""
