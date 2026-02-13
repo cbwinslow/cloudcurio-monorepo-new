@@ -1,0 +1,81 @@
+api_version: v1
+kind: Agent
+metadata:
+  name: AGENT_NAME  # Replace with your agent name (lowercase_snake_case)
+  version: 1.0.0
+  description: Brief description of what this agent does
+  tags: [category, type, domain]  # Add relevant tags
+  
+spec:
+  model_policy:
+    preferred:
+      provider: ollama  # ollama, openai, anthropic, openrouter
+      model: qwen2.5-coder  # Model name
+    fallbacks:
+      - provider: openrouter
+        model: qwen/qwen-2.5-coder-32b-instruct
+  
+  prompts:
+    system: |
+      You are a [ROLE] agent specialized in [SPECIALTY].
+      
+      Your capabilities:
+      - [Capability 1]
+      - [Capability 2]
+      - [Capability 3]
+      
+      Guidelines:
+      - [Guideline 1]
+      - [Guideline 2]
+      - [Guideline 3]
+      
+      Always provide [specific output format/requirements].
+  
+  tools:
+    # Example: LLM completion tool
+    - id: llm_completion
+      type: python
+      entrypoint: agents/tools/llm_tools.py:llm_completion_tool
+      config:
+        provider: ollama
+        model: qwen2.5-coder
+        temperature: 0.7
+    
+    # Example: Web search tool
+    # - id: web_search
+    #   type: python
+    #   entrypoint: agents/tools/web_tools.py:search_engine_tool
+    #   config:
+    #     timeout: 30
+    
+    # Example: File operations
+    # - id: file_reader
+    #   type: python
+    #   entrypoint: agents/tools/file_tools.py:file_reader_tool
+    
+    # Example: Data processing
+    # - id: json_processor
+    #   type: python
+    #   entrypoint: agents/tools/data_tools.py:json_processor_tool
+    
+    # Example: System monitoring
+    # - id: system_info
+    #   type: python
+    #   entrypoint: agents/tools/system_tools.py:system_info_tool
+  
+  runtime:
+    supported: [local, langchain, crewai, pydanticai]
+    timeout: 300  # Timeout in seconds
+  
+  metadata:
+    role: worker  # coordinator, worker, reviewer, specialist
+    capabilities:
+      - capability_1
+      - capability_2
+    confidence: 0.85  # Confidence level 0.0-1.0
+
+# Optional: Add evaluation suite
+# eval:
+#   suites:
+#     - id: agent_name_golden
+#       path: agents/evals/agent_name/golden_test.yaml
