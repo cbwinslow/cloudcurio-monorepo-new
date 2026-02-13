@@ -24,4 +24,17 @@ src/cbw_foundry/runtime/stubs.py
 src/cbw_foundry/spec/compiler.py
 src/cbw_foundry/spec/io.py
 src/cbw_foundry/spec/models.py
+src/cbw_foundry/swarm/__init__.py
+src/cbw_foundry/swarm/agents/__init__.py
+src/cbw_foundry/swarm/agents/specialized/__init__.py
+src/cbw_foundry/swarm/communication/__init__.py
+src/cbw_foundry/swarm/core/__init__.py
+src/cbw_foundry/swarm/governance/__init__.py
+src/cbw_foundry/swarm/knowledge/__init__.py
+src/cbw_foundry/swarm/quality/__init__.py
+src/cbw_foundry/swarm/templates/__init__.py
+src/cbw_foundry/swarm/tools/__init__.py
+src/cbw_foundry/swarm/tools/integrations/__init__.py
+src/cbw_foundry/swarm/tools/standard/__init__.py
+src/cbw_foundry/swarm/utils/__init__.py
 src/cbw_foundry/util/fs.py
