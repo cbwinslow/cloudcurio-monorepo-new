@@ -2,7 +2,7 @@
 
 **Goal:** One reusable, industry-grade source of truth for AI agents, tools, workflows, and automation.
 
-**Generated:** 2026-01-11  
+**Generated:** 2026-01-11
 **Version:** v0.4.0
 
 ## Overview
@@ -121,7 +121,7 @@ make pre-commit    # Run all pre-commit hooks manually
 
 ```bash
 # Scaffold a new agent with templates
-./bin/cbw-capture agent my_agent                   
+./bin/cbw-capture agent my_agent
 
 # Creates:
 # - agents/specs/my_agent.agent.yaml
@@ -239,8 +239,8 @@ CloudCurio supports multiple agent frameworks through a unified runtime adapter 
 
 **Supported Frameworks:**
 - ✅ **Local Runtime** - Built-in, lightweight execution (fully implemented)
-- ✅ **CrewAI** - Multi-agent collaboration framework
-- ✅ **PydanticAI** - Type-safe agent definitions with Pydantic
+- 🔄 **CrewAI** - Multi-agent collaboration framework (adapter stub)
+- 🔄 **PydanticAI** - Type-safe agent definitions with Pydantic (adapter stub)
 - 🔄 **LangChain** - Industry-standard LLM framework (adapter stub)
 
 ### Agent Types
@@ -267,10 +267,10 @@ CloudCurio supports multiple agent frameworks through a unified runtime adapter 
 - Multi-Agent Coordinator - Agent communication and state management
 
 **Monitoring & Diagnostics:**
-- Health Check Agent - System health monitoring
+- Health Check Module - System health monitoring (utility, not standalone agent)
 - Diagnostic System - Automated troubleshooting
-- Telemetry Agent - Metrics collection and reporting
-- Observability Agent - Distributed tracing integration
+- Telemetry Manager - Metrics collection and reporting (utility module)
+- Observability Manager - Distributed tracing integration (utility module)
 
 ### Tool Ecosystem
 
@@ -344,11 +344,11 @@ CloudCurio supports multiple agent frameworks through a unified runtime adapter 
    ```python
    # agents/tools/my_tool.py
    from cbw_foundry.tools import BaseTool
-   
+
    class MyTool(BaseTool):
        name = "my_tool"
        description = "Description of what this tool does"
-       
+
        def execute(self, **kwargs):
            # Implementation
            pass
@@ -358,7 +358,7 @@ CloudCurio supports multiple agent frameworks through a unified runtime adapter 
    ```python
    # Add to agents/tools/__init__.py
    from .my_tool import MyTool
-   
+
    __all__ = ["MyTool", ...]
    ```
 
@@ -486,6 +486,6 @@ See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
 
 ---
 
-**Version:** v0.4.0  
-**Last Updated:** 2026-01-11  
+**Version:** v0.4.0
+**Last Updated:** 2026-01-11
 **Maintained by:** @cbwinslow
