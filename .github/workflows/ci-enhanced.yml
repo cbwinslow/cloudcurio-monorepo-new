@@ -1,0 +1,243 @@
+name: Enhanced CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+  schedule:
+    # Run weekly to catch regressions
+    - cron: '0 0 * * 0'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # Matrix testing across Python versions and OS
+  test-matrix:
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.11', '3.12']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: pytest -q --cov=cbw_foundry --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  # Code quality checks
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint with ruff
+        run: ruff check . --output-format=github
+
+      - name: Format check with ruff
+        run: ruff format --check .
+
+      - name: Type check with mypy
+        run: mypy src --show-error-codes
+
+      - name: Check for security issues
+        run: |
+          pip install safety bandit
+          safety check || true
+          bandit -r src/ -f json -o bandit-report.json || true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+
+  # Agent validation and compilation
+  agents:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Generate indexes
+        run: ./bin/cbw-index
+
+      - name: Validate agent specs
+        run: |
+          if ls agents/specs/examples/*.agent.yaml 1> /dev/null 2>&1; then
+            ./bin/cbw-agent validate agents/specs/examples/*.agent.yaml
+          else
+            echo "No example agent specs found"
+          fi
+
+      - name: Compile agent specs
+        run: |
+          if ls agents/specs/examples/*.agent.yaml 1> /dev/null 2>&1; then
+            ./bin/cbw-agent compile agents/specs/examples/*.agent.yaml --out dist/agents
+          else
+            echo "No example agent specs to compile"
+          fi
+
+      - name: Run golden tests
+        run: |
+          if ls agents/evals/golden/*.yaml 1> /dev/null 2>&1; then
+            ./bin/cbw-agent eval agents/evals/golden/*.yaml || true
+          else
+            echo "No golden tests found"
+          fi
+
+      - name: Upload compiled agents
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-agents
+          path: dist/agents/
+
+  # Shell script validation
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: |
+          find . -name "*.sh" -type f | while read -r file; do
+            echo "Checking $file"
+            shellcheck "$file" || true
+          done
+
+  # YAML validation
+  yaml-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint YAML files
+        run: yamllint . || true
+
+  # Documentation checks
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for broken links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'no'
+          config-file: '.github/markdown-link-check-config.json'
+
+      - name: Check markdown formatting
+        uses: avto-dev/markdown-lint@v1
+        with:
+          args: '**/*.md'
+          ignore: 'node_modules'
+
+  # Performance benchmarks
+  benchmarks:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pytest-benchmark
+
+      - name: Run benchmarks
+        run: |
+          if [ -d "tests/benchmarks" ]; then
+            pytest tests/benchmarks --benchmark-only || true
+          else
+            echo "No benchmarks directory found"
+          fi
+
+  # Summary job
+  ci-success:
+    name: CI Success
+    needs: [test-matrix, quality, agents, shellcheck, yaml-lint, docs]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs
+        run: |
+          if [[ "${{ needs.test-matrix.result }}" != "success" ]] || \
+             [[ "${{ needs.quality.result }}" != "success" ]] || \
+             [[ "${{ needs.agents.result }}" != "success" ]] || \
+             [[ "${{ needs.shellcheck.result }}" != "success" ]]; then
+            echo "One or more required jobs failed"
+            exit 1
+          fi
+          echo "All required checks passed!"

@@ -1,0 +1,145 @@
+name: PR Triage and Auto-Labeling
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Auto-label based on files changed
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+
+      - name: Label PR size
+        uses: codelytv/pr-size-labeler@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: 'size/xs'
+          xs_max_size: 10
+          s_label: 'size/s'
+          s_max_size: 100
+          m_label: 'size/m'
+          m_max_size: 500
+          l_label: 'size/l'
+          l_max_size: 1000
+          xl_label: 'size/xl'
+          fail_if_xl: false
+
+      - name: Check for breaking changes
+        id: breaking
+        run: |
+          if git log --format=%B -n 1 | grep -iq "BREAKING CHANGE"; then
+            echo "has_breaking=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_breaking=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Label breaking changes
+        if: steps.breaking.outputs.has_breaking == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['breaking-change']
+            })
+
+      - name: Check PR title format
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            doesn't start with an uppercase character.
+
+      - name: Comment on first-time contributors
+        uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-message: |
+            👋 Thanks for opening your first pull request in CloudCurio Monorepo! 
+            
+            Please make sure your PR:
+            - ✅ Passes all CI checks
+            - ✅ Includes tests for new functionality
+            - ✅ Updates documentation if needed
+            - ✅ Follows our [Code Quality Rules](kb/rules/code_quality_rules.md)
+            
+            A maintainer will review your PR soon. Feel free to join our community if you have questions!
+
+      - name: Check for security changes
+        id: security
+        run: |
+          FILES_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || echo "")
+          if echo "$FILES_CHANGED" | grep -qE "(\.github/workflows/security\.yml|SECURITY\.md|.*security.*\.py)"; then
+            echo "has_security=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_security=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Label security PRs
+        if: steps.security.outputs.has_security == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['security']
+            })
+
+      - name: Request review from codeowners
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            if (pr.draft) {
+              console.log('PR is draft, skipping review request');
+              return;
+            }
+            
+            // Request review from codeowners
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              reviewers: ['cbwinslow']
+            });

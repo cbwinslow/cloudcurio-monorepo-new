@@ -1,0 +1,97 @@
+# Configuration for automatic PR labeling based on file paths
+# https://github.com/actions/labeler
+
+# Documentation changes
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: ['docs/**/*', '*.md', 'kb/**/*.md']
+
+# Agent changes
+agents:
+  - changed-files:
+    - any-glob-to-any-file: ['agents/**/*', 'agents.md']
+
+# Tool changes
+tools:
+  - changed-files:
+    - any-glob-to-any-file: ['agents/tools/**/*', 'agents/toolsets/**/*']
+
+# MCP server changes
+mcp-servers:
+  - changed-files:
+    - any-glob-to-any-file: ['mcp-servers/**/*', 'mcp/**/*']
+
+# Core framework changes
+core:
+  - changed-files:
+    - any-glob-to-any-file: ['src/cbw_foundry/**/*']
+
+# Test changes
+tests:
+  - changed-files:
+    - any-glob-to-any-file: ['tests/**/*', 'agents/evals/**/*']
+
+# CI/CD changes
+ci-cd:
+  - changed-files:
+    - any-glob-to-any-file: ['.github/workflows/**/*', '.github/actions/**/*']
+
+# Dependencies
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file: ['pyproject.toml', 'requirements*.txt', 'package*.json']
+
+# Configuration changes
+config:
+  - changed-files:
+    - any-glob-to-any-file: ['configs/**/*', '.pre-commit-config.yaml', 'Makefile']
+
+# Docker changes
+docker:
+  - changed-files:
+    - any-glob-to-any-file: ['docker/**/*', 'Dockerfile*', 'docker-compose*.yml']
+
+# Scripts
+scripts:
+  - changed-files:
+    - any-glob-to-any-file: ['scripts/**/*', 'bin/**/*', 'shell/**/*']
+
+# Workflow definitions
+workflows:
+  - changed-files:
+    - any-glob-to-any-file: ['workflows/**/*']
+
+# Python code
+python:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.py']
+
+# YAML files
+yaml:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.yaml', '**/*.yml']
+
+# Security
+security:
+  - changed-files:
+    - any-glob-to-any-file: ['SECURITY.md', '.github/workflows/security.yml']
+
+# GitHub configuration
+github:
+  - changed-files:
+    - any-glob-to-any-file: ['.github/**/*', '!.github/workflows/**/*']
+
+# Rules
+rules:
+  - changed-files:
+    - any-glob-to-any-file: ['kb/rules/**/*', 'rules.md']
+
+# Observability
+observability:
+  - changed-files:
+    - any-glob-to-any-file: ['docker/compose/observability/**/*', 'src/**/observability/**/*']
+
+# Prompts
+prompts:
+  - changed-files:
+    - any-glob-to-any-file: ['prompts/**/*']

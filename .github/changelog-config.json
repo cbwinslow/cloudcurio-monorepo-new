@@ -1,0 +1,97 @@
+{
+  "categories": [
+    {
+      "title": "## 🚀 Features",
+      "labels": ["feat", "feature", "enhancement"]
+    },
+    {
+      "title": "## 🐛 Bug Fixes",
+      "labels": ["fix", "bug", "bugfix"]
+    },
+    {
+      "title": "## 📚 Documentation",
+      "labels": ["docs", "documentation"]
+    },
+    {
+      "title": "## 🔧 Maintenance",
+      "labels": ["chore", "dependencies", "config"]
+    },
+    {
+      "title": "## 🏗️ Refactoring",
+      "labels": ["refactor", "refactoring"]
+    },
+    {
+      "title": "## ⚡ Performance",
+      "labels": ["perf", "performance"]
+    },
+    {
+      "title": "## 🧪 Tests",
+      "labels": ["test", "tests"]
+    },
+    {
+      "title": "## 🔒 Security",
+      "labels": ["security"]
+    },
+    {
+      "title": "## 🤖 Agents",
+      "labels": ["agents", "agent"]
+    },
+    {
+      "title": "## 🔌 MCP Servers",
+      "labels": ["mcp-servers", "mcp"]
+    },
+    {
+      "title": "## 🛠️ Tools",
+      "labels": ["tools", "tool"]
+    },
+    {
+      "title": "## 🔄 CI/CD",
+      "labels": ["ci-cd", "ci", "cd", "github-actions"]
+    }
+  ],
+  "ignore_labels": [
+    "ignore-changelog",
+    "duplicate",
+    "invalid",
+    "wontfix"
+  ],
+  "sort": {
+    "order": "ASC",
+    "on_property": "mergedAt"
+  },
+  "template": "${{CHANGELOG}}\n\n**Full Changelog**: ${{RELEASE_DIFF}}",
+  "pr_template": "- ${{TITLE}} by @${{AUTHOR}} in #${{NUMBER}}",
+  "empty_template": "No changes in this release.",
+  "label_extractor": [
+    {
+      "pattern": "^(feat|feature)(\\(.+\\))?:",
+      "target": "feat"
+    },
+    {
+      "pattern": "^(fix|bugfix)(\\(.+\\))?:",
+      "target": "fix"
+    },
+    {
+      "pattern": "^docs(\\(.+\\))?:",
+      "target": "docs"
+    },
+    {
+      "pattern": "^chore(\\(.+\\))?:",
+      "target": "chore"
+    },
+    {
+      "pattern": "^refactor(\\(.+\\))?:",
+      "target": "refactor"
+    },
+    {
+      "pattern": "^perf(\\(.+\\))?:",
+      "target": "perf"
+    },
+    {
+      "pattern": "^test(\\(.+\\))?:",
+      "target": "test"
+    }
+  ],
+  "max_pull_requests": 1000,
+  "max_back_track_time_days": 365
+}
