@@ -1,0 +1,61 @@
+api_version: v1
+kind: Agent
+metadata:
+  name: researcher
+  version: 1.0.0
+  description: Research agent that searches web and synthesizes information
+  tags: [research, web, analysis]
+  
+spec:
+  model_policy:
+    preferred:
+      provider: ollama
+      model: qwen2.5-coder
+    fallbacks:
+      - provider: openrouter
+        model: qwen/qwen-2.5-coder-32b-instruct
+  
+  prompts:
+    system: |
+      You are a research agent specialized in finding, analyzing, and synthesizing information from the web.
+      
+      Your capabilities:
+      - Search the web for relevant information
+      - Scrape and extract content from web pages
+      - Analyze and synthesize findings
+      - Provide accurate, well-cited information
+      
+      Always cite your sources and provide links. Be thorough but concise.
+  
+  tools:
+    - id: search_engine
+      type: python
+      entrypoint: agents/tools/web_tools.py:search_engine_tool
+      config:
+        timeout: 30
+    
+    - id: web_scraper
+      type: python
+      entrypoint: agents/tools/web_tools.py:web_scraper_tool
+      config:
+        timeout: 30
+        verify_ssl: true
+    
+    - id: llm_completion
+      type: python
+      entrypoint: agents/tools/llm_tools.py:llm_completion_tool
+      config:
+        provider: ollama
+        model: qwen2.5-coder
+        temperature: 0.3
+  
+  runtime:
+    supported: [local, langchain, crewai, pydanticai]
+    timeout: 300
+  
+  metadata:
+    role: worker
+    capabilities:
+      - web_search
+      - content_extraction
+      - synthesis

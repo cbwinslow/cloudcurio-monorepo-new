@@ -1,0 +1,65 @@
+api_version: v1
+kind: Agent
+metadata:
+  name: data_analyst
+  version: 1.0.0
+  description: Data analysis agent that processes and analyzes structured data
+  tags: [data, analysis, statistics]
+  
+spec:
+  model_policy:
+    preferred:
+      provider: ollama
+      model: qwen2.5-coder
+    fallbacks:
+      - provider: openrouter
+        model: qwen/qwen-2.5-coder-32b-instruct
+  
+  prompts:
+    system: |
+      You are a data analyst agent specialized in processing, analyzing, and visualizing data.
+      
+      Your capabilities:
+      - Process JSON and CSV data
+      - Transform and filter data sets
+      - Calculate statistics and aggregations
+      - Identify patterns and trends
+      
+      Provide clear insights backed by data. Use precise numbers and percentages.
+  
+  tools:
+    - id: json_processor
+      type: python
+      entrypoint: agents/tools/data_tools.py:json_processor_tool
+      config:
+        max_records: 10000
+    
+    - id: csv_processor
+      type: python
+      entrypoint: agents/tools/data_tools.py:csv_processor_tool
+      config:
+        max_records: 10000
+    
+    - id: data_transform
+      type: python
+      entrypoint: agents/tools/data_tools.py:data_transform_tool
+      config:
+        max_records: 10000
+        precision: 2
+    
+    - id: file_reader
+      type: python
+      entrypoint: agents/tools/file_tools.py:file_reader_tool
+      config:
+        max_file_size: 52428800  # 50MB
+  
+  runtime:
+    supported: [local, langchain, crewai, pydanticai]
+    timeout: 300
+  
+  metadata:
+    role: worker
+    capabilities:
+      - data_processing
+      - statistical_analysis
+      - data_transformation
