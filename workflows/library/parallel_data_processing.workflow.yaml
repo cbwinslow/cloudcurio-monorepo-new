@@ -1,0 +1,137 @@
+api_version: v1
+kind: Workflow
+metadata:
+  name: parallel_data_processing
+  version: 1.0.0
+  description: Parallel workflow for processing multiple data sources
+  tags: [data, parallel, etl]
+
+spec:
+  coordination: parallel
+  
+  steps:
+    # Parallel data extraction from multiple sources
+    - id: extract_api_data
+      name: "Extract API Data"
+      agent: data_collector
+      input:
+        source: "api"
+        endpoints: "${api_endpoints}"
+      output_var: api_data
+      timeout: 120
+      parallel_group: extraction
+    
+    - id: extract_database_data
+      name: "Extract Database Data"
+      agent: data_collector
+      input:
+        source: "database"
+        queries: "${db_queries}"
+      output_var: db_data
+      timeout: 120
+      parallel_group: extraction
+    
+    - id: extract_file_data
+      name: "Extract File Data"
+      agent: data_collector
+      input:
+        source: "files"
+        paths: "${file_paths}"
+      output_var: file_data
+      timeout: 120
+      parallel_group: extraction
+    
+    # Wait for all extractions to complete, then transform in parallel
+    - id: transform_api
+      name: "Transform API Data"
+      agent: data_analyst
+      input:
+        data: "${api_data}"
+        transformations: "${api_transforms}"
+      output_var: transformed_api
+      depends_on: [extract_api_data]
+      timeout: 90
+      parallel_group: transformation
+    
+    - id: transform_db
+      name: "Transform Database Data"
+      agent: data_analyst
+      input:
+        data: "${db_data}"
+        transformations: "${db_transforms}"
+      output_var: transformed_db
+      depends_on: [extract_database_data]
+      timeout: 90
+      parallel_group: transformation
+    
+    - id: transform_files
+      name: "Transform File Data"
+      agent: data_analyst
+      input:
+        data: "${file_data}"
+        transformations: "${file_transforms}"
+      output_var: transformed_files
+      depends_on: [extract_file_data]
+      timeout: 90
+      parallel_group: transformation
+    
+    # Merge all transformed data
+    - id: merge_data
+      name: "Merge All Data"
+      agent: data_analyst
+      input:
+        task: "Merge and deduplicate data"
+        datasets: 
+          - "${transformed_api}"
+          - "${transformed_db}"
+          - "${transformed_files}"
+        merge_strategy: "union"
+      output_var: merged_data
+      depends_on: [transform_api, transform_db, transform_files]
+      timeout: 120
+    
+    # Generate analytics in parallel
+    - id: generate_statistics
+      name: "Generate Statistics"
+      agent: data_analyst
+      input:
+        task: "Calculate statistics"
+        data: "${merged_data}"
+      output_var: statistics
+      depends_on: [merge_data]
+      timeout: 60
+      parallel_group: analytics
+    
+    - id: create_visualizations
+      name: "Create Visualizations"
+      agent: visualization_agent
+      input:
+        task: "Create charts and graphs"
+        data: "${merged_data}"
+      output_var: visualizations
+      depends_on: [merge_data]
+      timeout: 90
+      parallel_group: analytics
+    
+    # Final report
+    - id: generate_report
+      name: "Generate Final Report"
+      agent: report_generator
+      input:
+        data: "${merged_data}"
+        statistics: "${statistics}"
+        visualizations: "${visualizations}"
+        format: "html"
+      output_var: final_report
+      depends_on: [generate_statistics, create_visualizations]
+      timeout: 120
+
+  error_handling:
+    retry_failed_steps: true
+    max_retries: 3
+    continue_on_error: true  # Continue if one data source fails
+    
+  outputs:
+    merged_data: "${merged_data}"
+    statistics: "${statistics}"
+    report: "${final_report}"

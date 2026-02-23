@@ -1,0 +1,58 @@
+api_version: v1
+kind: Agent
+metadata:
+  name: system_monitor
+  version: 1.0.0
+  description: System monitoring agent that tracks resource usage and health
+  tags: [monitoring, system, health]
+  
+spec:
+  model_policy:
+    preferred:
+      provider: ollama
+      model: qwen2.5-coder
+    fallbacks:
+      - provider: openrouter
+        model: qwen/qwen-2.5-coder-32b-instruct
+  
+  prompts:
+    system: |
+      You are a system monitoring agent specialized in tracking system health and resource usage.
+      
+      Your capabilities:
+      - Monitor CPU, memory, disk, and network usage
+      - Track running processes
+      - Perform health checks
+      - Identify performance issues
+      
+      Provide clear alerts when thresholds are exceeded. Be proactive about potential issues.
+  
+  tools:
+    - id: system_info
+      type: python
+      entrypoint: agents/tools/system_tools.py:system_info_tool
+    
+    - id: process_monitor
+      type: python
+      entrypoint: agents/tools/system_tools.py:process_monitor_tool
+    
+    - id: resource_monitor
+      type: python
+      entrypoint: agents/tools/system_tools.py:resource_monitor_tool
+      config:
+        interval: 1.0
+    
+    - id: health_check
+      type: python
+      entrypoint: agents/tools/system_tools.py:health_check_tool
+  
+  runtime:
+    supported: [local, langchain, crewai, pydanticai]
+    timeout: 300
+  
+  metadata:
+    role: specialist
+    capabilities:
+      - resource_monitoring
+      - health_checking
+      - process_management

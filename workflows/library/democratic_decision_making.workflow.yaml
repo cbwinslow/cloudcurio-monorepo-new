@@ -1,0 +1,146 @@
+api_version: v1
+kind: Workflow
+metadata:
+  name: democratic_decision_making
+  version: 1.0.0
+  description: Democratic workflow where multiple agents vote on decisions
+  tags: [democratic, voting, consensus]
+
+spec:
+  coordination: democratic
+  
+  steps:
+    - id: define_problem
+      name: "Define Problem"
+      agent: task_coordinator
+      input:
+        task: "Analyze and define the problem"
+        context: "${problem_context}"
+      output_var: problem_definition
+      timeout: 120
+    
+    # All agents propose solutions in parallel
+    - id: propose_solution_1
+      name: "Senior Architect Proposal"
+      agent: senior_architect
+      input:
+        problem: "${problem_definition}"
+        task: "Propose architectural solution"
+      output_var: proposal_1
+      depends_on: [define_problem]
+      timeout: 180
+      parallel_group: proposals
+      voting_weight: 0.95
+    
+    - id: propose_solution_2
+      name: "Backend Lead Proposal"
+      agent: backend_lead
+      input:
+        problem: "${problem_definition}"
+        task: "Propose backend-focused solution"
+      output_var: proposal_2
+      depends_on: [define_problem]
+      timeout: 180
+      parallel_group: proposals
+      voting_weight: 0.85
+    
+    - id: propose_solution_3
+      name: "Frontend Lead Proposal"
+      agent: frontend_lead
+      input:
+        problem: "${problem_definition}"
+        task: "Propose frontend-focused solution"
+      output_var: proposal_3
+      depends_on: [define_problem]
+      timeout: 180
+      parallel_group: proposals
+      voting_weight: 0.85
+    
+    - id: propose_solution_4
+      name: "DevOps Engineer Proposal"
+      agent: devops_engineer
+      input:
+        problem: "${problem_definition}"
+        task: "Propose infrastructure solution"
+      output_var: proposal_4
+      depends_on: [define_problem]
+      timeout: 180
+      parallel_group: proposals
+      voting_weight: 0.80
+    
+    # Democratic voting phase
+    - id: voting_phase
+      name: "Democratic Vote"
+      coordination: vote
+      input:
+        proposals:
+          - proposal: "${proposal_1}"
+            weight: 0.95
+          - proposal: "${proposal_2}"
+            weight: 0.85
+          - proposal: "${proposal_3}"
+            weight: 0.85
+          - proposal: "${proposal_4}"
+            weight: 0.80
+        voting_criteria:
+          - feasibility
+          - maintainability
+          - performance
+          - cost
+      output_var: winning_proposal
+      depends_on: [propose_solution_1, propose_solution_2, propose_solution_3, propose_solution_4]
+      timeout: 60
+    
+    # Implementation planning based on winning proposal
+    - id: create_implementation_plan
+      name: "Create Implementation Plan"
+      agent: task_coordinator
+      input:
+        task: "Create detailed implementation plan"
+        solution: "${winning_proposal}"
+        team_size: "${team_size}"
+        timeline: "${project_timeline}"
+      output_var: implementation_plan
+      depends_on: [voting_phase]
+      timeout: 240
+    
+    # Code review of the plan
+    - id: review_plan
+      name: "Review Implementation Plan"
+      agent: code_reviewer
+      input:
+        task: "Review implementation plan for risks"
+        plan: "${implementation_plan}"
+        criteria: ["technical_debt", "security", "scalability"]
+      output_var: review_feedback
+      depends_on: [create_implementation_plan]
+      timeout: 180
+    
+    # Final approval vote
+    - id: final_approval
+      name: "Final Approval Vote"
+      coordination: vote
+      input:
+        plan: "${implementation_plan}"
+        feedback: "${review_feedback}"
+        threshold: 0.75  # 75% approval needed
+      output_var: approved_plan
+      depends_on: [review_plan]
+      timeout: 60
+
+  voting:
+    method: "confidence_weighted"
+    quorum: 0.5  # Need at least 50% participation
+    approval_threshold: 0.75
+    
+  error_handling:
+    retry_failed_steps: true
+    max_retries: 2
+    continue_on_error: false
+    
+  outputs:
+    problem: "${problem_definition}"
+    winning_solution: "${winning_proposal}"
+    implementation_plan: "${implementation_plan}"
+    review: "${review_feedback}"
+    approved: "${approved_plan}"

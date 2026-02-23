@@ -1,0 +1,138 @@
+{
+  "mcpServers": {
+    "automation": {
+      "command": "python3",
+      "args": [
+        "mcp-servers/automation/server.py"
+      ],
+      "env": {
+        "LOG_LEVEL": "info",
+        "MAX_WORKERS": "4"
+      },
+      "description": "Automation tools for file operations, process management, and system commands",
+      "tools": [
+        "execute_command",
+        "schedule_task",
+        "file_watch",
+        "process_monitor"
+      ]
+    },
+    "media": {
+      "command": "python3",
+      "args": [
+        "mcp-servers/media/server.py"
+      ],
+      "env": {
+        "LOG_LEVEL": "info",
+        "FFMPEG_PATH": "/usr/bin/ffmpeg"
+      },
+      "description": "Media processing tools for audio, video, and image manipulation",
+      "tools": [
+        "process_audio",
+        "process_video",
+        "convert_format",
+        "extract_audio"
+      ]
+    },
+    "content-optimizer": {
+      "command": "node",
+      "args": [
+        "mcp-servers/content-optimizer/src/index.js"
+      ],
+      "env": {
+        "LOG_LEVEL": "info",
+        "OLLAMA_HOST": "http://localhost:11434"
+      },
+      "description": "Content optimization using LLMs for SEO, readability, and engagement",
+      "tools": [
+        "optimize_content",
+        "generate_keywords",
+        "analyze_readability",
+        "suggest_improvements"
+      ]
+    },
+    "web-research": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "cbw_foundry.mcp.web_research_server"
+      ],
+      "env": {
+        "LOG_LEVEL": "info",
+        "SEARCH_ENGINE": "duckduckgo",
+        "MAX_RESULTS": "10"
+      },
+      "description": "Web research tools for searching and scraping",
+      "tools": [
+        "web_search",
+        "web_scrape",
+        "extract_links",
+        "summarize_page"
+      ]
+    },
+    "data-processing": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "cbw_foundry.mcp.data_processing_server"
+      ],
+      "env": {
+        "LOG_LEVEL": "info",
+        "MAX_RECORDS": "100000"
+      },
+      "description": "Data processing tools for JSON, CSV, and transformations",
+      "tools": [
+        "process_json",
+        "process_csv",
+        "transform_data",
+        "aggregate_data"
+      ]
+    },
+    "system-monitor": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "cbw_foundry.mcp.system_monitor_server"
+      ],
+      "env": {
+        "LOG_LEVEL": "info",
+        "MONITOR_INTERVAL": "5"
+      },
+      "description": "System monitoring and health check tools",
+      "tools": [
+        "get_system_info",
+        "monitor_resources",
+        "check_health",
+        "list_processes"
+      ]
+    },
+    "llm-tools": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "cbw_foundry.mcp.llm_tools_server"
+      ],
+      "env": {
+        "LOG_LEVEL": "info",
+        "OLLAMA_HOST": "http://localhost:11434",
+        "DEFAULT_MODEL": "qwen2.5-coder"
+      },
+      "description": "LLM integration tools for completions and embeddings",
+      "tools": [
+        "llm_completion",
+        "llm_embedding",
+        "llm_chat",
+        "model_list"
+      ]
+    }
+  },
+  "globalEnv": {
+    "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}",
+    "LOG_FORMAT": "json"
+  },
+  "settings": {
+    "timeout": 300,
+    "retryAttempts": 3,
+    "retryDelay": 1000
+  }
+}

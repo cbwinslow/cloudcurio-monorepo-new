@@ -1,0 +1,62 @@
+api_version: v1
+kind: Skill
+metadata:
+  name: SKILL_NAME  # Replace with skill name (lowercase_snake_case)
+  version: 1.0.0
+  description: Brief description of what this skill does
+  type: command  # command, automation, analysis, generation, transformation
+  tags: [category, domain]
+
+spec:
+  # Slash command definition
+  command: /SKILL_NAME
+  
+  # Parameters for the skill
+  parameters:
+    - name: input
+      type: string
+      description: Input parameter description
+      required: true
+    
+    - name: option1
+      type: string
+      description: Optional parameter description
+      required: false
+      default: "default_value"
+    
+    - name: verbose
+      type: boolean
+      description: Enable verbose output
+      required: false
+      default: false
+  
+  # Agents used by this skill
+  agents:
+    - agent_name_1
+    - agent_name_2
+  
+  # Workflow (optional)
+  workflow: workflows/skill_workflow.yaml
+  
+  # Examples
+  examples:
+    - command: "/SKILL_NAME input='example data' option1='value'"
+      description: "Basic usage example"
+      expected_output: "Description of expected output"
+    
+    - command: "/SKILL_NAME input='another example' verbose=true"
+      description: "Example with verbose output"
+      expected_output: "Description of expected output"
+
+  # Permissions required
+  permissions:
+    - read_files
+    - write_files
+    # - network_access
+    # - system_commands
+
+  # Configuration
+  config:
+    timeout: 300
+    max_retries: 2
+    cache_results: true

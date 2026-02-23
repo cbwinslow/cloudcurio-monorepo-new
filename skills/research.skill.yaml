@@ -1,0 +1,53 @@
+api_version: v1
+kind: Skill
+metadata:
+  name: research
+  version: 1.0.0
+  description: Research a topic using web search and synthesis
+  type: automation
+  tags: [research, web, analysis]
+
+spec:
+  command: /research
+  
+  parameters:
+    - name: topic
+      type: string
+      description: Topic to research
+      required: true
+    
+    - name: depth
+      type: string
+      description: Research depth (quick, standard, comprehensive)
+      required: false
+      default: "standard"
+    
+    - name: sources
+      type: integer
+      description: Number of sources to consult
+      required: false
+      default: 5
+  
+  agents:
+    - researcher
+    - data_analyst
+  
+  workflow: workflows/library/research_and_report.workflow.yaml
+  
+  examples:
+    - command: '/research topic="AI agent frameworks"'
+      description: "Quick research on AI agent frameworks"
+      expected_output: "Research report with findings and sources"
+    
+    - command: '/research topic="quantum computing" depth="comprehensive" sources=10'
+      description: "Comprehensive research with 10 sources"
+      expected_output: "Detailed research report"
+
+  permissions:
+    - network_access
+    - write_files
+
+  config:
+    timeout: 600
+    max_retries: 2
+    cache_results: true

@@ -1,0 +1,71 @@
+api_version: v1
+kind: Workflow
+metadata:
+  name: research_and_report
+  version: 1.0.0
+  description: Sequential workflow for research and report generation
+  tags: [research, content, sequential]
+
+spec:
+  coordination: sequential
+  
+  steps:
+    - id: research
+      name: "Research Topic"
+      agent: researcher
+      input:
+        task: "Research ${topic}"
+        depth: "comprehensive"
+      output_var: research_data
+      timeout: 300
+    
+    - id: analyze
+      name: "Analyze Data"
+      agent: data_analyst
+      input:
+        task: "Analyze research findings"
+        data: "${research_data}"
+      output_var: analysis_results
+      depends_on: [research]
+      timeout: 180
+    
+    - id: write_report
+      name: "Generate Report"
+      agent: writer
+      input:
+        task: "Write comprehensive report"
+        research: "${research_data}"
+        analysis: "${analysis_results}"
+        format: "markdown"
+      output_var: draft_report
+      depends_on: [analyze]
+      timeout: 300
+    
+    - id: review
+      name: "Review and Edit"
+      agent: editor
+      input:
+        task: "Review and improve report"
+        draft: "${draft_report}"
+        criteria: ["clarity", "accuracy", "completeness"]
+      output_var: final_report
+      depends_on: [write_report]
+      timeout: 180
+    
+    - id: save_report
+      name: "Save Final Report"
+      action: file_write
+      input:
+        filepath: "reports/${topic}_report.md"
+        content: "${final_report}"
+      depends_on: [review]
+
+  error_handling:
+    retry_failed_steps: true
+    max_retries: 2
+    continue_on_error: false
+    
+  outputs:
+    final_report: "${final_report}"
+    research_data: "${research_data}"
+    analysis: "${analysis_results}"

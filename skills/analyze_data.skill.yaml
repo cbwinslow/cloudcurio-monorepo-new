@@ -1,0 +1,49 @@
+api_version: v1
+kind: Skill
+metadata:
+  name: analyze_data
+  version: 1.0.0
+  description: Analyze data from files or input
+  type: analysis
+  tags: [data, analysis, statistics]
+
+spec:
+  command: /analyze
+  
+  parameters:
+    - name: source
+      type: string
+      description: Data source (file path or inline data)
+      required: true
+    
+    - name: format
+      type: string
+      description: Data format (json, csv, auto)
+      required: false
+      default: "auto"
+    
+    - name: operations
+      type: string
+      description: Analysis operations (stats, filter, transform)
+      required: false
+      default: "stats"
+  
+  agents:
+    - data_analyst
+  
+  examples:
+    - command: '/analyze source="data/sales.csv" operations="stats"'
+      description: "Analyze sales data and generate statistics"
+      expected_output: "Statistical summary of sales data"
+    
+    - command: '/analyze source="data/users.json" format="json" operations="filter,transform"'
+      description: "Filter and transform user data"
+      expected_output: "Processed user data"
+
+  permissions:
+    - read_files
+    - write_files
+
+  config:
+    timeout: 300
+    max_retries: 2
