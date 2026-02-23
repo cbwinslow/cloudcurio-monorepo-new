@@ -1,0 +1,144 @@
+{
+  "name": "cloudcurio-agents",
+  "version": "0.4.0",
+  "description": "CloudCurio AI Agent Framework",
+  "type": "mcp-extension",
+  
+  "mcpServers": {
+    "cloudcurio-tools": {
+      "command": "python3",
+      "args": ["-m", "cbw_foundry.mcp.unified_server"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}",
+        "OLLAMA_HOST": "http://localhost:11434"
+      }
+    }
+  },
+  
+  "tools": [
+    {
+      "name": "llm_completion",
+      "description": "Generate text completions using local or cloud LLMs",
+      "category": "generation",
+      "server": "cloudcurio-tools"
+    },
+    {
+      "name": "web_search",
+      "description": "Search the web and retrieve results",
+      "category": "research",
+      "server": "cloudcurio-tools"
+    },
+    {
+      "name": "web_scrape",
+      "description": "Extract content from web pages",
+      "category": "research",
+      "server": "cloudcurio-tools"
+    },
+    {
+      "name": "file_read",
+      "description": "Read content from files",
+      "category": "filesystem",
+      "server": "cloudcurio-tools"
+    },
+    {
+      "name": "file_write",
+      "description": "Write content to files",
+      "category": "filesystem",
+      "server": "cloudcurio-tools"
+    },
+    {
+      "name": "data_transform",
+      "description": "Transform and process data",
+      "category": "data",
+      "server": "cloudcurio-tools"
+    },
+    {
+      "name": "system_monitor",
+      "description": "Monitor system resources and health",
+      "category": "system",
+      "server": "cloudcurio-tools"
+    }
+  ],
+  
+  "agents": [
+    {
+      "name": "researcher",
+      "spec": "agents/specs/researcher.agent.yaml",
+      "description": "Research agent for web search and analysis",
+      "capabilities": ["web_search", "content_extraction", "synthesis"]
+    },
+    {
+      "name": "data_analyst",
+      "spec": "agents/specs/data_analyst.agent.yaml",
+      "description": "Data analysis and processing agent",
+      "capabilities": ["data_processing", "statistical_analysis"]
+    },
+    {
+      "name": "code_reviewer",
+      "spec": "agents/specs/code_reviewer.agent.yaml",
+      "description": "Code review and quality assurance agent",
+      "capabilities": ["code_analysis", "security_review", "best_practices"]
+    },
+    {
+      "name": "task_coordinator",
+      "spec": "agents/specs/task_coordinator.agent.yaml",
+      "description": "Multi-agent task coordination",
+      "capabilities": ["task_decomposition", "agent_delegation"]
+    }
+  ],
+  
+  "skills": [
+    {
+      "command": "/research",
+      "spec": "skills/research.skill.yaml",
+      "description": "Research a topic using web search and synthesis"
+    },
+    {
+      "command": "/analyze",
+      "spec": "skills/analyze_data.skill.yaml",
+      "description": "Analyze data from files or input"
+    },
+    {
+      "command": "/review",
+      "spec": "skills/code_review.skill.yaml",
+      "description": "Review code for quality and security"
+    },
+    {
+      "command": "/generate",
+      "spec": "skills/generate_content.skill.yaml",
+      "description": "Generate various types of content"
+    },
+    {
+      "command": "/monitor",
+      "spec": "skills/monitor_system.skill.yaml",
+      "description": "Monitor system health and resources"
+    }
+  ],
+  
+  "workflows": [
+    {
+      "name": "research_and_report",
+      "path": "workflows/library/research_and_report.workflow.yaml",
+      "description": "Sequential research and report generation"
+    },
+    {
+      "name": "parallel_data_processing",
+      "path": "workflows/library/parallel_data_processing.workflow.yaml",
+      "description": "Parallel data processing from multiple sources"
+    },
+    {
+      "name": "democratic_decision_making",
+      "path": "workflows/library/democratic_decision_making.workflow.yaml",
+      "description": "Democratic decision making with voting"
+    }
+  ],
+  
+  "settings": {
+    "auto_discover_skills": true,
+    "auto_discover_agents": true,
+    "default_model_provider": "ollama",
+    "default_model": "qwen2.5-coder",
+    "tool_timeout": 300,
+    "enable_caching": true
+  }
+}
