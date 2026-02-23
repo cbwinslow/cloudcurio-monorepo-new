@@ -1,7 +1,8 @@
 # CloudCurio Monorepo - AI Agent Task List
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Created:** 2026-02-13  
+**Updated:** 2026-02-23  
 **Purpose:** Comprehensive task list for AI agents to implement improvements and features  
 **Repository:** cloudcurio-monorepo-new
 
@@ -19,18 +20,350 @@ This document provides a structured, detailed task list that AI agents can follo
 
 ---
 
+## ✅ Completed Work (Phase 1 – Inventory & Search)
+
+**PR: "Remote Inventory Management System – Phase 1"**  
+**Status:** ✅ Merged
+
+### What was built
+
+| Component | File | Description |
+|-----------|------|-------------|
+| Inventory module | `src/cbw_foundry/inventory.py` | Scans all asset types (agents, tools, skills, workflows, MCP servers, scripts, templates), extracts metadata, supports search and persistence |
+| Search CLI | `src/cbw_foundry/search_cli.py` | `cbw-search` with `index`, `list`, `query`, `info`, `types`, `summary` subcommands |
+| Shell wrapper | `bin/cbw-search` | Bash wrapper delegating to the Python CLI |
+| Shell library | `shell/lib/inventory.sh` | Sourceable shell enhancement with fzf integration, colored output, and helper functions (`cbw-ls`, `cbw-find`, `cbw-show`, `cbw-pick`, `cbw-run-agent`, etc.) |
+| Rich index | `registry/index.json` | JSON index with full metadata for all 35+ assets |
+| Enhanced indexer | `src/cbw_foundry/index_cli.py` | Also produces `registry/index.json` alongside legacy YAML files |
+| Tests | `tests/python/test_inventory.py` | 26 passing unit + integration tests |
+
+### How to use it
+
+```bash
+# Source the shell library in your .bashrc / .zshrc:
+source "$CBW_MONO/shell/init/bash.sh"
+
+# Rebuild the index after adding new assets:
+cbw-rebuild-index          # or: cbw index
+
+# List all assets:
+cbw-ls                     # all types
+cbw-ls agent               # agents only
+
+# Search:
+cbw-find "transcription"
+cbw-find "web" skill
+
+# Interactive fuzzy picker (requires fzf):
+cbw-pick
+cbw-pick agent
+
+# Get details:
+cbw-show researcher
+
+# Run an agent by name:
+cbw-run-agent researcher --input "AI trends 2025" --runtime local
+
+# JSON output for scripting:
+cbw-search query "video" --format json | jq '.[].path'
+cbw-search list --type tool --format plain
+```
+
+---
+
 ## 🎯 Task Categories
 
-1. [Runtime Adapters](#runtime-adapters)
-2. [Agent Development](#agent-development)
-3. [Tool Development](#tool-development)
-4. [MCP Server Enhancements](#mcp-server-enhancements)
-5. [Testing & Quality](#testing--quality)
-6. [Documentation](#documentation)
-7. [Infrastructure & DevOps](#infrastructure--devops)
-8. [Performance & Optimization](#performance--optimization)
-9. [Security](#security)
-10. [User Experience](#user-experience)
+1. [Remote Management System – Phase 2](#remote-management-system--phase-2)
+2. [Runtime Adapters](#runtime-adapters)
+3. [Agent Development](#agent-development)
+4. [Tool Development](#tool-development)
+5. [MCP Server Enhancements](#mcp-server-enhancements)
+6. [Testing & Quality](#testing--quality)
+7. [Documentation](#documentation)
+8. [Infrastructure & DevOps](#infrastructure--devops)
+9. [Performance & Optimization](#performance--optimization)
+10. [Security](#security)
+
+---
+
+## Remote Management System – Phase 2
+
+> **Context:** Phase 1 built the inventory + search layer. Phase 2 adds the
+> download / install / run / update layer so users can manage assets remotely
+> with a single command.
+
+### TASK-RMS-002: Download & Install Assets from a Remote Registry
+**Priority:** P0 (Critical)  
+**Status:** ❌ Not Started  
+**Estimated Effort:** 4-6 days  
+**Depends on:** Phase 1 (completed)
+
+**Description:**  
+Build a `cbw install` / `cbw download` command that lets users pull individual
+assets (agents, tools, skills, scripts, MCP servers) from a remote source
+(GitHub release, raw URL, or a manifest file) into the local repo and
+automatically register them in the index.
+
+**Architecture Overview:**
+
+```
+Remote Source                 Local Repo
+─────────────────────         ──────────────────────────────────────
+GitHub Release          ──►   agents/specs/<name>.agent.yaml
+Raw YAML/JSON URL       ──►   skills/<name>.skill.yaml
+cbw-manifest.json       ──►   workflows/library/<name>.workflow.yaml
+tarball                 ──►   mcp-servers/<name>/
+```
+
+**Design:**
+
+1. **Remote Manifest** – A JSON file (hosted e.g. on GitHub Pages or a raw
+   GitHub URL) that lists all publishable assets with their download URLs:
+
+   ```json
+   // https://raw.githubusercontent.com/cbwinslow/cloudcurio-monorepo-new/main/registry/manifest.json
+   {
+     "version": "1.0.0",
+     "assets": [
+       {
+         "name": "researcher",
+         "type": "agent",
+         "version": "1.2.0",
+         "url": "https://raw.githubusercontent.com/cbwinslow/cloudcurio-monorepo-new/main/agents/specs/researcher.agent.yaml",
+         "sha256": "abc123...",
+         "description": "Research agent"
+       }
+     ]
+   }
+   ```
+
+2. **Python Module** – `src/cbw_foundry/installer.py`
+
+   ```python
+   class AssetInstaller:
+       def fetch_manifest(self, url: str) -> dict: ...
+       def list_remote(self, asset_type: str | None = None) -> list[dict]: ...
+       def download(self, name: str, dest: Path, verify_checksum: bool = True) -> Path: ...
+       def install(self, name: str) -> bool: ...
+       def update(self, name: str) -> bool: ...
+       def remove(self, name: str) -> bool: ...
+   ```
+
+3. **CLI extension** – Add subcommands to `cbw-search` or create `bin/cbw-install`:
+
+   ```bash
+   cbw-install list                    # List available remote assets
+   cbw-install search "transcription"  # Search remote assets
+   cbw-install get researcher          # Download + register researcher agent
+   cbw-install update researcher       # Pull latest version
+   cbw-install remove researcher       # Delete local copy + remove from index
+   cbw-install sync                    # Update all installed assets
+   ```
+
+4. **Shell functions** – Add to `shell/lib/inventory.sh`:
+
+   ```bash
+   cbw-install() { ... }   # install remote asset
+   cbw-update()  { ... }   # update one or all assets
+   cbw-remove()  { ... }   # remove a local asset
+   ```
+
+**Files to Create:**
+- `src/cbw_foundry/installer.py` – core installer module
+- `src/cbw_foundry/install_cli.py` – CLI entry point
+- `bin/cbw-install` – shell wrapper (copy pattern from `bin/cbw-search`)
+- `registry/manifest.json` – local copy / template of the remote manifest
+- `tests/python/test_installer.py` – unit tests with mocked HTTP calls
+
+**Files to Modify:**
+- `pyproject.toml` – add `cbw-install = "cbw_foundry.install_cli:main"` to scripts
+- `shell/init/bash.sh` – add `cbw-install()` wrapper function
+- `shell/lib/inventory.sh` – add install/update/remove shell functions
+- `src/cbw_foundry/cli.py` – add `"install": "cbw-install"` to mapping
+- `TASKS.md` – mark this task complete when done
+
+**Implementation Steps:**
+
+1. Create `registry/manifest.json` template (empty assets array, version 1.0.0).
+
+2. Write `src/cbw_foundry/installer.py`:
+   - Use `urllib.request` (stdlib only – no new deps) for HTTP GET.
+   - Validate SHA-256 checksums before writing.
+   - Write assets to the correct directory based on type:
+     - `agent` → `agents/specs/<name>.agent.yaml`
+     - `skill` → `skills/<name>.skill.yaml`
+     - `workflow` → `workflows/library/<name>.workflow.yaml`
+     - `tool` → `agents/tools/python/<name>.py`
+     - `mcp` → `mcp-servers/<name>/` (tarball extraction)
+     - `script` → `scripts/<name>.sh`
+   - After writing, call `Inventory.scan()` + `Inventory.save()` to update the index.
+
+3. Write `src/cbw_foundry/install_cli.py` with argparse subcommands.
+
+4. Create `bin/cbw-install` (chmod +x).
+
+5. Write tests using `unittest.mock.patch` to mock `urllib.request.urlopen`.
+
+6. Update shell library with `cbw-install`, `cbw-update`, `cbw-remove` functions.
+
+**Validation:**
+```bash
+# List remote assets (mocked)
+cbw-install list
+
+# Install an asset
+cbw-install get researcher
+
+# Verify it was indexed
+cbw-search info researcher
+
+# Update
+cbw-install update researcher
+
+# Remove
+cbw-install remove researcher
+```
+
+**Success Criteria:**
+- ✅ Can list remote assets from manifest
+- ✅ Can download and install an asset
+- ✅ Checksum verification works
+- ✅ Index updates automatically after install
+- ✅ All tests pass with mocked HTTP
+
+---
+
+### TASK-RMS-003: Shell Terminal Enhancement (Starship / fzf Style)
+**Priority:** P1 (High)  
+**Status:** ❌ Not Started  
+**Estimated Effort:** 2-3 days
+
+**Description:**  
+Enhance the shell environment with a richer prompt, keybindings, and tab
+completions so that the CloudCurio tools feel as polished as `fzf` + `starship`.
+
+**What to build:**
+
+1. **`shell/lib/completions.sh`** – Bash/Zsh tab completions for all `cbw-*` commands:
+   ```bash
+   # Completion: cbw-search query <TAB> → shows index items
+   # Completion: cbw-search list --type <TAB> → shows types
+   # Completion: cbw-run-agent <TAB> → shows agent names
+   ```
+
+2. **`shell/lib/keybindings.sh`** – Optional key bindings:
+   ```bash
+   # Ctrl+Alt+A → open cbw-pick agent in fzf
+   # Ctrl+Alt+S → open cbw-pick skill in fzf
+   # Ctrl+Alt+W → open cbw-pick workflow in fzf
+   ```
+
+3. **`shell/lib/prompt.sh`** – Optional prompt segment showing active CBW context:
+   ```bash
+   # Adds " 🤖 cbw" to PS1 when inside the repo dir
+   ```
+
+4. **`shell/init/bash.sh`** – Source the new libs.
+
+5. **`shell/init/zsh.sh`** – Zsh-specific completion setup.
+
+**Files to Create:**
+- `shell/lib/completions.sh`
+- `shell/lib/keybindings.sh`
+- `shell/lib/prompt.sh`
+
+**Files to Modify:**
+- `shell/init/bash.sh`
+- `shell/init/zsh.sh`
+
+---
+
+### TASK-RMS-004: Python API Server for Remote Management
+**Priority:** P1 (High)  
+**Status:** ❌ Not Started  
+**Estimated Effort:** 3-5 days
+
+**Description:**  
+Expose the inventory and installer as a lightweight HTTP API (FastAPI) so that
+external tools, CI pipelines, and remote machines can query and manage assets
+over HTTP without needing a shell.
+
+**Endpoints:**
+
+```
+GET  /api/v1/assets              List all assets
+GET  /api/v1/assets?type=agent   Filter by type
+GET  /api/v1/assets?q=research   Search
+GET  /api/v1/assets/{name}       Get single asset details
+POST /api/v1/assets/{name}/install  Install asset
+POST /api/v1/assets/index        Rebuild the index
+GET  /api/v1/health              Health check
+```
+
+**Files to Create:**
+- `src/cbw_foundry/api/__init__.py`
+- `src/cbw_foundry/api/server.py` – FastAPI app
+- `src/cbw_foundry/api/routes.py` – route handlers
+- `bin/cbw-serve` – shell wrapper to start the server
+- `tests/python/test_api_server.py` – tests using FastAPI TestClient
+- `docs/API.md` – API documentation
+
+**Files to Modify:**
+- `pyproject.toml` – add fastapi + uvicorn to optional deps; add `cbw-serve` script
+- `shell/init/bash.sh` – add `cbw-serve()` wrapper
+
+**Implementation:**
+```python
+# src/cbw_foundry/api/server.py
+from fastapi import FastAPI
+from cbw_foundry.inventory import Inventory
+
+app = FastAPI(title="CloudCurio Asset API", version="1.0.0")
+inv = Inventory()
+
+@app.get("/api/v1/assets")
+def list_assets(type: str | None = None, q: str | None = None):
+    if q:
+        return inv.search(q, item_type=type)
+    return inv.list_all(item_type=type)
+
+@app.get("/api/v1/assets/{name}")
+def get_asset(name: str):
+    item = inv.get(name)
+    if not item:
+        raise HTTPException(404, detail=f"Asset '{name}' not found")
+    return item
+
+@app.post("/api/v1/assets/index")
+def rebuild_index():
+    items = inv.scan()
+    inv.save()
+    return {"status": "ok", "total": len(items)}
+```
+
+---
+
+### TASK-RMS-005: MCP Server for Inventory Management
+**Priority:** P2 (Medium)  
+**Status:** ❌ Not Started  
+**Estimated Effort:** 2-3 days
+
+**Description:**  
+Create an MCP server that exposes the inventory as MCP tools so AI assistants
+(Claude, Copilot, etc.) can query and manage assets directly in conversation.
+
+**MCP Tools to expose:**
+- `list_assets(type?)` – list all or filtered assets
+- `search_assets(query, type?)` – search inventory
+- `get_asset(name)` – get details for an asset
+- `install_asset(name)` – install a remote asset
+- `rebuild_index()` – re-scan the repo
+
+**Files to Create:**
+- `mcp-servers/inventory/server.py` – MCP server implementation
+- `mcp-servers/inventory/requirements.txt`
+
+**Reference:** Look at `mcp-servers/automation/server.py` for implementation pattern.
 
 ---
 
@@ -177,12 +510,6 @@ Implement complete CrewAI runtime adapter to enable multi-agent collaboration wo
 **Description:**
 Implement complete PydanticAI runtime adapter for type-safe agent execution.
 
-**Reasoning:**
-- PydanticAI provides strong type safety
-- Excellent for structured data extraction
-- Natural fit with existing Pydantic usage
-- Better error handling with validation
-
 **Implementation Steps:**
 
 1. **Install PydanticAI**
@@ -211,90 +538,17 @@ Implement complete PydanticAI runtime adapter for type-safe agent execution.
 
 ### TASK-AD-001: Create Agent Discovery API
 **Priority:** P0 (Critical)  
-**Status:** ❌ Not Started  
-**Estimated Effort:** 3-4 days
+**Status:** 🔄 Partially Complete (inventory.py covers discovery; REST API layer still needed)  
+**Estimated Effort:** 1-2 days (REST layer only)
 
-**Description:**
-Implement an API for discovering available agents, their capabilities, and configurations.
+See `TASK-RMS-004` for the full API server implementation.
 
-**Reasoning:**
-- Enables programmatic agent selection
-- Supports dynamic agent loading
-- Facilitates agent marketplace/registry
-- Improves developer experience
+The `cbw_foundry.inventory.Inventory` class already provides:
+- `list_all(type?)` – list agents
+- `search(query, type?)` – search
+- `get(name)` – get single item
 
-**Implementation Steps:**
-
-1. **Design API Schema**
-   ```python
-   # src/cbw_foundry/agent_registry.py
-   class AgentRegistry:
-       def list_agents(self, filters: dict = None) -> list[AgentMetadata]:
-           """List all available agents with optional filters."""
-       
-       def get_agent(self, name: str) -> AgentSpec:
-           """Get specific agent by name."""
-       
-       def search_agents(self, query: str) -> list[AgentMetadata]:
-           """Search agents by capabilities or tags."""
-       
-       def get_agent_capabilities(self, name: str) -> list[str]:
-           """Get list of agent capabilities."""
-   ```
-
-2. **Implement Registry**
-   - Scan `agents/specs/` directory
-   - Parse agent metadata
-   - Build searchable index
-   - Cache results for performance
-
-3. **Add REST API**
-   ```python
-   # src/cbw_foundry/api/agent_api.py
-   from fastapi import FastAPI
-   
-   app = FastAPI()
-   
-   @app.get("/agents")
-   async def list_agents():
-       return registry.list_agents()
-   
-   @app.get("/agents/{name}")
-   async def get_agent(name: str):
-       return registry.get_agent(name)
-   ```
-
-4. **Add CLI Commands**
-   ```bash
-   ./bin/cbw-agent list                    # List all agents
-   ./bin/cbw-agent search "video editing"  # Search agents
-   ./bin/cbw-agent info transcription_agent # Get details
-   ```
-
-**Validation:**
-```bash
-# Test CLI
-./bin/cbw-agent list
-./bin/cbw-agent search "transcription"
-
-# Test API
-curl http://localhost:8000/agents
-curl http://localhost:8000/agents/transcription_agent
-```
-
-**Files to Create:**
-- `src/cbw_foundry/agent_registry.py`
-- `src/cbw_foundry/api/agent_api.py`
-- `tests/test_agent_registry.py`
-- `docs/AGENT_DISCOVERY.md`
-
-**Success Criteria:**
-- ✅ Can list all agents
-- ✅ Can search by capabilities
-- ✅ Can filter by tags
-- ✅ REST API functional
-- ✅ CLI commands work
-- ✅ Documentation complete
+**Remaining work:** wrap these in FastAPI routes (see TASK-RMS-004).
 
 ---
 
@@ -305,12 +559,6 @@ curl http://localhost:8000/agents/transcription_agent
 
 **Description:**
 Create a templating system for quickly scaffolding new agents based on common patterns.
-
-**Reasoning:**
-- Accelerates agent development
-- Ensures consistency across agents
-- Reduces boilerplate code
-- Teaches best practices
 
 **Implementation Steps:**
 
@@ -359,12 +607,6 @@ Create a templating system for quickly scaffolding new agents based on common pa
 **Description:**
 Create Dockerfile and docker-compose configurations for all MCP servers to enable containerized deployment.
 
-**Reasoning:**
-- Simplifies deployment
-- Ensures consistent environment
-- Enables scaling and orchestration
-- Improves portability
-
 **Implementation Steps:**
 
 1. **Create Dockerfiles**
@@ -391,10 +633,6 @@ Create Dockerfile and docker-compose configurations for all MCP servers to enabl
        build: ../../../mcp-servers/automation
        ports:
          - "8001:8000"
-       environment:
-         - MCP_HOST=0.0.0.0
-         - MCP_PORT=8000
-     
      media:
        build: ../../../mcp-servers/media
        ports:
@@ -402,11 +640,6 @@ Create Dockerfile and docker-compose configurations for all MCP servers to enabl
    ```
 
 3. **Add Health Checks**
-   ```python
-   @app.get("/health")
-   async def health_check():
-       return {"status": "healthy", "version": "1.0.0"}
-   ```
 
 **Files to Create:**
 - `mcp-servers/automation/Dockerfile`
@@ -415,22 +648,10 @@ Create Dockerfile and docker-compose configurations for all MCP servers to enabl
 - `docker/compose/mcp-servers/docker-compose.yml`
 - `docs/MCP_DEPLOYMENT.md`
 
-**Validation:**
-```bash
-# Build and run
-cd docker/compose/mcp-servers
-docker-compose up --build
-
-# Test health check
-curl http://localhost:8001/health
-curl http://localhost:8002/health
-```
-
 **Success Criteria:**
 - ✅ All MCP servers have Dockerfiles
 - ✅ docker-compose configuration works
 - ✅ Health checks functional
-- ✅ Documentation updated
 
 ---
 
@@ -442,15 +663,6 @@ curl http://localhost:8002/health
 **Current Coverage:** ~60%  
 **Target Coverage:** 80%+  
 **Estimated Effort:** 5-7 days
-
-**Description:**
-Increase test coverage to 80% across all modules with focus on critical paths.
-
-**Reasoning:**
-- Improves code reliability
-- Catches bugs early
-- Enables confident refactoring
-- Industry standard for production code
 
 **Implementation Steps:**
 
@@ -471,153 +683,24 @@ Increase test coverage to 80% across all modules with focus on critical paths.
    - Edge case testing
    - Error handling tests
 
-4. **Add Test Documentation**
-   ```python
-   def test_agent_execution():
-       """Test that agent executes successfully.
-       
-       This test verifies:
-       - Agent initialization
-       - Tool loading
-       - Input processing
-       - Output generation
-       """
-   ```
-
 **Validation:**
 ```bash
-# Run with coverage
 pytest --cov=cbw_foundry --cov-report=term --cov-fail-under=80
-
-# Should pass with 80%+ coverage
 ```
 
 **Success Criteria:**
 - ✅ 80%+ overall coverage
 - ✅ 100% coverage on security code
 - ✅ All critical paths tested
-- ✅ CI enforces coverage threshold
-
----
-
-### TASK-TQ-002: Create Performance Benchmark Suite
-**Priority:** P2 (Medium)  
-**Status:** ❌ Not Started  
-**Estimated Effort:** 3-4 days
-
-**Description:**
-Implement comprehensive performance benchmarks to track and prevent regressions.
-
-**Reasoning:**
-- Identifies performance bottlenecks
-- Prevents regressions
-- Guides optimization efforts
-- Provides baseline metrics
-
-**Implementation Steps:**
-
-1. **Create Benchmark Infrastructure**
-   ```python
-   # tests/benchmarks/conftest.py
-   import pytest
-   
-   @pytest.fixture
-   def benchmark_agent():
-       """Fixture for agent benchmarking."""
-       return create_test_agent()
-   ```
-
-2. **Write Benchmarks**
-   ```python
-   # tests/benchmarks/test_agent_performance.py
-   def test_agent_execution_time(benchmark, benchmark_agent):
-       """Benchmark agent execution time."""
-       result = benchmark(benchmark_agent.execute, task="test")
-       assert result['status'] == 'success'
-   
-   def test_tool_loading_time(benchmark):
-       """Benchmark tool loading performance."""
-       result = benchmark(load_all_tools)
-       assert len(result) > 0
-   ```
-
-3. **Add CI Integration**
-   ```yaml
-   # In .github/workflows/ci-enhanced.yml
-   - name: Run benchmarks
-     run: pytest tests/benchmarks --benchmark-only
-   ```
-
-**Success Criteria:**
-- ✅ Benchmark suite covers key operations
-- ✅ Runs in CI
-- ✅ Tracks performance over time
-- ✅ Alerts on regressions
 
 ---
 
 ## Documentation
 
-### TASK-DOC-001: Create Video Tutorial Series
-**Priority:** P2 (Medium)  
-**Status:** ❌ Not Started  
-**Estimated Effort:** 7-10 days
-
-**Description:**
-Create comprehensive video tutorial series covering key workflows.
-
-**Reasoning:**
-- Improves onboarding experience
-- Visual learning for complex topics
-- Increases adoption
-- Reduces support burden
-
-**Topics to Cover:**
-1. Getting Started (5 min)
-2. Creating Your First Agent (10 min)
-3. Tool Development (15 min)
-4. Multi-Agent Workflows (20 min)
-5. MCP Server Integration (15 min)
-6. Production Deployment (20 min)
-
-**Implementation Steps:**
-
-1. **Script Each Video**
-   - Write detailed scripts
-   - Include code examples
-   - Prepare demo environment
-
-2. **Record and Edit**
-   - Screen recording with narration
-   - Professional editing
-   - Add captions
-
-3. **Publish and Link**
-   - Upload to YouTube
-   - Add links to README.md
-   - Create playlist
-
-**Success Criteria:**
-- ✅ 6 videos published
-- ✅ Linked from documentation
-- ✅ Closed captions included
-- ✅ Positive user feedback
-
----
-
-### TASK-DOC-002: Generate API Documentation
+### TASK-DOC-001: Generate API Documentation
 **Priority:** P1 (High)  
 **Status:** ❌ Not Started  
 **Estimated Effort:** 2-3 days
-
-**Description:**
-Generate comprehensive API documentation from code docstrings.
-
-**Reasoning:**
-- Keeps docs in sync with code
-- Improves developer experience
-- Reduces documentation drift
-- Industry best practice
 
 **Implementation Steps:**
 
@@ -629,11 +712,7 @@ Generate comprehensive API documentation from code docstrings.
 2. **Configure Sphinx**
    ```python
    # docs/conf.py
-   extensions = [
-       'sphinx.ext.autodoc',
-       'sphinx.ext.napoleon',
-       'sphinx_autodoc_typehints',
-   ]
+   extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx_autodoc_typehints']
    ```
 
 3. **Generate Documentation**
@@ -641,19 +720,6 @@ Generate comprehensive API documentation from code docstrings.
    sphinx-apidoc -o docs/api src/cbw_foundry
    cd docs && make html
    ```
-
-4. **Deploy to GitHub Pages**
-   ```yaml
-   # .github/workflows/docs.yml
-   - name: Deploy to GitHub Pages
-     uses: peaceiris/actions-gh-pages@v3
-   ```
-
-**Success Criteria:**
-- ✅ API docs generated
-- ✅ Deployed to GitHub Pages
-- ✅ Auto-updates on changes
-- ✅ Search functionality works
 
 ---
 
@@ -664,85 +730,39 @@ Generate comprehensive API documentation from code docstrings.
 **Status:** ❌ Not Started  
 **Estimated Effort:** 2-3 days
 
-**Description:**
-Create PowerShell script for Windows users to setup environment.
-
-**Reasoning:**
-- Many developers use Windows
-- Current setup is Unix-only
-- Improves accessibility
-- Reduces setup friction
-
 **Implementation Steps:**
 
 1. **Create PowerShell Script**
    ```powershell
    # scripts/bootstrap.ps1
    Write-Host "CloudCurio Monorepo Bootstrap (Windows)"
-   
-   # Check Python
-   if (!(Get-Command python -ErrorAction SilentlyContinue)) {
-       Write-Error "Python not found. Please install Python 3.11+"
-       exit 1
-   }
-   
-   # Create venv
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1
-   
-   # Install dependencies
-   python -m pip install --upgrade pip
    pip install -e ".[dev]"
-   
-   # Install pre-commit
    pre-commit install
-   
-   Write-Host "Setup complete!"
    ```
-
-2. **Test on Windows**
-   - Test on Windows 10
-   - Test on Windows 11
-   - Test with different Python versions
-
-3. **Update Documentation**
-   - Add Windows instructions to INSTALL.md
-   - Include troubleshooting section
-
-**Success Criteria:**
-- ✅ Script works on Windows 10/11
-- ✅ Handles errors gracefully
-- ✅ Documentation updated
-- ✅ User feedback positive
 
 ---
 
 ## Summary
 
-This task list provides 15+ detailed tasks across 10 categories. Each task includes:
-- Complete implementation steps
-- Clear success criteria
-- Validation procedures
-- File locations
-- Priority levels
-
-AI agents should:
-1. Pick tasks matching their capabilities
-2. Follow implementation steps precisely
-3. Validate their work thoroughly
-4. Update documentation
-5. Run all tests before completion
-
-For questions or clarification on any task, refer to:
-- Project documentation in `docs/`
-- Code quality rules in `kb/rules/`
-- Existing implementations as examples
-- This task list for context
+| Task | Priority | Status |
+|------|----------|--------|
+| TASK-RMS-002: Download & Install Assets | P0 | ❌ Not Started |
+| TASK-RMS-003: Shell Terminal Enhancement | P1 | ❌ Not Started |
+| TASK-RMS-004: Python API Server | P1 | ❌ Not Started |
+| TASK-RMS-005: MCP Server for Inventory | P2 | ❌ Not Started |
+| TASK-RA-001: LangChain Runtime | P1 | 🔄 Stub |
+| TASK-RA-002: CrewAI Runtime | P1 | 🔄 Stub |
+| TASK-RA-003: PydanticAI Runtime | P1 | 🔄 Stub |
+| TASK-AD-002: Agent Templates | P2 | ❌ Not Started |
+| TASK-MCP-001: Docker for MCP | P1 | ❌ Not Started |
+| TASK-TQ-001: 80% Test Coverage | P1 | 🔄 In Progress |
+| TASK-DOC-001: API Documentation | P1 | ❌ Not Started |
+| TASK-INFRA-001: Windows Bootstrap | P2 | ❌ Not Started |
 
 ---
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Maintained by:** @cbwinslow  
-**Last Updated:** 2026-02-13
-
-*This task list is a living document. Add new tasks as they're identified and mark completed tasks with ✅.*
+**Last Updated:** 2026-02-23

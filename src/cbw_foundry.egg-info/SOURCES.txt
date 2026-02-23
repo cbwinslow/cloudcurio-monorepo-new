@@ -7,6 +7,8 @@ src/cbw_foundry/capture_cli.py
 src/cbw_foundry/cli.py
 src/cbw_foundry/doctor_cli.py
 src/cbw_foundry/index_cli.py
+src/cbw_foundry/inventory.py
+src/cbw_foundry/search_cli.py
 src/cbw_foundry/workflow_cli.py
 src/cbw_foundry.egg-info/PKG-INFO
 src/cbw_foundry.egg-info/SOURCES.txt
@@ -21,6 +23,8 @@ src/cbw_foundry/runtime/base.py
 src/cbw_foundry/runtime/local_runtime.py
 src/cbw_foundry/runtime/registry.py
 src/cbw_foundry/runtime/stubs.py
+src/cbw_foundry/skills/__init__.py
+src/cbw_foundry/skills/commands.py
 src/cbw_foundry/spec/compiler.py
 src/cbw_foundry/spec/io.py
 src/cbw_foundry/spec/models.py
