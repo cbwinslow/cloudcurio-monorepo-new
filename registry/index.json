@@ -1,0 +1,397 @@
+{
+  "version": "1.0.0",
+  "total": 35,
+  "items": [
+    {
+      "type": "agent",
+      "name": "code_reviewer",
+      "version": "1.0.0",
+      "description": "Code review agent that analyzes code quality and provides feedback",
+      "tags": [
+        "code",
+        "review",
+        "quality"
+      ],
+      "path": "agents/specs/code_reviewer.agent.yaml",
+      "icon": "🤖"
+    },
+    {
+      "type": "agent",
+      "name": "data_analyst",
+      "version": "1.0.0",
+      "description": "Data analysis agent that processes and analyzes structured data",
+      "tags": [
+        "data",
+        "analysis",
+        "statistics"
+      ],
+      "path": "agents/specs/data_analyst.agent.yaml",
+      "icon": "🤖"
+    },
+    {
+      "type": "agent",
+      "name": "hello_world",
+      "version": "0.4.0",
+      "description": "",
+      "tags": [
+        "example",
+        "dev"
+      ],
+      "path": "agents/specs/examples/hello_world.agent.yaml",
+      "icon": "🤖"
+    },
+    {
+      "type": "agent",
+      "name": "researcher",
+      "version": "1.0.0",
+      "description": "Research agent that searches web and synthesizes information",
+      "tags": [
+        "research",
+        "web",
+        "analysis"
+      ],
+      "path": "agents/specs/researcher.agent.yaml",
+      "icon": "🤖"
+    },
+    {
+      "type": "agent",
+      "name": "system_monitor",
+      "version": "1.0.0",
+      "description": "System monitoring agent that tracks resource usage and health",
+      "tags": [
+        "monitoring",
+        "system",
+        "health"
+      ],
+      "path": "agents/specs/system_monitor.agent.yaml",
+      "icon": "🤖"
+    },
+    {
+      "type": "agent",
+      "name": "task_coordinator",
+      "version": "1.0.0",
+      "description": "Coordinator agent that manages and delegates tasks to other agents",
+      "tags": [
+        "coordinator",
+        "orchestration",
+        "delegation"
+      ],
+      "path": "agents/specs/task_coordinator.agent.yaml",
+      "icon": "🤖"
+    },
+    {
+      "type": "skill",
+      "name": "analyze_data",
+      "version": "1.0.0",
+      "description": "Analyze data from files or input",
+      "tags": [
+        "data",
+        "analysis",
+        "statistics"
+      ],
+      "command": "/analyze",
+      "path": "skills/analyze_data.skill.yaml",
+      "icon": "⚡"
+    },
+    {
+      "type": "skill",
+      "name": "code_review",
+      "version": "1.0.0",
+      "description": "Review code for quality, security, and best practices",
+      "tags": [
+        "code",
+        "review",
+        "quality"
+      ],
+      "command": "/review",
+      "path": "skills/code_review.skill.yaml",
+      "icon": "⚡"
+    },
+    {
+      "type": "skill",
+      "name": "generate_content",
+      "version": "1.0.0",
+      "description": "Generate various types of content using AI",
+      "tags": [
+        "content",
+        "generation",
+        "writing"
+      ],
+      "command": "/generate",
+      "path": "skills/generate_content.skill.yaml",
+      "icon": "⚡"
+    },
+    {
+      "type": "skill",
+      "name": "monitor_system",
+      "version": "1.0.0",
+      "description": "Monitor system health and resources",
+      "tags": [
+        "system",
+        "monitoring",
+        "health"
+      ],
+      "command": "/monitor",
+      "path": "skills/monitor_system.skill.yaml",
+      "icon": "⚡"
+    },
+    {
+      "type": "skill",
+      "name": "research",
+      "version": "1.0.0",
+      "description": "Research a topic using web search and synthesis",
+      "tags": [
+        "research",
+        "web",
+        "analysis"
+      ],
+      "command": "/research",
+      "path": "skills/research.skill.yaml",
+      "icon": "⚡"
+    },
+    {
+      "type": "workflow",
+      "name": "bootstrap_machine",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [],
+      "path": "workflows/library/bootstrap_machine.workflow.yaml",
+      "icon": "🔄"
+    },
+    {
+      "type": "workflow",
+      "name": "democratic_decision_making",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [],
+      "path": "workflows/library/democratic_decision_making.workflow.yaml",
+      "icon": "🔄"
+    },
+    {
+      "type": "workflow",
+      "name": "parallel_data_processing",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [],
+      "path": "workflows/library/parallel_data_processing.workflow.yaml",
+      "icon": "🔄"
+    },
+    {
+      "type": "workflow",
+      "name": "research_and_report",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [],
+      "path": "workflows/library/research_and_report.workflow.yaml",
+      "icon": "🔄"
+    },
+    {
+      "type": "tool",
+      "name": "data_tools",
+      "version": "1.0.0",
+      "description": "Data Processing Tools.",
+      "tags": [],
+      "path": "agents/tools/data_tools.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "tool",
+      "name": "database_connector",
+      "version": "1.0.0",
+      "description": "Database Connector Tools - Generic database integration utilities.",
+      "tags": [],
+      "path": "agents/tools/database_connector.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "tool",
+      "name": "file_tools",
+      "version": "1.0.0",
+      "description": "File System Tools.",
+      "tags": [],
+      "path": "agents/tools/file_tools.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "tool",
+      "name": "llm_tools",
+      "version": "1.0.0",
+      "description": "LLM Integration Tools.",
+      "tags": [],
+      "path": "agents/tools/llm_tools.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "tool",
+      "name": "echo_tool",
+      "version": "1.0.0",
+      "description": "echo_tool.py",
+      "tags": [],
+      "path": "agents/tools/python/echo_tool.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "tool",
+      "name": "system_tools",
+      "version": "1.0.0",
+      "description": "System Monitoring and Management Tools.",
+      "tags": [],
+      "path": "agents/tools/system_tools.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "tool",
+      "name": "llm_api",
+      "version": "1.0.0",
+      "description": "Load environment variables from .env files in order of precedence",
+      "tags": [],
+      "path": "agents/tools/tool_starters/llm_api.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "tool",
+      "name": "screenshot_utils",
+      "version": "1.0.0",
+      "description": "Take a screenshot of a webpage using Playwright.",
+      "tags": [],
+      "path": "agents/tools/tool_starters/screenshot_utils.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "tool",
+      "name": "search_engine",
+      "version": "1.0.0",
+      "description": "Search using DuckDuckGo and return results with URLs and text snippets.",
+      "tags": [],
+      "path": "agents/tools/tool_starters/search_engine.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "tool",
+      "name": "web_scraper",
+      "version": "1.0.0",
+      "description": "Asynchronously fetch a webpage's content.",
+      "tags": [],
+      "path": "agents/tools/tool_starters/web_scraper.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "tool",
+      "name": "web_tools",
+      "version": "1.0.0",
+      "description": "Web Interaction Tools.",
+      "tags": [],
+      "path": "agents/tools/web_tools.py",
+      "icon": "🔧"
+    },
+    {
+      "type": "mcp",
+      "name": "automation",
+      "version": "1.0.0",
+      "description": "MCP Automation Server",
+      "tags": [
+        "mcp",
+        "server"
+      ],
+      "path": "mcp-servers/automation/server.py",
+      "icon": "🔌"
+    },
+    {
+      "type": "mcp",
+      "name": "content_optimizer",
+      "version": "1.0.0",
+      "description": "Cloudflare Worker for Content Optimization MCP Server",
+      "tags": [
+        "mcp",
+        "server"
+      ],
+      "path": "mcp-servers/content-optimizer/src/index.js",
+      "icon": "🔌"
+    },
+    {
+      "type": "mcp",
+      "name": "media",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [
+        "mcp",
+        "server"
+      ],
+      "path": "mcp-servers/media/server.py",
+      "icon": "🔌"
+    },
+    {
+      "type": "script",
+      "name": "bootstrap",
+      "version": "1.0.0",
+      "description": "",
+      "tags": [
+        "shell",
+        "script"
+      ],
+      "path": "scripts/bootstrap.sh",
+      "icon": "📜"
+    },
+    {
+      "type": "script",
+      "name": "install_integrations",
+      "version": "1.0.0",
+      "description": "Colors for output",
+      "tags": [
+        "shell",
+        "script"
+      ],
+      "path": "scripts/install_integrations.sh",
+      "icon": "📜"
+    },
+    {
+      "type": "script",
+      "name": "upgrade_existing_repo",
+      "version": "1.0.0",
+      "description": "upgrade_existing_repo.sh",
+      "tags": [
+        "shell",
+        "script"
+      ],
+      "path": "scripts/upgrade_existing_repo.sh",
+      "icon": "📜"
+    },
+    {
+      "type": "template",
+      "name": "AGENT_NAME",
+      "version": "1.0.0",
+      "description": "Brief description of what this agent does",
+      "tags": [
+        "category",
+        "type",
+        "domain"
+      ],
+      "path": "templates/agents/agent.template.yaml",
+      "icon": "📋"
+    },
+    {
+      "type": "template",
+      "name": "SKILL_NAME",
+      "version": "1.0.0",
+      "description": "Brief description of what this skill does",
+      "tags": [
+        "category",
+        "domain"
+      ],
+      "path": "templates/skills/skill.template.yaml",
+      "icon": "📋"
+    },
+    {
+      "type": "template",
+      "name": "WORKFLOW_NAME",
+      "version": "1.0.0",
+      "description": "Brief description of what this workflow does",
+      "tags": [
+        "category",
+        "type"
+      ],
+      "path": "templates/workflows/workflow.template.yaml",
+      "icon": "📋"
+    }
+  ]
+}

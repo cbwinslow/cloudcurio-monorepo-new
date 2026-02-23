@@ -21,7 +21,7 @@ def ensure_repo_root() -> None:
 
     if missing:
         print("ERROR: You are not in CloudCurio repo root.", file=sys.stderr)
-        print(f"Please cd to: ~/Documents/cloudcurio_monorepo", file=sys.stderr)
+        print("Please cd to: ~/Documents/cloudcurio_monorepo", file=sys.stderr)
         print(f"\nMissing paths: {', '.join(missing)}", file=sys.stderr)
         raise SystemExit(1)
 
@@ -38,6 +38,7 @@ def main() -> None:
         "doctor": "cbw-doctor",
         "workflow": "cbw-workflow",
         "capture": "cbw-capture",
+        "search": "cbw-search",
     }
 
     if ns.subcommand in ("help", "-h", "--help"):
@@ -45,6 +46,9 @@ def main() -> None:
         print("\nCommon:")
         print("  cbw doctor")
         print("  cbw index")
+        print("  cbw search index")
+        print("  cbw search query transcription")
+        print("  cbw search list --type agent")
         print("  cbw capture agent my_agent")
         print(
             "  cbw agent run agents/specs/examples/hello_world.agent.yaml --input hi --runtime local"
