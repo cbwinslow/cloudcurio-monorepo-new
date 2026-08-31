@@ -9,8 +9,7 @@ from pathlib import Path
 # Ensure src/ is on the path regardless of how pytest is invoked
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from cbw_foundry.inventory import Inventory, _slug, ITEM_TYPES
-
+from cbw_foundry.inventory import ITEM_TYPES, Inventory, _slug
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 
@@ -18,6 +17,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 # ---------------------------------------------------------------------------
 # Unit tests for helpers
 # ---------------------------------------------------------------------------
+
 
 class TestSlug:
     def test_agent_suffix_stripped(self) -> None:
@@ -46,6 +46,7 @@ class TestItemTypes:
 # ---------------------------------------------------------------------------
 # Integration tests against the real repo
 # ---------------------------------------------------------------------------
+
 
 class TestInventoryScan:
     """Test scanning against the actual repo layout."""

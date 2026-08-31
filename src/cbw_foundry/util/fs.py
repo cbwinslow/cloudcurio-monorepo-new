@@ -1,8 +1,9 @@
 from __future__ import annotations
-from pathlib import Path
-from typing import List
 
-def expand_paths(patterns: list[str]) -> List[Path]:
+from pathlib import Path
+
+
+def expand_paths(patterns: list[str]) -> list[Path]:
     out: list[Path] = []
     for pat in patterns:
         p = Path(pat)
@@ -19,8 +20,10 @@ def expand_paths(patterns: list[str]) -> List[Path]:
             uniq.append(p)
     return uniq
 
+
 def ensure_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
+
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")

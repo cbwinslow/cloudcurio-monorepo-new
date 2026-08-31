@@ -4,12 +4,12 @@ Coordinates multiple agents by managing their communication, state, and task dis
 Uses the MessageBus system for inter-agent messaging and maintains agent registry.
 """
 
-from typing import Dict, List, Any, Optional
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
-from cbw_foundry.swarm.communication import MessageBus, Message, MessageType
+from cbw_foundry.swarm.communication import Message, MessageBus, MessageType
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +20,9 @@ class AgentState:
 
     agent_id: str
     status: str  # idle, busy, error, offline
-    current_task: Optional[str] = None
+    current_task: str | None = None
     last_heartbeat: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class MultiAgentCoordinator:
@@ -31,11 +31,11 @@ class MultiAgentCoordinator:
     def __init__(self):
         """Initialize multi-agent coordinator."""
         self.message_bus = MessageBus()
-        self.agents: Dict[str, AgentState] = {}
-        self.task_queue: List[Dict[str, Any]] = []
+        self.agents: dict[str, AgentState] = {}
+        self.task_queue: list[dict[str, Any]] = []
         logger.info("Initialized MultiAgentCoordinator")
 
-    def register_agent(self, agent_id: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+    def register_agent(self, agent_id: str, metadata: dict[str, Any] | None = None) -> None:
         """Register an agent with the coordinator.
 
         Args:
@@ -59,7 +59,7 @@ class MultiAgentCoordinator:
             del self.agents[agent_id]
             logger.info(f"Unregistered agent '{agent_id}'")
 
-    def assign_task(self, agent_id: str, task: Dict[str, Any]) -> None:
+    def assign_task(self, agent_id: str, task: dict[str, Any]) -> None:
         """Assign task to specific agent.
 
         Args:
@@ -78,7 +78,7 @@ class MultiAgentCoordinator:
         self.agents[agent_id].current_task = task.get("task_id")
         logger.info(f"Assigned task to agent '{agent_id}'")
 
-    def broadcast_message(self, message_type: MessageType, content: Dict[str, Any]) -> None:
+    def broadcast_message(self, message_type: MessageType, content: dict[str, Any]) -> None:
         """Broadcast message to all agents.
 
         Args:
@@ -89,7 +89,7 @@ class MultiAgentCoordinator:
         self.message_bus.publish(message)
         logger.info(f"Broadcast message of type '{message_type}'")
 
-    def get_agent_status(self, agent_id: str) -> Optional[AgentState]:
+    def get_agent_status(self, agent_id: str) -> AgentState | None:
         """Get current agent status.
 
         Args:
@@ -100,7 +100,7 @@ class MultiAgentCoordinator:
         """
         return self.agents.get(agent_id)
 
-    def get_all_agents(self) -> Dict[str, AgentState]:
+    def get_all_agents(self) -> dict[str, AgentState]:
         """Get all registered agents and their states.
 
         Returns:
@@ -108,9 +108,7 @@ class MultiAgentCoordinator:
         """
         return self.agents.copy()
 
-    def update_agent_status(
-        self, agent_id: str, status: str, task_id: Optional[str] = None
-    ) -> None:
+    def update_agent_status(self, agent_id: str, status: str, task_id: str | None = None) -> None:
         """Update agent status.
 
         Args:
@@ -124,7 +122,7 @@ class MultiAgentCoordinator:
             self.agents[agent_id].last_heartbeat = datetime.utcnow().isoformat()
             logger.debug(f"Updated agent '{agent_id}' status to '{status}'")
 
-    def handle_task_complete(self, agent_id: str, result: Dict[str, Any]) -> None:
+    def handle_task_complete(self, agent_id: str, result: dict[str, Any]) -> None:
         """Handle task completion from agent.
 
         Args:
@@ -151,4 +149,4 @@ class MultiAgentCoordinator:
                     self.agents[msg.sender].last_heartbeat = datetime.utcnow().isoformat()
 
 
-__all__ = ["MultiAgentCoordinator", "AgentState"]
+__all__ = ["AgentState", "MultiAgentCoordinator"]

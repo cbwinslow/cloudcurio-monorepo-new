@@ -304,6 +304,7 @@ python3 examples/use_cases/data_analysis_automation.py data.csv
 ```python
 # In Cursor chat
 "Use cloudcurio to research AI trends"
+
 "Run /analyze on data.csv"
 ```
 
@@ -375,6 +376,6 @@ Built with modern AI agent patterns and best practices from leading AI companies
 
 ---
 
-**Version**: 0.4.0  
-**Last Updated**: 2026-02-13  
+**Version**: 0.4.0
+**Last Updated**: 2026-02-13
 **Status**: Production-Ready ✅

@@ -137,8 +137,7 @@ tools = client.list_tools()
 
 # Execute tool
 result = client.execute_tool(
-    tool_name="execute_command",
-    params={"command": "ls -la", "timeout": 10}
+    tool_name="execute_command", params={"command": "ls -la", "timeout": 10}
 )
 
 print(result)
@@ -232,10 +231,10 @@ server.tool({
 }, async (input) => {
   // Tool implementation
   const { param1, param2 } = input;
-  
+
   // Process
   const result = await processData(param1, param2);
-  
+
   return {
     success: true,
     data: result
@@ -286,7 +285,7 @@ const { McpClient } = require('@modelcontextprotocol/sdk');
 
 describe('Custom MCP Server', () => {
   let client;
-  
+
   before(async () => {
     client = new McpClient({
       command: 'node',
@@ -294,23 +293,23 @@ describe('Custom MCP Server', () => {
     });
     await client.connect();
   });
-  
+
   after(async () => {
     await client.disconnect();
   });
-  
+
   it('should list available tools', async () => {
     const tools = await client.listTools();
     assert(tools.length > 0);
     assert(tools.some(t => t.name === 'my_tool'));
   });
-  
+
   it('should execute tool', async () => {
     const result = await client.executeTool('my_tool', {
       param1: 'test',
       param2: 42
     });
-    
+
     assert.strictEqual(result.success, true);
     assert(result.data);
   });
@@ -332,10 +331,10 @@ server.tool({
     if (!input.param1) {
       throw new Error('param1 is required');
     }
-    
+
     // Execute
     const result = await processData(input);
-    
+
     return {
       success: true,
       data: result
@@ -395,7 +394,7 @@ server.tool({
   name: 'my_tool'
 }, async (input) => {
   logger.info('Tool called', { tool: 'my_tool', input });
-  
+
   try {
     const result = await processData(input);
     logger.info('Tool succeeded', { tool: 'my_tool', result });
@@ -438,15 +437,15 @@ server.tool({
     allowedTags: [],
     allowedAttributes: {}
   });
-  
+
   // Validate against whitelist
   const allowedCommands = ['ls', 'echo', 'cat'];
   const baseCommand = command.split(' ')[0];
-  
+
   if (!allowedCommands.includes(baseCommand)) {
     throw new Error('Command not allowed');
   }
-  
+
   // Execute safely
   const result = await executeCommand(command);
   return { success: true, data: result };
@@ -461,6 +460,6 @@ server.tool({
 
 ---
 
-**Last Updated:** 2026-01-24  
-**Version:** 1.0.0  
+**Last Updated:** 2026-01-24
+**Version:** 1.0.0
 **Maintained By:** @cbwinslow

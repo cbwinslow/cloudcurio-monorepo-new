@@ -14,9 +14,9 @@ Modification Log:
 """
 
 from __future__ import annotations
-from typing import Dict
 
-def echo_tool(text: str) -> Dict[str, str]:
+
+def echo_tool(text: str) -> dict[str, str]:
     if not isinstance(text, str):
         raise TypeError("text must be a string")
     return {"echo": text}

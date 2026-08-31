@@ -42,8 +42,7 @@ def _slug(path: str) -> str:
     stem = Path(path).stem
     # strip suffixes like .agent, .skill, .workflow
     for suffix in (".agent", ".skill", ".workflow", ".tool"):
-        if stem.endswith(suffix):
-            stem = stem[: -len(suffix)]
+        stem = stem.removesuffix(suffix)
     return stem.replace("-", "_")
 
 
@@ -104,6 +103,7 @@ def _extract_description_from_sh(path: Path) -> str:
 # ---------------------------------------------------------------------------
 # Scanners per asset type
 # ---------------------------------------------------------------------------
+
 
 def _scan_agents(root: Path) -> list[dict[str, Any]]:
     items = []
@@ -263,6 +263,7 @@ def _scan_templates(root: Path) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Main Inventory class
 # ---------------------------------------------------------------------------
+
 
 class Inventory:
     """Manage the CloudCurio asset inventory.
