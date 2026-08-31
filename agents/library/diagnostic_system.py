@@ -11,7 +11,7 @@ import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from agents.pydantic_ai_swarm_orchestrator import PydanticAISwarmOrchestrator
@@ -20,11 +20,12 @@ if TYPE_CHECKING:
 @dataclass
 class DiagnosticIssue:
     """Represents a diagnostic issue found in the swarm."""
+
     title: str
     description: str
     severity: str  # "critical", "high", "medium", "low", "info"
     category: str  # "performance", "health", "configuration", "agent", "task"
-    solutions: List[Dict[str, Any]] = None
+    solutions: list[dict[str, Any]] = None
     detected_at: datetime = None
     resolved: bool = False
 
@@ -49,9 +50,9 @@ class SwarmDiagnosticSystem:
 
         # Diagnostic state
         self.is_monitoring = False
-        self.issues: List[DiagnosticIssue] = []
+        self.issues: list[DiagnosticIssue] = []
         self.last_health_check = None
-        self.monitoring_task: Optional[asyncio.Task] = None
+        self.monitoring_task: asyncio.Task | None = None
 
         # Configuration
         self.health_check_interval = 30  # seconds
@@ -105,7 +106,7 @@ class SwarmDiagnosticSystem:
             self.logger.error(f"Failed to stop diagnostic monitoring: {e}")
             return False
 
-    async def run_diagnostics(self) -> List[DiagnosticIssue]:
+    async def run_diagnostics(self) -> list[DiagnosticIssue]:
         """
         Run comprehensive diagnostic checks and return current issues.
 
@@ -147,7 +148,7 @@ class SwarmDiagnosticSystem:
             self.logger.error(f"Diagnostic checks failed: {e}")
             return []
 
-    async def _check_agent_health(self) -> List[DiagnosticIssue]:
+    async def _check_agent_health(self) -> list[DiagnosticIssue]:
         """Check health of all registered agents."""
         issues = []
 
@@ -157,64 +158,72 @@ class SwarmDiagnosticSystem:
                 status = await agent.get_status_async()
 
                 # Check if agent is active
-                if not getattr(agent, 'is_active', True):
-                    issues.append(DiagnosticIssue(
-                        title=f"Agent {agent_name} is inactive",
-                        description=f"Agent {agent_name} is not responding or has stopped",
-                        severity="high",
-                        category="agent",
-                        solutions=[
-                            {
-                                "description": "Restart the agent",
-                                "automated": True,
-                                "action": "restart_agent",
-                                "target": agent_name
-                            }
-                        ]
-                    ))
+                if not getattr(agent, "is_active", True):
+                    issues.append(
+                        DiagnosticIssue(
+                            title=f"Agent {agent_name} is inactive",
+                            description=f"Agent {agent_name} is not responding or has stopped",
+                            severity="high",
+                            category="agent",
+                            solutions=[
+                                {
+                                    "description": "Restart the agent",
+                                    "automated": True,
+                                    "action": "restart_agent",
+                                    "target": agent_name,
+                                }
+                            ],
+                        )
+                    )
 
                 # Check confidence levels
                 confidence = status.get("confidence", {}).get("overall", 1.0)
                 if confidence < 0.3:
-                    issues.append(DiagnosticIssue(
-                        title=f"Low confidence for agent {agent_name}",
-                        description=f"Agent {agent_name} has low confidence score ({confidence:.2f})",
-                        severity="medium",
-                        category="agent",
-                        solutions=[
-                            {
-                                "description": "Review agent configuration and recent tasks",
-                                "automated": False
-                            }
-                        ]
-                    ))
+                    issues.append(
+                        DiagnosticIssue(
+                            title=f"Low confidence for agent {agent_name}",
+                            description=f"Agent {agent_name} has low confidence score ({confidence:.2f})",
+                            severity="medium",
+                            category="agent",
+                            solutions=[
+                                {
+                                    "description": "Review agent configuration and recent tasks",
+                                    "automated": False,
+                                }
+                            ],
+                        )
+                    )
 
             except Exception as e:
-                issues.append(DiagnosticIssue(
-                    title=f"Agent {agent_name} health check failed",
-                    description=f"Failed to get status for agent {agent_name}: {str(e)}",
-                    severity="high",
-                    category="agent"
-                ))
+                issues.append(
+                    DiagnosticIssue(
+                        title=f"Agent {agent_name} health check failed",
+                        description=f"Failed to get status for agent {agent_name}: {e!s}",
+                        severity="high",
+                        category="agent",
+                    )
+                )
 
         # Check agent count
         if len(self.swarm.agents) < 2:
-            issues.append(DiagnosticIssue(
-                title="Low agent count",
-                description=f"Swarm only has {len(self.swarm.agents)} agents - recommended minimum is 3",
-                severity="medium",
-                category="configuration",
-                solutions=[
-                    {
-                        "description": "Register additional specialized agents",
-                        "automated": False
-                    }
-                ]
-            ))
+            issues.append(
+                DiagnosticIssue(
+                    title="Low agent count",
+                    description=f"Swarm only has {len(self.swarm.agents)} agents - recommended minimum is 3",
+                    severity="medium",
+                    category="configuration",
+                    solutions=[
+                        {
+                            "description": "Register additional specialized agents",
+                            "automated": False,
+                        }
+                    ],
+                )
+            )
 
         return issues
 
-    async def _check_performance(self) -> List[DiagnosticIssue]:
+    async def _check_performance(self) -> list[DiagnosticIssue]:
         """Check swarm performance metrics."""
         issues = []
 
@@ -224,171 +233,178 @@ class SwarmDiagnosticSystem:
             success_rate = self.swarm.metrics["successful_tasks"] / total_tasks
             if success_rate < 0.7:
                 severity = "critical" if success_rate < 0.5 else "high"
-                issues.append(DiagnosticIssue(
-                    title="Low task success rate",
-                    description=".1f",
-                    severity=severity,
-                    category="performance",
-                    solutions=[
-                        {
-                            "description": "Review agent task assignments and error patterns",
-                            "automated": False
-                        },
-                        {
-                            "description": "Check agent configurations and capabilities",
-                            "automated": False
-                        }
-                    ]
-                ))
+                issues.append(
+                    DiagnosticIssue(
+                        title="Low task success rate",
+                        description=".1f",
+                        severity=severity,
+                        category="performance",
+                        solutions=[
+                            {
+                                "description": "Review agent task assignments and error patterns",
+                                "automated": False,
+                            },
+                            {
+                                "description": "Check agent configurations and capabilities",
+                                "automated": False,
+                            },
+                        ],
+                    )
+                )
 
         # Check average response time
         avg_time = self.swarm.metrics["average_execution_time"]
         if avg_time > 60:  # More than 1 minute
-            issues.append(DiagnosticIssue(
-                title="High average task execution time",
-                description=".1f",
-                severity="medium",
-                category="performance",
-                solutions=[
-                    {
-                        "description": "Optimize agent execution logic",
-                        "automated": False
-                    },
-                    {
-                        "description": "Review task complexity and agent assignments",
-                        "automated": False
-                    }
-                ]
-            ))
+            issues.append(
+                DiagnosticIssue(
+                    title="High average task execution time",
+                    description=".1f",
+                    severity="medium",
+                    category="performance",
+                    solutions=[
+                        {"description": "Optimize agent execution logic", "automated": False},
+                        {
+                            "description": "Review task complexity and agent assignments",
+                            "automated": False,
+                        },
+                    ],
+                )
+            )
 
         return issues
 
-    async def _check_configuration(self) -> List[DiagnosticIssue]:
+    async def _check_configuration(self) -> list[DiagnosticIssue]:
         """Check swarm configuration for issues."""
         issues = []
 
         # Check if efficiency enforcer is active
         if not self.swarm.efficiency_enforcer:
-            issues.append(DiagnosticIssue(
-                title="Efficiency enforcer not active",
-                description="Swarm efficiency rules are not being enforced",
-                severity="medium",
-                category="configuration",
-                solutions=[
-                    {
-                        "description": "Initialize efficiency enforcer",
-                        "automated": True,
-                        "action": "init_efficiency_enforcer"
-                    }
-                ]
-            ))
+            issues.append(
+                DiagnosticIssue(
+                    title="Efficiency enforcer not active",
+                    description="Swarm efficiency rules are not being enforced",
+                    severity="medium",
+                    category="configuration",
+                    solutions=[
+                        {
+                            "description": "Initialize efficiency enforcer",
+                            "automated": True,
+                            "action": "init_efficiency_enforcer",
+                        }
+                    ],
+                )
+            )
 
         # Check monitoring settings
         if not self.swarm.enable_monitoring:
-            issues.append(DiagnosticIssue(
-                title="Monitoring disabled",
-                description="Swarm performance monitoring is disabled",
-                severity="low",
-                category="configuration",
-                solutions=[
-                    {
-                        "description": "Enable monitoring for better observability",
-                        "automated": False
-                    }
-                ]
-            ))
+            issues.append(
+                DiagnosticIssue(
+                    title="Monitoring disabled",
+                    description="Swarm performance monitoring is disabled",
+                    severity="low",
+                    category="configuration",
+                    solutions=[
+                        {
+                            "description": "Enable monitoring for better observability",
+                            "automated": False,
+                        }
+                    ],
+                )
+            )
 
         return issues
 
-    async def _check_task_processing(self) -> List[DiagnosticIssue]:
+    async def _check_task_processing(self) -> list[DiagnosticIssue]:
         """Check task processing health."""
         issues = []
 
         # Check for stuck tasks (no recent completions)
-        last_completion_time = getattr(self.swarm, '_last_task_completion', time.time())
+        last_completion_time = getattr(self.swarm, "_last_task_completion", time.time())
         time_since_last_task = time.time() - last_completion_time
 
         if time_since_last_task > 300 and self.swarm.is_active:  # 5 minutes
-            issues.append(DiagnosticIssue(
-                title="No recent task completions",
-                description=".0f",
-                severity="medium",
-                category="task",
-                solutions=[
-                    {
-                        "description": "Check agent health and task assignments",
-                        "automated": False
-                    },
-                    {
-                        "description": "Review task queue and agent availability",
-                        "automated": True,
-                        "action": "check_task_queue"
-                    }
-                ]
-            ))
+            issues.append(
+                DiagnosticIssue(
+                    title="No recent task completions",
+                    description=".0f",
+                    severity="medium",
+                    category="task",
+                    solutions=[
+                        {
+                            "description": "Check agent health and task assignments",
+                            "automated": False,
+                        },
+                        {
+                            "description": "Review task queue and agent availability",
+                            "automated": True,
+                            "action": "check_task_queue",
+                        },
+                    ],
+                )
+            )
 
         # Check task queue size
         queue_size = self.swarm.task_queue.qsize()
         if queue_size > 10:
-            issues.append(DiagnosticIssue(
-                title="Large task queue",
-                description=f"Task queue has {queue_size} pending tasks",
-                severity="medium",
-                category="task",
-                solutions=[
-                    {
-                        "description": "Add more agents or optimize task processing",
-                        "automated": False
-                    }
-                ]
-            ))
+            issues.append(
+                DiagnosticIssue(
+                    title="Large task queue",
+                    description=f"Task queue has {queue_size} pending tasks",
+                    severity="medium",
+                    category="task",
+                    solutions=[
+                        {
+                            "description": "Add more agents or optimize task processing",
+                            "automated": False,
+                        }
+                    ],
+                )
+            )
 
         return issues
 
-    async def _check_resources(self) -> List[DiagnosticIssue]:
+    async def _check_resources(self) -> list[DiagnosticIssue]:
         """Check system resource usage."""
         issues = []
 
         # Check memory usage (if available)
         peak_memory = self.swarm.metrics.get("peak_memory_usage_mb", 0)
         if peak_memory > 500:  # Over 500MB
-            issues.append(DiagnosticIssue(
-                title="High memory usage",
-                description=f"Peak memory usage: {peak_memory} MB",
-                severity="low",
-                category="performance",
-                solutions=[
-                    {
-                        "description": "Monitor memory usage patterns",
-                        "automated": False
-                    },
-                    {
-                        "description": "Consider optimizing data structures",
-                        "automated": False
-                    }
-                ]
-            ))
+            issues.append(
+                DiagnosticIssue(
+                    title="High memory usage",
+                    description=f"Peak memory usage: {peak_memory} MB",
+                    severity="low",
+                    category="performance",
+                    solutions=[
+                        {"description": "Monitor memory usage patterns", "automated": False},
+                        {"description": "Consider optimizing data structures", "automated": False},
+                    ],
+                )
+            )
 
         # Check uptime
         if self.swarm.start_time:
             uptime_hours = (time.time() - self.swarm.start_time) / 3600
             if uptime_hours > 24:  # Over 24 hours
-                issues.append(DiagnosticIssue(
-                    title="Long uptime",
-                    description=".1f",
-                    severity="info",
-                    category="performance",
-                    solutions=[
-                        {
-                            "description": "Consider periodic restarts for maintenance",
-                            "automated": False
-                        }
-                    ]
-                ))
+                issues.append(
+                    DiagnosticIssue(
+                        title="Long uptime",
+                        description=".1f",
+                        severity="info",
+                        category="performance",
+                        solutions=[
+                            {
+                                "description": "Consider periodic restarts for maintenance",
+                                "automated": False,
+                            }
+                        ],
+                    )
+                )
 
         return issues
 
-    def _update_issues_list(self, new_issues: List[DiagnosticIssue]):
+    def _update_issues_list(self, new_issues: list[DiagnosticIssue]):
         """Update the issues list with new findings."""
         # Mark existing issues as resolved if not in new list
         existing_titles = {issue.title for issue in new_issues}
@@ -413,7 +429,8 @@ class SwarmDiagnosticSystem:
         # Clean up old resolved issues
         cutoff_time = datetime.now().timestamp() - (self.issue_retention_days * 24 * 60 * 60)
         self.issues = [
-            issue for issue in self.issues
+            issue
+            for issue in self.issues
             if not issue.resolved or issue.detected_at.timestamp() > cutoff_time
         ]
 
@@ -458,7 +475,7 @@ class SwarmDiagnosticSystem:
         except Exception as e:
             self.logger.error(f"Health check failed: {e}")
 
-    def get_diagnostic_summary(self) -> Dict[str, Any]:
+    def get_diagnostic_summary(self) -> dict[str, Any]:
         """Get a summary of diagnostic status."""
         active_issues = [i for i in self.issues if not i.resolved]
 
@@ -470,10 +487,10 @@ class SwarmDiagnosticSystem:
             "high_issues": len([i for i in active_issues if i.severity == "high"]),
             "last_health_check": self.last_health_check,
             "monitoring_active": self.is_monitoring,
-            "issues_by_category": self._issues_by_category(active_issues)
+            "issues_by_category": self._issues_by_category(active_issues),
         }
 
-    def _issues_by_category(self, issues: List[DiagnosticIssue]) -> Dict[str, int]:
+    def _issues_by_category(self, issues: list[DiagnosticIssue]) -> dict[str, int]:
         """Group issues by category."""
         categories = {}
         for issue in issues:
@@ -489,13 +506,10 @@ class SwarmDiagnosticSystem:
                 return True
         return False
 
-    def get_issues_by_severity(self, severity: str) -> List[DiagnosticIssue]:
+    def get_issues_by_severity(self, severity: str) -> list[DiagnosticIssue]:
         """Get all issues of a specific severity."""
-        return [
-            issue for issue in self.issues
-            if issue.severity == severity and not issue.resolved
-        ]
+        return [issue for issue in self.issues if issue.severity == severity and not issue.resolved]
 
-    def get_unresolved_issues(self) -> List[DiagnosticIssue]:
+    def get_unresolved_issues(self) -> list[DiagnosticIssue]:
         """Get all unresolved issues."""
         return [issue for issue in self.issues if not issue.resolved]

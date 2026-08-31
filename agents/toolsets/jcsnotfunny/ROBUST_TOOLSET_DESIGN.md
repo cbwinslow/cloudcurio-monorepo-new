@@ -112,7 +112,9 @@ def _validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
 ### Error Handling
 
 ```python
-def _apply_fallback_strategies(self, error: Exception, parameters: Dict[str, Any], execution_id: str) -> Optional[ToolResult]:
+def _apply_fallback_strategies(
+    self, error: Exception, parameters: Dict[str, Any], execution_id: str
+) -> Optional[ToolResult]:
     """Apply fallback strategies for failed execution."""
 
     # Strategy 1: Retry with exponential backoff
@@ -201,10 +203,12 @@ def _retry_with_backoff(self, parameters: Dict[str, Any], execution_id: str) -> 
     for attempt in range(max_attempts):
         try:
             result = self._execute_core(parameters, execution_id)
-            return self._create_success_result(result, execution_id, 0.9)  # Slightly reduced quality
+            return self._create_success_result(
+                result, execution_id, 0.9
+            )  # Slightly reduced quality
         except Exception as e:
             if attempt < max_attempts - 1:
-                delay = initial_delay * (backoff_factor ** attempt)
+                delay = initial_delay * (backoff_factor**attempt)
                 time.sleep(delay)
             else:
                 raise e
@@ -213,7 +217,9 @@ def _retry_with_backoff(self, parameters: Dict[str, Any], execution_id: str) -> 
 ### 2. Quality Reduction
 
 ```python
-def _execute_with_reduced_quality(self, parameters: Dict[str, Any], execution_id: str) -> ToolResult:
+def _execute_with_reduced_quality(
+    self, parameters: Dict[str, Any], execution_id: str
+) -> ToolResult:
     """Execute with reduced quality settings."""
 
     # Reduce resource-intensive parameters
@@ -247,13 +253,17 @@ def _process_in_segments(self, parameters: Dict[str, Any], execution_id: str) ->
     # Combine segment results
     combined_result = self._combine_segment_results(results)
 
-    return self._create_success_result(combined_result, execution_id, 0.8)  # Slightly reduced quality
+    return self._create_success_result(
+        combined_result, execution_id, 0.8
+    )  # Slightly reduced quality
 ```
 
 ### 4. Alternative Algorithms
 
 ```python
-def _execute_with_alternative_algorithm(self, parameters: Dict[str, Any], execution_id: str) -> ToolResult:
+def _execute_with_alternative_algorithm(
+    self, parameters: Dict[str, Any], execution_id: str
+) -> ToolResult:
     """Execute using alternative algorithm."""
 
     try:
@@ -287,10 +297,10 @@ def _monitor_execution(self, execution_id: str) -> Dict[str, Any]:
     memory_usage = end_memory - start_memory
 
     return {
-        'execution_time': execution_time,
-        'cpu_usage': cpu_usage,
-        'memory_usage': memory_usage,
-        'result': result
+        "execution_time": execution_time,
+        "cpu_usage": cpu_usage,
+        "memory_usage": memory_usage,
+        "result": result,
     }
 ```
 
@@ -302,7 +312,7 @@ def _check_resource_availability(self) -> None:
 
     cpu_percent = psutil.cpu_percent()
     memory_percent = psutil.virtual_memory().percent
-    disk_percent = psutil.disk_usage('/').percent
+    disk_percent = psutil.disk_usage("/").percent
 
     if cpu_percent > 80:
         raise ResourceError(f"CPU usage too high: {cpu_percent}%")
@@ -324,44 +334,44 @@ class VideoAnalysisTool(RobustTool):
 
     def _define_validation_schema(self) -> Dict[str, Any]:
         return {
-            'type': 'object',
-            'properties': {
-                'video_path': {'type': 'string', 'minLength': 1},
-                'analysis_type': {
-                    'type': 'string',
-                    'enum': ['speaker_detection', 'engagement', 'cut_points', 'full']
+            "type": "object",
+            "properties": {
+                "video_path": {"type": "string", "minLength": 1},
+                "analysis_type": {
+                    "type": "string",
+                    "enum": ["speaker_detection", "engagement", "cut_points", "full"],
                 },
-                'quality_level': {
-                    'type': 'string',
-                    'enum': ['low', 'medium', 'high'],
-                    'default': 'medium'
-                }
+                "quality_level": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high"],
+                    "default": "medium",
+                },
             },
-            'required': ['video_path']
+            "required": ["video_path"],
         }
 
     def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
         """Perform video analysis."""
 
-        video_path = parameters['video_path']
-        analysis_type = parameters.get('analysis_type', 'full')
-        quality_level = parameters.get('quality_level', 'medium')
+        video_path = parameters["video_path"]
+        analysis_type = parameters.get("analysis_type", "full")
+        quality_level = parameters.get("quality_level", "medium")
 
         # Load video file
         video = self._load_video_file(video_path)
 
         # Perform analysis based on type
-        if analysis_type == 'speaker_detection':
+        if analysis_type == "speaker_detection":
             result = self._detect_speakers(video, quality_level)
-        elif analysis_type == 'engagement':
+        elif analysis_type == "engagement":
             result = self._analyze_engagement(video, quality_level)
-        elif analysis_type == 'cut_points':
+        elif analysis_type == "cut_points":
             result = self._find_cut_points(video, quality_level)
         else:  # full analysis
             result = {
-                'speakers': self._detect_speakers(video, quality_level),
-                'engagement': self._analyze_engagement(video, quality_level),
-                'cut_points': self._find_cut_points(video, quality_level)
+                "speakers": self._detect_speakers(video, quality_level),
+                "engagement": self._analyze_engagement(video, quality_level),
+                "cut_points": self._find_cut_points(video, quality_level),
             }
 
         return result
@@ -373,18 +383,18 @@ class VideoAnalysisTool(RobustTool):
         quality_score = 1.0
 
         # Check if analysis contains expected fields
-        if 'speakers' in result:
-            if len(result['speakers']) == 0:
+        if "speakers" in result:
+            if len(result["speakers"]) == 0:
                 warnings.append("No speakers detected")
                 quality_score *= 0.7
 
-        if 'engagement' in result:
-            if result['engagement']['score'] < 0.3:
+        if "engagement" in result:
+            if result["engagement"]["score"] < 0.3:
                 warnings.append("Low engagement score")
                 quality_score *= 0.8
 
-        if 'cut_points' in result:
-            if len(result['cut_points']) < 3:
+        if "cut_points" in result:
+            if len(result["cut_points"]) < 3:
                 warnings.append("Few cut points detected")
                 quality_score *= 0.9
 
@@ -399,50 +409,54 @@ class AudioCleanupTool(RobustTool):
 
     def _define_validation_schema(self) -> Dict[str, Any]:
         return {
-            'type': 'object',
-            'properties': {
-                'audio_path': {'type': 'string', 'minLength': 1},
-                'output_path': {'type': 'string', 'minLength': 1},
-                'noise_reduction': {'type': 'boolean', 'default': True},
-                'de_ess': {'type': 'boolean', 'default': True},
-                'equalization': {'type': 'boolean', 'default': True},
-                'quality': {'type': 'string', 'enum': ['low', 'medium', 'high'], 'default': 'medium'}
+            "type": "object",
+            "properties": {
+                "audio_path": {"type": "string", "minLength": 1},
+                "output_path": {"type": "string", "minLength": 1},
+                "noise_reduction": {"type": "boolean", "default": True},
+                "de_ess": {"type": "boolean", "default": True},
+                "equalization": {"type": "boolean", "default": True},
+                "quality": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high"],
+                    "default": "medium",
+                },
             },
-            'required': ['audio_path', 'output_path']
+            "required": ["audio_path", "output_path"],
         }
 
     def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
         """Process audio file."""
 
-        audio_path = parameters['audio_path']
-        output_path = parameters['output_path']
-        quality = parameters.get('quality', 'medium')
+        audio_path = parameters["audio_path"]
+        output_path = parameters["output_path"]
+        quality = parameters.get("quality", "medium")
 
         # Load audio file
         audio = self._load_audio_file(audio_path)
 
         # Apply processing steps
-        if parameters.get('noise_reduction', True):
+        if parameters.get("noise_reduction", True):
             audio = self._apply_noise_reduction(audio, quality)
 
-        if parameters.get('de_ess', True):
+        if parameters.get("de_ess", True):
             audio = self._apply_de_essing(audio, quality)
 
-        if parameters.get('equalization', True):
+        if parameters.get("equalization", True):
             audio = self._apply_equalization(audio, quality)
 
         # Save processed audio
         self._save_audio_file(audio, output_path)
 
         return {
-            'input_path': audio_path,
-            'output_path': output_path,
-            'processing_steps': [
-                'noise_reduction' if parameters.get('noise_reduction', True) else None,
-                'de_essing' if parameters.get('de_ess', True) else None,
-                'equalization' if parameters.get('equalization', True) else None
+            "input_path": audio_path,
+            "output_path": output_path,
+            "processing_steps": [
+                "noise_reduction" if parameters.get("noise_reduction", True) else None,
+                "de_essing" if parameters.get("de_ess", True) else None,
+                "equalization" if parameters.get("equalization", True) else None,
             ],
-            'quality': quality
+            "quality": quality,
         }
 
     def _perform_quality_assurance(self, result: Any) -> tuple[float, List[str]]:
@@ -452,18 +466,18 @@ class AudioCleanupTool(RobustTool):
         quality_score = 1.0
 
         # Check if output file exists and is valid
-        if not os.path.exists(result['output_path']):
+        if not os.path.exists(result["output_path"]):
             warnings.append("Output file not created")
             quality_score = 0.0
         else:
             # Check file size (basic validation)
-            file_size = os.path.getsize(result['output_path'])
+            file_size = os.path.getsize(result["output_path"])
             if file_size == 0:
                 warnings.append("Output file is empty")
                 quality_score = 0.0
 
         # Check if processing steps were applied
-        applied_steps = [s for s in result['processing_steps'] if s is not None]
+        applied_steps = [s for s in result["processing_steps"] if s is not None]
         if len(applied_steps) == 0:
             warnings.append("No processing steps applied")
             quality_score *= 0.5
@@ -479,29 +493,32 @@ class ContentSchedulingTool(RobustTool):
 
     def _define_validation_schema(self) -> Dict[str, Any]:
         return {
-            'type': 'object',
-            'properties': {
-                'content': {'type': 'string', 'minLength': 1},
-                'platforms': {
-                    'type': 'array',
-                    'items': {'type': 'string', 'enum': ['twitter', 'instagram', 'tiktok', 'youtube', 'linkedin']},
-                    'minItems': 1
+            "type": "object",
+            "properties": {
+                "content": {"type": "string", "minLength": 1},
+                "platforms": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": ["twitter", "instagram", "tiktok", "youtube", "linkedin"],
+                    },
+                    "minItems": 1,
                 },
-                'schedule_time': {'type': 'string', 'format': 'date-time'},
-                'media_path': {'type': 'string'},
-                'dry_run': {'type': 'boolean', 'default': False}
+                "schedule_time": {"type": "string", "format": "date-time"},
+                "media_path": {"type": "string"},
+                "dry_run": {"type": "boolean", "default": False},
             },
-            'required': ['content', 'platforms']
+            "required": ["content", "platforms"],
         }
 
     def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
         """Schedule content across platforms."""
 
-        content = parameters['content']
-        platforms = parameters['platforms']
-        schedule_time = parameters.get('schedule_time')
-        media_path = parameters.get('media_path')
-        dry_run = parameters.get('dry_run', False)
+        content = parameters["content"]
+        platforms = parameters["platforms"]
+        schedule_time = parameters.get("schedule_time")
+        media_path = parameters.get("media_path")
+        dry_run = parameters.get("dry_run", False)
 
         results = {}
 
@@ -515,20 +532,19 @@ class ContentSchedulingTool(RobustTool):
 
                 if dry_run:
                     results[platform] = {
-                        'status': 'dry_run',
-                        'content': formatted_content,
-                        'would_schedule_at': schedule_time or datetime.now().isoformat()
+                        "status": "dry_run",
+                        "content": formatted_content,
+                        "would_schedule_at": schedule_time or datetime.now().isoformat(),
                     }
                 else:
                     # Schedule the post
-                    schedule_result = self._schedule_post(platform, formatted_content, media_path, schedule_time)
+                    schedule_result = self._schedule_post(
+                        platform, formatted_content, media_path, schedule_time
+                    )
                     results[platform] = schedule_result
 
             except Exception as e:
-                results[platform] = {
-                    'status': 'error',
-                    'error': str(e)
-                }
+                results[platform] = {"status": "error", "error": str(e)}
 
         return results
 
@@ -540,14 +556,18 @@ class ContentSchedulingTool(RobustTool):
 
         # Check if all platforms were processed
         total_platforms = len(result)
-        successful_platforms = sum(1 for p, r in result.items() if r.get('status') == 'success' or r.get('status') == 'dry_run')
+        successful_platforms = sum(
+            1
+            for p, r in result.items()
+            if r.get("status") == "success" or r.get("status") == "dry_run"
+        )
 
         if successful_platforms < total_platforms:
             warnings.append(f"Only {successful_platforms}/{total_platforms} platforms succeeded")
             quality_score = successful_platforms / total_platforms
 
         # Check for errors
-        error_platforms = [p for p, r in result.items() if r.get('status') == 'error']
+        error_platforms = [p for p, r in result.items() if r.get("status") == "error"]
         if error_platforms:
             warnings.append(f"Platforms with errors: {', '.join(error_platforms)}")
 
@@ -566,21 +586,21 @@ class VideoEditorAgent(BaseAgent):
         """Initialize video editing tools."""
 
         tools = {
-            'video_analysis': VideoAnalysisTool(
-                name='video_analysis',
-                description='Analyze video footage for speaker detection and engagement',
-                config={'retry_policy': {'max_attempts': 2}}
+            "video_analysis": VideoAnalysisTool(
+                name="video_analysis",
+                description="Analyze video footage for speaker detection and engagement",
+                config={"retry_policy": {"max_attempts": 2}},
             ),
-            'auto_cut': AutoCutTool(
-                name='auto_cut',
-                description='Automatically cut between camera angles',
-                config={'resource_limits': {'max_cpu_percent': 70}}
+            "auto_cut": AutoCutTool(
+                name="auto_cut",
+                description="Automatically cut between camera angles",
+                config={"resource_limits": {"max_cpu_percent": 70}},
             ),
-            'add_overlays': AddOverlaysTool(
-                name='add_overlays',
-                description='Add text overlays and branding elements',
-                config={'retry_policy': {'max_attempts': 3}}
-            )
+            "add_overlays": AddOverlaysTool(
+                name="add_overlays",
+                description="Add text overlays and branding elements",
+                config={"retry_policy": {"max_attempts": 3}},
+            ),
         }
 
         return tools
@@ -588,9 +608,9 @@ class VideoEditorAgent(BaseAgent):
     def execute_workflow(self, workflow_name: str, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Execute video editing workflow."""
 
-        if workflow_name == 'episode_edit':
+        if workflow_name == "episode_edit":
             return self._execute_episode_edit_workflow(inputs)
-        elif workflow_name == 'short_creation':
+        elif workflow_name == "short_creation":
             return self._execute_short_creation_workflow(inputs)
         else:
             raise ValueError(f"Unknown workflow: {workflow_name}")
@@ -601,42 +621,41 @@ class VideoEditorAgent(BaseAgent):
         results = {}
 
         # Step 1: Video analysis
-        analysis_result = self.execute_tool('video_analysis', {
-            'video_path': inputs['video_path'],
-            'analysis_type': 'full'
-        })
+        analysis_result = self.execute_tool(
+            "video_analysis", {"video_path": inputs["video_path"], "analysis_type": "full"}
+        )
 
         if not analysis_result.success:
-            return {'success': False, 'error': analysis_result.error}
+            return {"success": False, "error": analysis_result.error}
 
-        results['analysis'] = analysis_result.data
+        results["analysis"] = analysis_result.data
 
         # Step 2: Auto cutting
-        cut_result = self.execute_tool('auto_cut', {
-            'video_path': inputs['video_path'],
-            'cut_points': analysis_result.data['cut_points']
-        })
+        cut_result = self.execute_tool(
+            "auto_cut",
+            {"video_path": inputs["video_path"], "cut_points": analysis_result.data["cut_points"]},
+        )
 
         if not cut_result.success:
-            return {'success': False, 'error': cut_result.error}
+            return {"success": False, "error": cut_result.error}
 
-        results['cut_video'] = cut_result.data
+        results["cut_video"] = cut_result.data
 
         # Step 3: Add overlays
-        overlay_result = self.execute_tool('add_overlays', {
-            'video_path': cut_result.data['output_path'],
-            'overlays': inputs.get('overlays', [])
-        })
+        overlay_result = self.execute_tool(
+            "add_overlays",
+            {"video_path": cut_result.data["output_path"], "overlays": inputs.get("overlays", [])},
+        )
 
         if not overlay_result.success:
-            return {'success': False, 'error': overlay_result.error}
+            return {"success": False, "error": overlay_result.error}
 
-        results['final_video'] = overlay_result.data
+        results["final_video"] = overlay_result.data
 
         return {
-            'success': True,
-            'results': results,
-            'quality_score': self._calculate_workflow_quality(results)
+            "success": True,
+            "results": results,
+            "quality_score": self._calculate_workflow_quality(results),
         }
 ```
 
@@ -648,9 +667,9 @@ class ProductionWorkflowOrchestrator:
 
     def __init__(self):
         self.agents = {
-            'video_editor': VideoEditorAgent(),
-            'audio_engineer': AudioEngineerAgent(),
-            'social_media': SocialMediaManagerAgent()
+            "video_editor": VideoEditorAgent(),
+            "audio_engineer": AudioEngineerAgent(),
+            "social_media": SocialMediaManagerAgent(),
         }
 
     def execute_complete_production(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
@@ -659,47 +678,53 @@ class ProductionWorkflowOrchestrator:
         results = {}
 
         # Step 1: Video editing
-        video_result = self.agents['video_editor'].execute_workflow('episode_edit', {
-            'video_path': inputs['video_path'],
-            'overlays': inputs.get('overlays', [])
-        })
+        video_result = self.agents["video_editor"].execute_workflow(
+            "episode_edit",
+            {"video_path": inputs["video_path"], "overlays": inputs.get("overlays", [])},
+        )
 
-        if not video_result['success']:
-            return {'success': False, 'error': video_result['error']}
+        if not video_result["success"]:
+            return {"success": False, "error": video_result["error"]}
 
-        results['video'] = video_result
+        results["video"] = video_result
 
         # Step 2: Audio processing
-        audio_result = self.agents['audio_engineer'].execute_workflow('audio_mastering', {
-            'audio_path': inputs['audio_path'],
-            'video_cut_points': video_result['results']['analysis']['cut_points']
-        })
+        audio_result = self.agents["audio_engineer"].execute_workflow(
+            "audio_mastering",
+            {
+                "audio_path": inputs["audio_path"],
+                "video_cut_points": video_result["results"]["analysis"]["cut_points"],
+            },
+        )
 
-        if not audio_result['success']:
-            return {'success': False, 'error': audio_result['error']}
+        if not audio_result["success"]:
+            return {"success": False, "error": audio_result["error"]}
 
-        results['audio'] = audio_result
+        results["audio"] = audio_result
 
         # Step 3: Social media scheduling
-        social_result = self.agents['social_media'].execute_workflow('content_scheduling', {
-            'content': inputs['social_content'],
-            'platforms': inputs.get('platforms', ['twitter', 'instagram']),
-            'media_path': video_result['results']['final_video']['output_path']
-        })
+        social_result = self.agents["social_media"].execute_workflow(
+            "content_scheduling",
+            {
+                "content": inputs["social_content"],
+                "platforms": inputs.get("platforms", ["twitter", "instagram"]),
+                "media_path": video_result["results"]["final_video"]["output_path"],
+            },
+        )
 
-        if not social_result['success']:
-            return {'success': False, 'error': social_result['error']}
+        if not social_result["success"]:
+            return {"success": False, "error": social_result["error"]}
 
-        results['social'] = social_result
+        results["social"] = social_result
 
         # Calculate overall quality
         overall_quality = self._calculate_overall_quality(results)
 
         return {
-            'success': True,
-            'results': results,
-            'quality_score': overall_quality,
-            'status': 'Production complete'
+            "success": True,
+            "results": results,
+            "quality_score": overall_quality,
+            "status": "Production complete",
         }
 ```
 

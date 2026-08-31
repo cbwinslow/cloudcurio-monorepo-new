@@ -136,7 +136,9 @@ class InputValidator:
         # Check required parameters
         missing_params = self._check_required_params(input_data)
         if missing_params:
-            return ValidationResult(False, f"Missing required parameters: {', '.join(missing_params)}")
+            return ValidationResult(
+                False, f"Missing required parameters: {', '.join(missing_params)}"
+            )
 
         # Check parameter types
         type_errors = self._check_param_types(input_data)
@@ -151,7 +153,9 @@ class InputValidator:
         # Check parameter relationships
         relation_errors = self._check_param_relationships(input_data)
         if relation_errors:
-            return ValidationResult(False, f"Parameter relationship errors: {', '.join(relation_errors)}")
+            return ValidationResult(
+                False, f"Parameter relationship errors: {', '.join(relation_errors)}"
+            )
 
         return ValidationResult(True, "Input validation successful")
 
@@ -165,7 +169,9 @@ class InputValidator:
 
         for param, param_type in self.param_types.items():
             if param in input_data and not isinstance(input_data[param], param_type):
-                errors.append(f"{param} must be {param_type.__name__}, got {type(input_data[param]).__name__}")
+                errors.append(
+                    f"{param} must be {param_type.__name__}, got {type(input_data[param]).__name__}"
+                )
 
         return errors
 
@@ -253,7 +259,9 @@ class ComprehensiveErrorHandler:
 
         return ErrorHandlingResult(False, "All fallback strategies exhausted")
 
-    def _create_comprehensive_error_response(self, error: Exception, context: dict) -> ErrorHandlingResult:
+    def _create_comprehensive_error_response(
+        self, error: Exception, context: dict
+    ) -> ErrorHandlingResult:
         """Create comprehensive error response"""
 
         error_details = {
@@ -263,7 +271,7 @@ class ComprehensiveErrorHandler:
             "timestamp": datetime.now().isoformat(),
             "suggestions": self._get_error_suggestions(error),
             "documentation": self._get_relevant_documentation(error),
-            "support": self._get_support_information()
+            "support": self._get_support_information(),
         }
 
         return ErrorHandlingResult(False, "Error handling complete", error_details)
@@ -276,32 +284,38 @@ class ComprehensiveErrorHandler:
             "Review input parameters and data",
             "Verify system resource availability",
             "Consult tool documentation",
-            "Contact support if issue persists"
+            "Contact support if issue persists",
         ]
 
         # Add error-specific suggestions
         error_type = type(error).__name__
 
         if error_type == "FileNotFoundError":
-            suggestions.extend([
-                "Verify file paths are correct",
-                "Check file permissions",
-                "Ensure files exist at specified locations"
-            ])
+            suggestions.extend(
+                [
+                    "Verify file paths are correct",
+                    "Check file permissions",
+                    "Ensure files exist at specified locations",
+                ]
+            )
         elif error_type == "TimeoutError":
-            suggestions.extend([
-                "Reduce input complexity or size",
-                "Increase timeout settings",
-                "Check system resource availability",
-                "Process in smaller batches"
-            ])
+            suggestions.extend(
+                [
+                    "Reduce input complexity or size",
+                    "Increase timeout settings",
+                    "Check system resource availability",
+                    "Process in smaller batches",
+                ]
+            )
         elif error_type == "MemoryError":
-            suggestions.extend([
-                "Reduce input size",
-                "Increase available memory",
-                "Use lower quality settings",
-                "Process in smaller segments"
-            ])
+            suggestions.extend(
+                [
+                    "Reduce input size",
+                    "Increase available memory",
+                    "Use lower quality settings",
+                    "Process in smaller segments",
+                ]
+            )
 
         return suggestions
 ```
@@ -333,10 +347,7 @@ class QualityAssessmentFramework:
 
         # Calculate overall score
         overall_score = self._calculate_overall_score(
-            completeness_score,
-            accuracy_score,
-            consistency_score,
-            performance_score
+            completeness_score, accuracy_score, consistency_score, performance_score
         )
 
         # Determine quality level
@@ -349,7 +360,7 @@ class QualityAssessmentFramework:
             performance_score,
             overall_score,
             quality_level,
-            self._get_quality_suggestions(quality_level)
+            self._get_quality_suggestions(quality_level),
         )
 
     def _calculate_completeness_score(self, result: dict, criteria: dict) -> float:
@@ -381,23 +392,19 @@ class QualityAssessmentFramework:
         # For now, return a reasonable default
         return criteria.get("default_performance", 0.9)
 
-    def _calculate_overall_score(self, completeness: float, accuracy: float,
-                                consistency: float, performance: float) -> float:
+    def _calculate_overall_score(
+        self, completeness: float, accuracy: float, consistency: float, performance: float
+    ) -> float:
         """Calculate overall quality score"""
 
         # Weighted average
-        weights = {
-            "completeness": 0.3,
-            "accuracy": 0.4,
-            "consistency": 0.2,
-            "performance": 0.1
-        }
+        weights = {"completeness": 0.3, "accuracy": 0.4, "consistency": 0.2, "performance": 0.1}
 
         return (
-            completeness * weights["completeness"] +
-            accuracy * weights["accuracy"] +
-            consistency * weights["consistency"] +
-            performance * weights["performance"]
+            completeness * weights["completeness"]
+            + accuracy * weights["accuracy"]
+            + consistency * weights["consistency"]
+            + performance * weights["performance"]
         )
 
     def _determine_quality_level(self, score: float) -> str:
@@ -458,10 +465,7 @@ class FallbackStrategyFramework:
 
                 if result.success:
                     return FallbackResult(
-                        True,
-                        result.data,
-                        attempted_strategies + [strategy.name],
-                        suggestions
+                        True, result.data, attempted_strategies + [strategy.name], suggestions
                     )
                 else:
                     attempted_strategies.append(strategy.name)
@@ -471,12 +475,7 @@ class FallbackStrategyFramework:
                 attempted_strategies.append(strategy.name)
                 suggestions.append(f"Fallback strategy {strategy.name} failed: {str(e)}")
 
-        return FallbackResult(
-            False,
-            None,
-            attempted_strategies,
-            suggestions
-        )
+        return FallbackResult(False, None, attempted_strategies, suggestions)
 
     def _load_strategies(self) -> list:
         """Load appropriate fallback strategies"""
@@ -486,7 +485,7 @@ class FallbackStrategyFramework:
             RetryStrategy(),
             ReduceQualityStrategy(),
             SegmentProcessingStrategy(),
-            AlternativeAlgorithmStrategy()
+            AlternativeAlgorithmStrategy(),
         ]
 
         # Tool-specific strategies
@@ -498,20 +497,11 @@ class FallbackStrategyFramework:
         """Load tool-specific fallback strategies"""
 
         if self.tool_name == "video_analysis":
-            return [
-                VideoAnalysisFallbackStrategy(),
-                FrameSamplingStrategy()
-            ]
+            return [VideoAnalysisFallbackStrategy(), FrameSamplingStrategy()]
         elif self.tool_name == "audio_cleanup":
-            return [
-                AudioCleanupFallbackStrategy(),
-                NoiseReductionOnlyStrategy()
-            ]
+            return [AudioCleanupFallbackStrategy(), NoiseReductionOnlyStrategy()]
         elif self.tool_name == "content_scheduling":
-            return [
-                ContentSchedulingFallbackStrategy(),
-                QueueForReviewStrategy()
-            ]
+            return [ContentSchedulingFallbackStrategy(), QueueForReviewStrategy()]
         else:
             return []
 ```
@@ -536,13 +526,13 @@ class VideoAnalysisTool(BaseTool):
             "analysis_type": str,
             "output_format": str,
             "quality": str,
-            "min_confidence": float
+            "min_confidence": float,
         }
         param_validators = {
             "analysis_type": EnumValidator(["speaker", "engagement", "cuts", "full"]),
             "output_format": EnumValidator(["json", "xml", "csv"]),
             "quality": EnumValidator(["low", "medium", "high"]),
-            "min_confidence": RangeValidator(0.0, 1.0)
+            "min_confidence": RangeValidator(0.0, 1.0),
         }
 
         # Initialize base tool
@@ -552,15 +542,11 @@ class VideoAnalysisTool(BaseTool):
             config=config,
             required_params=required_params,
             param_types=param_types,
-            param_validators=param_validators
+            param_validators=param_validators,
         )
 
         # Set default values
-        self.defaults = {
-            "output_format": "json",
-            "quality": "medium",
-            "min_confidence": 0.8
-        }
+        self.defaults = {"output_format": "json", "quality": "medium", "min_confidence": 0.8}
 
     def _execute_main_logic(self, input_data: dict) -> dict:
         """Execute video analysis with comprehensive processing"""
@@ -590,7 +576,7 @@ class VideoAnalysisTool(BaseTool):
             "results": formatted_result,
             "quality": input_data["quality"],
             "confidence": result.get("confidence", 0.9),
-            "processing_time": result.get("processing_time", 0)
+            "processing_time": result.get("processing_time", 0),
         }
 
     def _analyze_speakers(self, video: Video, input_data: dict) -> dict:
@@ -598,31 +584,28 @@ class VideoAnalysisTool(BaseTool):
 
         # Use speaker detection algorithm
         speakers = video.detect_speakers(
-            min_confidence=input_data["min_confidence"],
-            quality=input_data["quality"]
+            min_confidence=input_data["min_confidence"], quality=input_data["quality"]
         )
 
         return {
             "speakers": speakers,
             "confidence": speakers.get("confidence", 0.9),
             "processing_time": speakers.get("processing_time", 0),
-            "analysis_type": "speaker"
+            "analysis_type": "speaker",
         }
 
     def _analyze_engagement(self, video: Video, input_data: dict) -> dict:
         """Analyze video for engagement metrics"""
 
         # Calculate engagement metrics
-        engagement = video.calculate_engagement(
-            quality=input_data["quality"]
-        )
+        engagement = video.calculate_engagement(quality=input_data["quality"])
 
         return {
             "engagement_score": engagement.get("score", 0.7),
             "engagement_metrics": engagement.get("metrics", {}),
             "confidence": engagement.get("confidence", 0.85),
             "processing_time": engagement.get("processing_time", 0),
-            "analysis_type": "engagement"
+            "analysis_type": "engagement",
         }
 
     def _analyze_cut_points(self, video: Video, input_data: dict) -> dict:
@@ -630,15 +613,14 @@ class VideoAnalysisTool(BaseTool):
 
         # Identify cut points
         cut_points = video.identify_cut_points(
-            quality=input_data["quality"],
-            min_confidence=input_data["min_confidence"]
+            quality=input_data["quality"], min_confidence=input_data["min_confidence"]
         )
 
         return {
             "cut_points": cut_points.get("points", []),
             "confidence": cut_points.get("confidence", 0.8),
             "processing_time": cut_points.get("processing_time", 0),
-            "analysis_type": "cuts"
+            "analysis_type": "cuts",
         }
 
     def _analyze_full(self, video: Video, input_data: dict) -> dict:
@@ -655,16 +637,16 @@ class VideoAnalysisTool(BaseTool):
             "engagement_metrics": engagement["engagement_metrics"],
             "cut_points": cut_points["cut_points"],
             "confidence": min(
-                speakers["confidence"],
-                engagement["confidence"],
-                cut_points["confidence"]
+                speakers["confidence"], engagement["confidence"], cut_points["confidence"]
             ),
-            "processing_time": sum([
-                speakers["processing_time"],
-                engagement["processing_time"],
-                cut_points["processing_time"]
-            ]),
-            "analysis_type": "full"
+            "processing_time": sum(
+                [
+                    speakers["processing_time"],
+                    engagement["processing_time"],
+                    cut_points["processing_time"],
+                ]
+            ),
+            "analysis_type": "full",
         }
 
     def _format_results(self, result: dict, output_format: str) -> dict:
@@ -720,13 +702,13 @@ class AudioCleanupTool(BaseTool):
             "noise_reduction": float,
             "de_essing": float,
             "equalization": str,
-            "quality": str
+            "quality": str,
         }
         param_validators = {
             "noise_reduction": RangeValidator(0.0, 1.0),
             "de_essing": RangeValidator(0.0, 1.0),
             "equalization": EnumValidator(["flat", "podcast", "music", "voice"]),
-            "quality": EnumValidator(["low", "medium", "high"])
+            "quality": EnumValidator(["low", "medium", "high"]),
         }
 
         # Initialize base tool
@@ -736,7 +718,7 @@ class AudioCleanupTool(BaseTool):
             config=config,
             required_params=required_params,
             param_types=param_types,
-            param_validators=param_validators
+            param_validators=param_validators,
         )
 
         # Set default values
@@ -745,7 +727,7 @@ class AudioCleanupTool(BaseTool):
             "noise_reduction": 0.8,
             "de_essing": 0.6,
             "equalization": "podcast",
-            "quality": "medium"
+            "quality": "medium",
         }
 
     def _execute_main_logic(self, input_data: dict) -> dict:
@@ -776,7 +758,7 @@ class AudioCleanupTool(BaseTool):
             "quality": input_data["quality"],
             "processing_time": cleanup_result["processing_time"],
             "original_duration": cleanup_result["original_duration"],
-            "cleaned_duration": cleanup_result["cleaned_duration"]
+            "cleaned_duration": cleanup_result["cleaned_duration"],
         }
 
     def _clean_audio(self, audio: Audio, input_data: dict) -> dict:
@@ -786,20 +768,17 @@ class AudioCleanupTool(BaseTool):
 
         # Apply noise reduction
         noise_reduced = audio.reduce_noise(
-            level=input_data["noise_reduction"],
-            quality=input_data["quality"]
+            level=input_data["noise_reduction"], quality=input_data["quality"]
         )
 
         # Apply de-essing
         de_essed = noise_reduced.de_ess(
-            level=input_data["de_essing"],
-            quality=input_data["quality"]
+            level=input_data["de_essing"], quality=input_data["quality"]
         )
 
         # Apply equalization
         equalized = de_essed.equalize(
-            preset=input_data["equalization"],
-            quality=input_data["quality"]
+            preset=input_data["equalization"], quality=input_data["quality"]
         )
 
         # Calculate quality scores
@@ -814,7 +793,7 @@ class AudioCleanupTool(BaseTool):
             "de_essing_score": de_essing_score,
             "processing_time": processing_time,
             "original_duration": audio.duration,
-            "cleaned_duration": equalized.duration
+            "cleaned_duration": equalized.duration,
         }
 
     def _apply_defaults(self, input_data: dict) -> dict:
@@ -893,12 +872,12 @@ class ContentSchedulingTool(BaseTool):
             "schedule_time": str,
             "media_path": str,
             "tags": list,
-            "dry_run": bool
+            "dry_run": bool,
         }
         param_validators = {
             "platforms": ListValidator(["twitter", "instagram", "tiktok", "youtube", "linkedin"]),
             "schedule_time": DateTimeValidator(),
-            "tags": ListValidator(str, max_length=10)
+            "tags": ListValidator(str, max_length=10),
         }
 
         # Initialize base tool
@@ -908,16 +887,11 @@ class ContentSchedulingTool(BaseTool):
             config=config,
             required_params=required_params,
             param_types=param_types,
-            param_validators=param_validators
+            param_validators=param_validators,
         )
 
         # Set default values
-        self.defaults = {
-            "schedule_time": None,
-            "media_path": None,
-            "tags": [],
-            "dry_run": False
-        }
+        self.defaults = {"schedule_time": None, "media_path": None, "tags": [], "dry_run": False}
 
         # Initialize platform clients
         self.platform_clients = self._initialize_platform_clients()
@@ -930,7 +904,7 @@ class ContentSchedulingTool(BaseTool):
             "instagram": InstagramClient(self.config.get("instagram_api_key")),
             "tiktok": TikTokClient(self.config.get("tiktok_api_key")),
             "youtube": YouTubeClient(self.config.get("youtube_api_key")),
-            "linkedin": LinkedInClient(self.config.get("linkedin_api_key"))
+            "linkedin": LinkedInClient(self.config.get("linkedin_api_key")),
         }
 
     def _execute_main_logic(self, input_data: dict) -> dict:
@@ -950,20 +924,14 @@ class ContentSchedulingTool(BaseTool):
             try:
                 # Prepare platform-specific content
                 platform_content = self._prepare_platform_content(
-                    input_data["content"],
-                    platform,
-                    input_data
+                    input_data["content"], platform, input_data
                 )
 
                 # Schedule content
                 if input_data["dry_run"]:
                     result = self._create_dry_run_result(platform, platform_content, input_data)
                 else:
-                    result = self._schedule_content(
-                        platform,
-                        platform_content,
-                        input_data
-                    )
+                    result = self._schedule_content(platform, platform_content, input_data)
 
                 platform_results[platform] = result
 
@@ -977,7 +945,7 @@ class ContentSchedulingTool(BaseTool):
             "schedule_time": input_data["schedule_time"],
             "results": platform_results,
             "dry_run": input_data["dry_run"],
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _prepare_platform_content(self, content: str, platform: str, input_data: dict) -> dict:
@@ -1007,7 +975,7 @@ class ContentSchedulingTool(BaseTool):
                 content["content"],
                 content.get("media"),
                 input_data["schedule_time"],
-                content.get("tags", [])
+                content.get("tags", []),
             )
 
             return {
@@ -1015,7 +983,7 @@ class ContentSchedulingTool(BaseTool):
                 "platform": platform,
                 "content_id": schedule_result.get("id"),
                 "schedule_time": schedule_result.get("schedule_time"),
-                "url": schedule_result.get("url")
+                "url": schedule_result.get("url"),
             }
 
         except Exception as e:
@@ -1039,7 +1007,7 @@ class ContentSchedulingTool(BaseTool):
             "platform": platform,
             "content": content,
             "schedule_time": input_data["schedule_time"],
-            "message": "This is a dry run - content would be scheduled as shown"
+            "message": "This is a dry run - content would be scheduled as shown",
         }
 
     def _create_error_result(self, platform: str, error: str, input_data: dict) -> dict:
@@ -1050,7 +1018,7 @@ class ContentSchedulingTool(BaseTool):
             "platform": platform,
             "error": error,
             "content": input_data["content"],
-            "suggestions": self._get_platform_error_suggestions(platform, error)
+            "suggestions": self._get_platform_error_suggestions(platform, error),
         }
 
     def _get_platform_error_suggestions(self, platform: str, error: str) -> list:
@@ -1060,7 +1028,7 @@ class ContentSchedulingTool(BaseTool):
             "Check platform API connectivity",
             "Review platform-specific requirements",
             "Verify content format and size",
-            "Check rate limits"
+            "Check rate limits",
         ]
 
         if "authentication" in error.lower():
@@ -1089,7 +1057,7 @@ class VideoEditorAgent:
         self.tools = {
             "video_analysis": VideoAnalysisTool(),
             "audio_cleanup": AudioCleanupTool(),
-            "content_scheduling": ContentSchedulingTool()
+            "content_scheduling": ContentSchedulingTool(),
         }
 
         self.workflow = self._define_workflow()
@@ -1100,7 +1068,7 @@ class VideoEditorAgent:
         return [
             {"tool": "video_analysis", "params": {"analysis_type": "full"}},
             {"tool": "audio_cleanup", "params": {"quality": "high"}},
-            {"tool": "content_scheduling", "params": {"platforms": ["twitter", "instagram"]}}
+            {"tool": "content_scheduling", "params": {"platforms": ["twitter", "instagram"]}},
         ]
 
     def process_episode(self, video_path: str, audio_path: str) -> dict:
@@ -1127,7 +1095,7 @@ class VideoEditorAgent:
         return {
             "status": "SUCCESS",
             "workflow_results": workflow_results,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _prepare_input_data(self, step: dict, video_path: str, audio_path: str) -> dict:
@@ -1152,7 +1120,7 @@ class VideoEditorAgent:
             "failed_step": step["tool"],
             "error": str(error),
             "suggestions": self._get_workflow_error_suggestions(step, error),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _get_workflow_error_suggestions(self, step: dict, error: Exception) -> list:
@@ -1162,27 +1130,33 @@ class VideoEditorAgent:
             "Review workflow configuration",
             "Check tool-specific error information",
             "Verify input data quality",
-            "Consult workflow documentation"
+            "Consult workflow documentation",
         ]
 
         if "video_analysis" in step["tool"]:
-            suggestions.extend([
-                "Check video file integrity",
-                "Verify video format compatibility",
-                "Reduce video quality if memory issues"
-            ])
+            suggestions.extend(
+                [
+                    "Check video file integrity",
+                    "Verify video format compatibility",
+                    "Reduce video quality if memory issues",
+                ]
+            )
         elif "audio_cleanup" in step["tool"]:
-            suggestions.extend([
-                "Check audio file integrity",
-                "Verify audio format compatibility",
-                "Reduce processing complexity"
-            ])
+            suggestions.extend(
+                [
+                    "Check audio file integrity",
+                    "Verify audio format compatibility",
+                    "Reduce processing complexity",
+                ]
+            )
         elif "content_scheduling" in step["tool"]:
-            suggestions.extend([
-                "Check platform API connectivity",
-                "Review platform-specific requirements",
-                "Verify content format and size"
-            ])
+            suggestions.extend(
+                [
+                    "Check platform API connectivity",
+                    "Review platform-specific requirements",
+                    "Verify content format and size",
+                ]
+            )
 
         return suggestions
 ```
@@ -1202,13 +1176,13 @@ class PodcastProductionWorkflow:
             "video_editor": VideoEditorAgent(),
             "audio_engineer": AudioEngineerAgent(),
             "social_media_manager": SocialMediaManagerAgent(),
-            "content_distributor": ContentDistributorAgent()
+            "content_distributor": ContentDistributorAgent(),
         }
 
         self.tools = {
             "video_analysis": VideoAnalysisTool(),
             "audio_cleanup": AudioCleanupTool(),
-            "content_scheduling": ContentSchedulingTool()
+            "content_scheduling": ContentSchedulingTool(),
         }
 
         self.workflow_definition = self._define_workflow()
@@ -1220,23 +1194,23 @@ class PodcastProductionWorkflow:
             "video_processing": {
                 "agent": "video_editor",
                 "tools": ["video_analysis"],
-                "dependencies": []
+                "dependencies": [],
             },
             "audio_processing": {
                 "agent": "audio_engineer",
                 "tools": ["audio_cleanup"],
-                "dependencies": []
+                "dependencies": [],
             },
             "content_creation": {
                 "agent": "social_media_manager",
                 "tools": [],
-                "dependencies": ["video_processing", "audio_processing"]
+                "dependencies": ["video_processing", "audio_processing"],
             },
             "content_distribution": {
                 "agent": "content_distributor",
                 "tools": ["content_scheduling"],
-                "dependencies": ["content_creation"]
-            }
+                "dependencies": ["content_creation"],
+            },
         }
 
     def execute_workflow(self, episode_data: dict) -> dict:
@@ -1261,7 +1235,7 @@ class PodcastProductionWorkflow:
         return {
             "status": "SUCCESS",
             "workflow_results": workflow_results,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _check_dependencies(self, step_config: dict, workflow_results: dict) -> bool:
@@ -1276,8 +1250,9 @@ class PodcastProductionWorkflow:
 
         return True
 
-    def _execute_step(self, step_name: str, step_config: dict,
-                     episode_data: dict, workflow_results: dict) -> dict:
+    def _execute_step(
+        self, step_name: str, step_config: dict, episode_data: dict, workflow_results: dict
+    ) -> dict:
         """Execute workflow step"""
 
         if "agent" in step_config:
@@ -1287,8 +1262,9 @@ class PodcastProductionWorkflow:
         else:
             raise WorkflowError(f"Invalid step configuration: {step_name}")
 
-    def _execute_agent_step(self, step_name: str, step_config: dict,
-                           episode_data: dict, workflow_results: dict) -> dict:
+    def _execute_agent_step(
+        self, step_name: str, step_config: dict, episode_data: dict, workflow_results: dict
+    ) -> dict:
         """Execute agent-based workflow step"""
 
         agent = self.agents[step_config["agent"]]
@@ -1299,8 +1275,9 @@ class PodcastProductionWorkflow:
         # Execute agent
         return agent.execute(agent_input)
 
-    def _execute_tool_step(self, step_name: str, step_config: dict,
-                          episode_data: dict, workflow_results: dict) -> dict:
+    def _execute_tool_step(
+        self, step_name: str, step_config: dict, episode_data: dict, workflow_results: dict
+    ) -> dict:
         """Execute tool-based workflow step"""
 
         results = {}
@@ -1309,7 +1286,9 @@ class PodcastProductionWorkflow:
             tool = self.tools[tool_name]
 
             # Prepare tool input
-            tool_input = self._prepare_tool_input(step_name, tool_name, episode_data, workflow_results)
+            tool_input = self._prepare_tool_input(
+                step_name, tool_name, episode_data, workflow_results
+            )
 
             # Execute tool
             result = tool.execute(tool_input)
@@ -1322,22 +1301,24 @@ class PodcastProductionWorkflow:
         return {
             "status": "SUCCESS",
             "tool_results": results,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
-    def _prepare_agent_input(self, step_name: str, episode_data: dict,
-                            workflow_results: dict) -> dict:
+    def _prepare_agent_input(
+        self, step_name: str, episode_data: dict, workflow_results: dict
+    ) -> dict:
         """Prepare input for agent execution"""
 
         # This would be implemented based on specific agent requirements
         return {
             "episode_data": episode_data,
             "workflow_results": workflow_results,
-            "step_name": step_name
+            "step_name": step_name,
         }
 
-    def _prepare_tool_input(self, step_name: str, tool_name: str,
-                           episode_data: dict, workflow_results: dict) -> dict:
+    def _prepare_tool_input(
+        self, step_name: str, tool_name: str, episode_data: dict, workflow_results: dict
+    ) -> dict:
         """Prepare input for tool execution"""
 
         # This would be implemented based on specific tool requirements
@@ -1345,7 +1326,7 @@ class PodcastProductionWorkflow:
             "episode_data": episode_data,
             "workflow_results": workflow_results,
             "step_name": step_name,
-            "tool_name": tool_name
+            "tool_name": tool_name,
         }
 
     def _handle_workflow_error(self, step_name: str, error: Exception) -> dict:
@@ -1356,7 +1337,7 @@ class PodcastProductionWorkflow:
             "failed_step": step_name,
             "error": str(error),
             "suggestions": self._get_workflow_error_suggestions(step_name, error),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _get_workflow_error_suggestions(self, step_name: str, error: Exception) -> list:
@@ -1367,27 +1348,33 @@ class PodcastProductionWorkflow:
             "Check step-specific error information",
             "Verify input data quality",
             "Consult workflow documentation",
-            "Check system resource availability"
+            "Check system resource availability",
         ]
 
         if "video" in step_name.lower():
-            suggestions.extend([
-                "Check video file integrity",
-                "Verify video format compatibility",
-                "Review video processing parameters"
-            ])
+            suggestions.extend(
+                [
+                    "Check video file integrity",
+                    "Verify video format compatibility",
+                    "Review video processing parameters",
+                ]
+            )
         elif "audio" in step_name.lower():
-            suggestions.extend([
-                "Check audio file integrity",
-                "Verify audio format compatibility",
-                "Review audio processing parameters"
-            ])
+            suggestions.extend(
+                [
+                    "Check audio file integrity",
+                    "Verify audio format compatibility",
+                    "Review audio processing parameters",
+                ]
+            )
         elif "content" in step_name.lower():
-            suggestions.extend([
-                "Check content format and size",
-                "Review platform-specific requirements",
-                "Verify API connectivity"
-            ])
+            suggestions.extend(
+                [
+                    "Check content format and size",
+                    "Review platform-specific requirements",
+                    "Verify API connectivity",
+                ]
+            )
 
         return suggestions
 ```
@@ -1406,13 +1393,13 @@ class IntegratedErrorHandler:
         self.tool_handlers = {
             "video_analysis": VideoAnalysisErrorHandler(),
             "audio_cleanup": AudioCleanupErrorHandler(),
-            "content_scheduling": ContentSchedulingErrorHandler()
+            "content_scheduling": ContentSchedulingErrorHandler(),
         }
 
         self.agent_handlers = {
             "video_editor": VideoEditorErrorHandler(),
             "audio_engineer": AudioEngineerErrorHandler(),
-            "social_media_manager": SocialMediaErrorHandler()
+            "social_media_manager": SocialMediaErrorHandler(),
         }
 
         self.workflow_handler = WorkflowErrorHandler()
@@ -1479,7 +1466,7 @@ class IntegratedErrorHandler:
             "context": context,
             "timestamp": datetime.now().isoformat(),
             "suggestions": self._get_general_suggestions(error),
-            "documentation": self._get_general_documentation()
+            "documentation": self._get_general_documentation(),
         }
 
     def _handle_general_tool_error(self, error: Exception, context: dict) -> dict:
@@ -1490,7 +1477,7 @@ class IntegratedErrorHandler:
             "Review input parameters",
             "Verify system resources",
             "Consult tool documentation",
-            "Contact support if issue persists"
+            "Contact support if issue persists",
         ]
 
         return {
@@ -1501,7 +1488,7 @@ class IntegratedErrorHandler:
             "tool_name": context.get("tool_name", "unknown"),
             "timestamp": datetime.now().isoformat(),
             "suggestions": suggestions,
-            "documentation": ["docs/troubleshooting/TOOLS.md"]
+            "documentation": ["docs/troubleshooting/TOOLS.md"],
         }
 
     def _handle_general_agent_error(self, error: Exception, context: dict) -> dict:
@@ -1512,7 +1499,7 @@ class IntegratedErrorHandler:
             "Review workflow integration",
             "Verify tool dependencies",
             "Consult agent documentation",
-            "Contact support if issue persists"
+            "Contact support if issue persists",
         ]
 
         return {
@@ -1523,7 +1510,7 @@ class IntegratedErrorHandler:
             "agent_name": context.get("agent_name", "unknown"),
             "timestamp": datetime.now().isoformat(),
             "suggestions": suggestions,
-            "documentation": ["docs/troubleshooting/AGENTS.md"]
+            "documentation": ["docs/troubleshooting/AGENTS.md"],
         }
 
     def _get_general_suggestions(self, error: Exception) -> list:
@@ -1534,7 +1521,7 @@ class IntegratedErrorHandler:
             "Review recent changes",
             "Verify system resource availability",
             "Consult documentation",
-            "Contact support if issue persists"
+            "Contact support if issue persists",
         ]
 
         error_type = type(error).__name__
@@ -1551,11 +1538,7 @@ class IntegratedErrorHandler:
     def _get_general_documentation(self) -> list:
         """Get general documentation links"""
 
-        return [
-            "docs/TROUBLESHOOTING.md",
-            "docs/FAQ.md",
-            "docs/SUPPORT.md"
-        ]
+        return ["docs/TROUBLESHOOTING.md", "docs/FAQ.md", "docs/SUPPORT.md"]
 ```
 
 ## Tool Design Best Practices

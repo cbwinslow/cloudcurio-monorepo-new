@@ -88,18 +88,18 @@ description: "Brief description of what this agent does"
 # Detailed system prompt - this is the agent's core instruction
 system_prompt: |
   You are a specialized agent designed to [primary purpose].
-  
+
   Your responsibilities:
   - [Responsibility 1]
   - [Responsibility 2]
   - [Responsibility 3]
-  
+
   Guidelines:
   - Be precise and accurate
   - Use the provided tools when needed
   - Validate your outputs
   - Handle errors gracefully
-  
+
   Output format:
   [Specify expected output structure]
 
@@ -108,7 +108,7 @@ tools:
   - name: tool_name_1
     description: "What this tool does"
     required: true  # or false
-    
+
   - name: tool_name_2
     description: "What this tool does"
     required: false
@@ -179,14 +179,14 @@ tests:
     input: "Input that triggers core behavior"
     expected_output: "Expected response or pattern"
     match_type: "exact"  # exact, contains, regex
-    
+
   # Test 2: Tool usage
   - name: "tool_integration"
     description: "Test that agent uses tools correctly"
     input: "Input that requires tool usage"
     expected_output: "Output showing tool was used"
     match_type: "contains"
-    
+
   # Test 3: Edge case
   - name: "edge_case_handling"
     description: "Test edge case behavior"
@@ -194,7 +194,7 @@ tests:
     expected_output: "Graceful handling response"
     match_type: "regex"
     expected_pattern: "^Error: .+ handled gracefully$"
-    
+
   # Test 4: Error handling
   - name: "error_handling"
     description: "Test error scenarios"
@@ -413,33 +413,33 @@ runtime:
 ```yaml
 system_prompt: |
   You are a [role/title] specialized in [domain/task].
-  
+
   ## Role
   [Detailed description of agent's role and expertise]
-  
+
   ## Responsibilities
   1. [Primary responsibility]
   2. [Secondary responsibility]
   3. [Additional responsibilities...]
-  
+
   ## Guidelines
   - [Guideline 1]
   - [Guideline 2]
   - [Guideline 3]
-  
+
   ## Tools Available
   You have access to the following tools:
   - **tool_name_1**: [When and how to use it]
   - **tool_name_2**: [When and how to use it]
-  
+
   ## Output Format
   [Specify expected output structure]
-  
+
   Example:
   ```
   [Example output]
   ```
-  
+
   ## Error Handling
   If you encounter errors:
   1. [Step 1]
@@ -453,23 +453,23 @@ system_prompt: |
 ```yaml
 system_prompt: |
   You are a Research Agent specialized in gathering, analyzing, and synthesizing information from multiple sources.
-  
+
   Your goal is to provide comprehensive, accurate, and well-cited research on any topic.
-  
+
   Process:
   1. Break down the research question
   2. Use search tools to gather information
   3. Analyze and synthesize findings
   4. Present results with citations
-  
+
   Output format:
   ## Summary
   [2-3 sentence overview]
-  
+
   ## Key Findings
   1. [Finding with citation]
   2. [Finding with citation]
-  
+
   ## Sources
   - [Source 1]
   - [Source 2]
@@ -479,20 +479,20 @@ system_prompt: |
 ```yaml
 system_prompt: |
   You are a Code Review Agent specializing in identifying bugs, security issues, and code quality problems.
-  
+
   Review code for:
   - Logic errors and bugs
   - Security vulnerabilities
   - Performance issues
   - Code style and best practices
   - Test coverage
-  
+
   For each issue found, provide:
   - Severity (Critical/High/Medium/Low)
   - Location (file:line)
   - Description
   - Suggested fix
-  
+
   Be constructive and focus on improvements.
 ```
 
@@ -531,11 +531,12 @@ If needed tool doesn't exist, create it:
    ```python
    # agents/tools/my_custom_tool.py
    from cbw_foundry.tools import BaseTool
-   
+
+
    class MyCustomTool(BaseTool):
        name = "my_custom_tool"
        description = "What this tool does"
-       
+
        def execute(self, **kwargs):
            # Implementation
            return result
@@ -545,6 +546,7 @@ If needed tool doesn't exist, create it:
    ```python
    # agents/tools/__init__.py
    from .my_custom_tool import MyCustomTool
+
    __all__ = ["MyCustomTool", ...]
    ```
 
@@ -571,9 +573,11 @@ import pytest
 from cbw_foundry.spec.io import load_agent_spec
 from cbw_foundry.runtime.local_runtime import LocalRuntime
 
+
 def test_agent_loads():
     spec = load_agent_spec("agents/specs/my_new_agent.agent.yaml")
     assert spec.name == "my_new_agent"
+
 
 def test_agent_basic_execution():
     spec = load_agent_spec("agents/specs/my_new_agent.agent.yaml")
@@ -654,6 +658,7 @@ Integrate custom frameworks:
 # src/cbw_foundry/runtime/adapters/my_adapter.py
 from cbw_foundry.runtime.base import BaseRuntime
 
+
 class MyFrameworkAdapter(BaseRuntime):
     def run(self, spec, input, **kwargs):
         # Integrate with your framework
@@ -691,12 +696,12 @@ description: "Creates engaging content for various platforms"
 
 system_prompt: |
   You are a content creation agent specialized in writing engaging content.
-  
+
   Adapt tone and style based on platform:
   - Twitter: Concise, punchy, hashtags
   - LinkedIn: Professional, informative
   - Blog: Detailed, well-structured
-  
+
   Always include relevant hashtags and calls-to-action.
 
 tools:
@@ -719,14 +724,14 @@ description: "Helps with code writing, review, and debugging"
 
 system_prompt: |
   You are a code assistant specialized in Python, JavaScript, and Go.
-  
+
   Capabilities:
   - Write clean, efficient code
   - Review code for bugs and issues
   - Debug problems
   - Suggest improvements
   - Explain complex concepts
-  
+
   Always:
   - Follow language best practices
   - Include error handling
@@ -834,6 +839,6 @@ git commit -m "feat(agents): add NAME"
 
 ---
 
-**Last Updated:** 2026-01-15  
-**Maintained By:** @cbwinslow  
+**Last Updated:** 2026-01-15
+**Maintained By:** @cbwinslow
 **Related:** [Using the Repo](using_the_repo.md), [Code Quality Rules](../rules/code_quality_rules.md)

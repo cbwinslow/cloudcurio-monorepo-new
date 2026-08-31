@@ -7,19 +7,18 @@ A2A protocol, and persistent message queuing.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import os
 import threading
 import time
 import uuid
-from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any
 
 # Third-party integrations (optional)
 try:
@@ -30,30 +29,35 @@ try:
     from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
     OPENTELEMETRY_AVAILABLE = True
 except ImportError:
     OPENTELEMETRY_AVAILABLE = False
 
 try:
     from langsmith import Client as LangSmithClient
+
     LANGSMITH_AVAILABLE = True
 except ImportError:
     LANGSMITH_AVAILABLE = False
 
 try:
     from langfuse import Langfuse
+
     LANGFUSE_AVAILABLE = True
 except ImportError:
     LANGFUSE_AVAILABLE = False
 
 try:
     import pika  # RabbitMQ
+
     PIKA_AVAILABLE = True
 except ImportError:
     PIKA_AVAILABLE = False
 
 try:
     from celery import Celery
+
     CELERY_AVAILABLE = True
 except ImportError:
     CELERY_AVAILABLE = False
@@ -64,6 +68,7 @@ from swarm_communication import Message, MessageBus, SwarmCoordinator, VotingSys
 
 class MessagePriority(Enum):
     """Standardized message priority levels."""
+
     CRITICAL = 5
     HIGH = 4
     NORMAL = 3
@@ -73,6 +78,7 @@ class MessagePriority(Enum):
 
 class MessageType(Enum):
     """Standardized message types for A2A protocol compliance."""
+
     # Core agent communication
     AGENT_HANDSHAKE = "agent_handshake"
     AGENT_STATUS = "agent_status"
@@ -112,49 +118,49 @@ class A2AMessage:
 
     # Required A2A fields
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + 'Z')
+    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
     sender: str = ""
     recipient: str = ""
     message_type: MessageType = MessageType.AGENT_STATUS
 
     # Optional A2A fields
-    correlation_id: Optional[str] = None
-    in_reply_to: Optional[str] = None
-    conversation_id: Optional[str] = None
+    correlation_id: str | None = None
+    in_reply_to: str | None = None
+    conversation_id: str | None = None
 
     # Content
-    content: Dict[str, Any] = field(default_factory=dict)
+    content: dict[str, Any] = field(default_factory=dict)
 
     # Metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     # Protocol compliance
     protocol_version: str = "A2A/1.0"
     content_type: str = "application/json"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'id': self.id,
-            'timestamp': self.timestamp,
-            'sender': self.sender,
-            'recipient': self.recipient,
-            'message_type': self.message_type.value,
-            'correlation_id': self.correlation_id,
-            'in_reply_to': self.in_reply_to,
-            'conversation_id': self.conversation_id,
-            'content': self.content,
-            'metadata': self.metadata,
-            'protocol_version': self.protocol_version,
-            'content_type': self.content_type
+            "id": self.id,
+            "timestamp": self.timestamp,
+            "sender": self.sender,
+            "recipient": self.recipient,
+            "message_type": self.message_type.value,
+            "correlation_id": self.correlation_id,
+            "in_reply_to": self.in_reply_to,
+            "conversation_id": self.conversation_id,
+            "content": self.content,
+            "metadata": self.metadata,
+            "protocol_version": self.protocol_version,
+            "content_type": self.content_type,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'A2AMessage':
+    def from_dict(cls, data: dict[str, Any]) -> A2AMessage:
         """Create from dictionary."""
         # Convert string message_type back to enum
-        if 'message_type' in data:
-            data['message_type'] = MessageType(data['message_type'])
+        if "message_type" in data:
+            data["message_type"] = MessageType(data["message_type"])
         return cls(**data)
 
 
@@ -166,9 +172,9 @@ class TelemetryCollector:
         self.logger = logging.getLogger(__name__)
 
         # Telemetry data
-        self.metrics: Dict[str, Any] = defaultdict(dict)
-        self.traces: List[Dict[str, Any]] = []
-        self.logs: List[Dict[str, Any]] = []
+        self.metrics: dict[str, Any] = defaultdict(dict)
+        self.traces: list[dict[str, Any]] = []
+        self.logs: list[dict[str, Any]] = []
 
         # Integrations
         self._setup_opentelemetry()
@@ -177,12 +183,14 @@ class TelemetryCollector:
 
         # Performance tracking
         self.start_time = time.time()
-        self.event_counts: Dict[str, int] = defaultdict(int)
+        self.event_counts: dict[str, int] = defaultdict(int)
 
     def _setup_opentelemetry(self) -> None:
         """Setup OpenTelemetry integration."""
         if not OPENTELEMETRY_AVAILABLE:
-            self.logger.warning("OpenTelemetry not available - install with: pip install opentelemetry-sdk opentelemetry-exporter-jaeger opentelemetry-exporter-prometheus")
+            self.logger.warning(
+                "OpenTelemetry not available - install with: pip install opentelemetry-sdk opentelemetry-exporter-jaeger opentelemetry-exporter-prometheus"
+            )
             return
 
         # Setup tracing
@@ -200,8 +208,7 @@ class TelemetryCollector:
         # Prometheus exporter for metrics
         prometheus_reader = PrometheusMetricReader()
         metric_reader = PeriodicExportingMetricReader(
-            exporter=prometheus_reader,
-            export_interval_millis=10000
+            exporter=prometheus_reader, export_interval_millis=10000
         )
         meter_provider = MeterProvider(metric_readers=[metric_reader])
         metrics.set_meter_provider(meter_provider)
@@ -211,16 +218,13 @@ class TelemetryCollector:
 
         # Define metrics
         self.agent_count = self.meter.create_counter(
-            "agent_count",
-            description="Number of active agents"
+            "agent_count", description="Number of active agents"
         )
         self.message_count = self.meter.create_counter(
-            "message_count",
-            description="Number of messages processed"
+            "message_count", description="Number of messages processed"
         )
         self.task_success_rate = self.meter.create_histogram(
-            "task_success_rate",
-            description="Task success rate distribution"
+            "task_success_rate", description="Task success rate distribution"
         )
 
         self.logger.info("OpenTelemetry initialized")
@@ -250,32 +254,29 @@ class TelemetryCollector:
         host = os.getenv("LANGFUSE_HOST")
 
         if public_key and secret_key:
-            self.langfuse = Langfuse(
-                public_key=public_key,
-                secret_key=secret_key,
-                host=host
-            )
+            self.langfuse = Langfuse(public_key=public_key, secret_key=secret_key, host=host)
             self.logger.info("LangFuse initialized")
         else:
             self.langfuse = None
             self.logger.warning("LangFuse credentials not found")
 
-    def record_event(self, event_type: str, data: Dict[str, Any],
-                    agent_name: Optional[str] = None) -> None:
+    def record_event(
+        self, event_type: str, data: dict[str, Any], agent_name: str | None = None
+    ) -> None:
         """Record a telemetry event."""
         event = {
-            'timestamp': time.time(),
-            'event_type': event_type,
-            'agent_name': agent_name,
-            'data': data
+            "timestamp": time.time(),
+            "event_type": event_type,
+            "agent_name": agent_name,
+            "data": data,
         }
 
         self.event_counts[event_type] += 1
 
         # Add to appropriate storage
-        if event_type.endswith('_log'):
+        if event_type.endswith("_log"):
             self.logs.append(event)
-        elif event_type.endswith('_trace'):
+        elif event_type.endswith("_trace"):
             self.traces.append(event)
         else:
             # Store in metrics
@@ -284,62 +285,66 @@ class TelemetryCollector:
                     self.metrics[agent_name] = {}
                 self.metrics[agent_name][event_type] = data
             else:
-                self.metrics['swarm'][event_type] = data
+                self.metrics["swarm"][event_type] = data
 
         # Send to integrations
         self._send_to_integrations(event)
 
-    def _send_to_integrations(self, event: Dict[str, Any]) -> None:
+    def _send_to_integrations(self, event: dict[str, Any]) -> None:
         """Send event to configured integrations."""
         try:
             # OpenTelemetry metrics
-            if OPENTELEMETRY_AVAILABLE and hasattr(self, 'message_count'):
-                if event['event_type'] == 'message_processed':
+            if OPENTELEMETRY_AVAILABLE and hasattr(self, "message_count"):
+                if event["event_type"] == "message_processed":
                     self.message_count.add(1)
-                elif event['event_type'] == 'task_completed':
-                    success = event['data'].get('success', False)
+                elif event["event_type"] == "task_completed":
+                    success = event["data"].get("success", False)
                     self.task_success_rate.record(1.0 if success else 0.0)
 
             # LangSmith traces
-            if hasattr(self, 'langsmith') and self.langsmith:
-                if event['event_type'] in ['agent_action', 'tool_execution']:
+            if hasattr(self, "langsmith") and self.langsmith:
+                if event["event_type"] in ["agent_action", "tool_execution"]:
                     self.langsmith.create_run(
                         name=f"{event['agent_name']}_{event['event_type']}",
-                        inputs=event['data'].get('inputs', {}),
-                        outputs=event['data'].get('outputs', {}),
-                        run_type="chain"
+                        inputs=event["data"].get("inputs", {}),
+                        outputs=event["data"].get("outputs", {}),
+                        run_type="chain",
                     )
 
             # LangFuse traces
-            if hasattr(self, 'langfuse') and self.langfuse:
-                if event['event_type'] in ['agent_action', 'tool_execution']:
+            if hasattr(self, "langfuse") and self.langfuse:
+                if event["event_type"] in ["agent_action", "tool_execution"]:
                     self.langfuse.trace(
                         name=f"{event['agent_name']}_{event['event_type']}",
-                        input=event['data'].get('inputs', {}),
-                        output=event['data'].get('outputs', {}),
+                        input=event["data"].get("inputs", {}),
+                        output=event["data"].get("outputs", {}),
                         metadata={
-                            'agent_name': event.get('agent_name'),
-                            'timestamp': event['timestamp']
-                        }
+                            "agent_name": event.get("agent_name"),
+                            "timestamp": event["timestamp"],
+                        },
                     )
 
         except Exception as e:
             self.logger.error(f"Error sending to integrations: {e}")
 
-    def get_metrics_summary(self) -> Dict[str, Any]:
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Get comprehensive metrics summary."""
         runtime = time.time() - self.start_time
 
         return {
-            'runtime_seconds': runtime,
-            'total_events': sum(self.event_counts.values()),
-            'event_counts': dict(self.event_counts),
-            'active_agents': len([k for k in self.metrics.keys() if k != 'swarm']),
-            'integrations': {
-                'opentelemetry': OPENTELEMETRY_AVAILABLE,
-                'langsmith': LANGSMITH_AVAILABLE and hasattr(self, 'langsmith') and self.langsmith is not None,
-                'langfuse': LANGFUSE_AVAILABLE and hasattr(self, 'langfuse') and self.langfuse is not None
-            }
+            "runtime_seconds": runtime,
+            "total_events": sum(self.event_counts.values()),
+            "event_counts": dict(self.event_counts),
+            "active_agents": len([k for k in self.metrics.keys() if k != "swarm"]),
+            "integrations": {
+                "opentelemetry": OPENTELEMETRY_AVAILABLE,
+                "langsmith": LANGSMITH_AVAILABLE
+                and hasattr(self, "langsmith")
+                and self.langsmith is not None,
+                "langfuse": LANGFUSE_AVAILABLE
+                and hasattr(self, "langfuse")
+                and self.langfuse is not None,
+            },
         }
 
 
@@ -369,16 +374,16 @@ class PersistentMessageQueue:
         try:
             connection = pika.BlockingConnection(
                 pika.ConnectionParameters(
-                    host=os.getenv('RABBITMQ_HOST', 'localhost'),
-                    port=int(os.getenv('RABBITMQ_PORT', '5672')),
+                    host=os.getenv("RABBITMQ_HOST", "localhost"),
+                    port=int(os.getenv("RABBITMQ_PORT", "5672")),
                     credentials=pika.PlainCredentials(
-                        username=os.getenv('RABBITMQ_USER', 'guest'),
-                        password=os.getenv('RABBITMQ_PASS', 'guest')
-                    )
+                        username=os.getenv("RABBITMQ_USER", "guest"),
+                        password=os.getenv("RABBITMQ_PASS", "guest"),
+                    ),
                 )
             )
             self.channel = connection.channel()
-            self.channel.queue_declare(queue='agent_messages', durable=True)
+            self.channel.queue_declare(queue="agent_messages", durable=True)
             self.logger.info("RabbitMQ connection established")
         except Exception as e:
             self.logger.error(f"Failed to connect to RabbitMQ: {e}")
@@ -388,10 +393,11 @@ class PersistentMessageQueue:
         """Setup Redis connection."""
         try:
             import redis
+
             self.redis_client = redis.Redis(
-                host=os.getenv('REDIS_HOST', 'localhost'),
-                port=int(os.getenv('REDIS_PORT', '6379')),
-                db=int(os.getenv('REDIS_DB', '0'))
+                host=os.getenv("REDIS_HOST", "localhost"),
+                port=int(os.getenv("REDIS_PORT", "6379")),
+                db=int(os.getenv("REDIS_DB", "0")),
             )
             self.redis_client.ping()
             self.logger.info("Redis connection established")
@@ -401,7 +407,7 @@ class PersistentMessageQueue:
 
     def _setup_memory(self) -> None:
         """Setup in-memory queue as fallback."""
-        self.memory_queue: List[A2AMessage] = []
+        self.memory_queue: list[A2AMessage] = []
         self.logger.info("Using in-memory message queue")
 
     def publish_message(self, message: A2AMessage) -> bool:
@@ -409,13 +415,13 @@ class PersistentMessageQueue:
         try:
             if self.queue_type == "rabbitmq":
                 self.channel.basic_publish(
-                    exchange='',
-                    routing_key='agent_messages',
+                    exchange="",
+                    routing_key="agent_messages",
                     body=json.dumps(message.to_dict()),
-                    properties=pika.BasicProperties(delivery_mode=2)  # Persistent
+                    properties=pika.BasicProperties(delivery_mode=2),  # Persistent
                 )
             elif self.queue_type == "redis":
-                self.redis_client.lpush('agent_messages', json.dumps(message.to_dict()))
+                self.redis_client.lpush("agent_messages", json.dumps(message.to_dict()))
             else:
                 self.memory_queue.append(message)
             return True
@@ -427,6 +433,7 @@ class PersistentMessageQueue:
         """Consume messages from queue."""
         try:
             if self.queue_type == "rabbitmq":
+
                 def rabbit_callback(ch, method, properties, body):
                     message_dict = json.loads(body)
                     message = A2AMessage.from_dict(message_dict)
@@ -434,14 +441,13 @@ class PersistentMessageQueue:
                     ch.basic_ack(delivery_tag=method.delivery_tag)
 
                 self.channel.basic_consume(
-                    queue='agent_messages',
-                    on_message_callback=rabbit_callback
+                    queue="agent_messages", on_message_callback=rabbit_callback
                 )
                 self.channel.start_consuming()
 
             elif self.queue_type == "redis":
                 while True:
-                    message_data = self.redis_client.brpop('agent_messages', timeout=1)
+                    message_data = self.redis_client.brpop("agent_messages", timeout=1)
                     if message_data:
                         message_dict = json.loads(message_data[1])
                         message = A2AMessage.from_dict(message_dict)
@@ -473,8 +479,8 @@ class A2AProtocolHandler:
         self.logger = logging.getLogger(__name__)
 
         # A2A protocol state
-        self.agent_registry: Dict[str, Dict[str, Any]] = {}
-        self.conversations: Dict[str, List[A2AMessage]] = defaultdict(list)
+        self.agent_registry: dict[str, dict[str, Any]] = {}
+        self.conversations: dict[str, list[A2AMessage]] = defaultdict(list)
 
         # Protocol compliance
         self.supported_protocols = ["A2A/1.0", "A2A/1.1"]
@@ -483,19 +489,19 @@ class A2AProtocolHandler:
             "voting": True,
             "task_coordination": True,
             "knowledge_sharing": True,
-            "telemetry": True
+            "telemetry": True,
         }
 
     def register_agent(self, agent: BaseAgent) -> None:
         """Register agent with A2A protocol."""
         agent_info = {
-            'id': agent.agent_name,
-            'name': agent.name,
-            'role': agent.role,
-            'capabilities': self.capabilities.copy(),
-            'supported_protocols': self.supported_protocols.copy(),
-            'registered_at': datetime.utcnow().isoformat() + 'Z',
-            'status': 'active'
+            "id": agent.agent_name,
+            "name": agent.name,
+            "role": agent.role,
+            "capabilities": self.capabilities.copy(),
+            "supported_protocols": self.supported_protocols.copy(),
+            "registered_at": datetime.utcnow().isoformat() + "Z",
+            "status": "active",
         }
 
         self.agent_registry[agent.agent_name] = agent_info
@@ -506,17 +512,17 @@ class A2AProtocolHandler:
             recipient=agent.agent_name,
             message_type=MessageType.AGENT_HANDSHAKE,
             content={
-                'agent_info': agent_info,
-                'protocol_requirements': {
-                    'heartbeat_interval': 30,  # seconds
-                    'status_update_interval': 60,
-                    'message_ack_timeout': 10
-                }
-            }
+                "agent_info": agent_info,
+                "protocol_requirements": {
+                    "heartbeat_interval": 30,  # seconds
+                    "status_update_interval": 60,
+                    "message_ack_timeout": 10,
+                },
+            },
         )
 
         self.send_a2a_message(handshake)
-        self.telemetry.record_event('agent_registered', agent_info, agent.agent_name)
+        self.telemetry.record_event("agent_registered", agent_info, agent.agent_name)
 
     def send_a2a_message(self, message: A2AMessage) -> bool:
         """Send A2A protocol compliant message."""
@@ -533,14 +539,14 @@ class A2AProtocolHandler:
             message_type=message.message_type.value,
             content=message.content,
             priority=3,  # Default priority
-            correlation_id=message.correlation_id
+            correlation_id=message.correlation_id,
         )
 
         # Add metadata
-        internal_message.content['_a2a_metadata'] = {
-            'protocol_version': message.protocol_version,
-            'conversation_id': message.conversation_id,
-            'in_reply_to': message.in_reply_to
+        internal_message.content["_a2a_metadata"] = {
+            "protocol_version": message.protocol_version,
+            "conversation_id": message.conversation_id,
+            "in_reply_to": message.in_reply_to,
         }
 
         success = self.message_bus.send_message(internal_message)
@@ -550,34 +556,38 @@ class A2AProtocolHandler:
             if message.conversation_id:
                 self.conversations[message.conversation_id].append(message)
 
-            self.telemetry.record_event('a2a_message_sent', {
-                'message_type': message.message_type.value,
-                'recipient': message.recipient,
-                'conversation_id': message.conversation_id
-            }, message.sender)
+            self.telemetry.record_event(
+                "a2a_message_sent",
+                {
+                    "message_type": message.message_type.value,
+                    "recipient": message.recipient,
+                    "conversation_id": message.conversation_id,
+                },
+                message.sender,
+            )
 
         return success
 
     def receive_a2a_message(self, message: Message) -> None:
         """Process received A2A message."""
         # Check if this is an A2A message
-        if '_a2a_metadata' not in message.content:
+        if "_a2a_metadata" not in message.content:
             return  # Not an A2A message
 
-        metadata = message.content.pop('_a2a_metadata')
+        metadata = message.content.pop("_a2a_metadata")
 
         # Reconstruct A2A message
         a2a_message = A2AMessage(
             id=message.message_id,
-            timestamp=datetime.fromtimestamp(message.timestamp).isoformat() + 'Z',
+            timestamp=datetime.fromtimestamp(message.timestamp).isoformat() + "Z",
             sender=message.sender,
             recipient=message.recipient,
             message_type=MessageType(message.message_type),
             content=message.content,
             correlation_id=message.correlation_id,
-            protocol_version=metadata.get('protocol_version', 'A2A/1.0'),
-            conversation_id=metadata.get('conversation_id'),
-            in_reply_to=metadata.get('in_reply_to')
+            protocol_version=metadata.get("protocol_version", "A2A/1.0"),
+            conversation_id=metadata.get("conversation_id"),
+            in_reply_to=metadata.get("in_reply_to"),
         )
 
         # Handle based on message type
@@ -593,16 +603,20 @@ class A2AProtocolHandler:
         except Exception as e:
             self.logger.error(f"Error handling A2A message {message.message_type}: {e}")
 
-        self.telemetry.record_event('a2a_message_received', {
-            'message_type': message.message_type.value,
-            'sender': message.sender,
-            'conversation_id': message.conversation_id
-        }, message.recipient)
+        self.telemetry.record_event(
+            "a2a_message_received",
+            {
+                "message_type": message.message_type.value,
+                "sender": message.sender,
+                "conversation_id": message.conversation_id,
+            },
+            message.recipient,
+        )
 
     def _handle_agent_handshake(self, message: A2AMessage) -> None:
         """Handle agent handshake."""
-        agent_info = message.content.get('agent_info', {})
-        agent_id = agent_info.get('id')
+        agent_info = message.content.get("agent_info", {})
+        agent_id = agent_info.get("id")
 
         if agent_id:
             self.agent_registry[agent_id] = agent_info
@@ -618,20 +632,20 @@ class A2AProtocolHandler:
     def _handle_vote_proposal(self, message: A2AMessage) -> None:
         """Handle voting proposal."""
         # Forward to voting system
-        proposal_data = message.content.get('proposal', {})
+        proposal_data = message.content.get("proposal", {})
         # Implementation would integrate with VotingSystem
 
     def _handle_unknown_message(self, message: A2AMessage) -> None:
         """Handle unknown message type."""
         self.logger.warning(f"Unknown A2A message type: {message.message_type}")
 
-    def get_protocol_status(self) -> Dict[str, Any]:
+    def get_protocol_status(self) -> dict[str, Any]:
         """Get A2A protocol status."""
         return {
-            'registered_agents': len(self.agent_registry),
-            'active_conversations': len(self.conversations),
-            'supported_protocols': self.supported_protocols,
-            'capabilities': self.capabilities
+            "registered_agents": len(self.agent_registry),
+            "active_conversations": len(self.conversations),
+            "supported_protocols": self.supported_protocols,
+            "capabilities": self.capabilities,
         }
 
 
@@ -654,7 +668,7 @@ class SwarmObservabilityManager:
 
         # Monitoring
         self.monitoring_active = False
-        self.monitoring_thread: Optional[threading.Thread] = None
+        self.monitoring_thread: threading.Thread | None = None
 
     def register_agent(self, agent: BaseAgent) -> None:
         """Register an agent with full observability."""
@@ -681,26 +695,31 @@ class SwarmObservabilityManager:
         # Setup telemetry tracking
         original_execute_tool = agent.execute_tool
 
-        def monitored_execute_tool(tool_name: str, parameters: Dict[str, Any]):
+        def monitored_execute_tool(tool_name: str, parameters: dict[str, Any]):
             start_time = time.time()
 
             # Pre-execution telemetry
-            self.telemetry.record_event('tool_execution_start', {
-                'tool_name': tool_name,
-                'parameters': parameters
-            }, agent_name)
+            self.telemetry.record_event(
+                "tool_execution_start",
+                {"tool_name": tool_name, "parameters": parameters},
+                agent_name,
+            )
 
             try:
                 result = original_execute_tool(tool_name, parameters)
                 execution_time = time.time() - start_time
 
                 # Post-execution telemetry
-                self.telemetry.record_event('tool_execution_complete', {
-                    'tool_name': tool_name,
-                    'success': result.success,
-                    'execution_time': execution_time,
-                    'error': result.error if not result.success else None
-                }, agent_name)
+                self.telemetry.record_event(
+                    "tool_execution_complete",
+                    {
+                        "tool_name": tool_name,
+                        "success": result.success,
+                        "execution_time": execution_time,
+                        "error": result.error if not result.success else None,
+                    },
+                    agent_name,
+                )
 
                 # Update confidence metrics
                 agent.update_confidence_after_execution(tool_name, result.success)
@@ -709,11 +728,11 @@ class SwarmObservabilityManager:
 
             except Exception as e:
                 execution_time = time.time() - start_time
-                self.telemetry.record_event('tool_execution_error', {
-                    'tool_name': tool_name,
-                    'error': str(e),
-                    'execution_time': execution_time
-                }, agent_name)
+                self.telemetry.record_event(
+                    "tool_execution_error",
+                    {"tool_name": tool_name, "error": str(e), "execution_time": execution_time},
+                    agent_name,
+                )
                 raise
 
         # Monkey patch the method
@@ -742,12 +761,13 @@ class SwarmObservabilityManager:
                     recipient=message.recipient,
                     message_type=message.message_type.value,
                     content=message.content,
-                    timestamp=datetime.fromisoformat(message.timestamp[:-1]).timestamp()
+                    timestamp=datetime.fromisoformat(message.timestamp[:-1]).timestamp(),
                 )
             )
 
-        queue_thread = threading.Thread(target=self.persistent_queue.consume_messages,
-                                       args=(queue_callback,), daemon=True)
+        queue_thread = threading.Thread(
+            target=self.persistent_queue.consume_messages, args=(queue_callback,), daemon=True
+        )
         queue_thread.start()
 
         self.logger.info("Swarm observability monitoring started")
@@ -789,9 +809,9 @@ class SwarmObservabilityManager:
                 recipient=agent_name,
                 message_type=MessageType.AGENT_HEARTBEAT,
                 content={
-                    'timestamp': datetime.utcnow().isoformat() + 'Z',
-                    'system_status': 'healthy'
-                }
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "system_status": "healthy",
+                },
             )
             self.a2a_handler.send_a2a_message(heartbeat)
 
@@ -800,43 +820,47 @@ class SwarmObservabilityManager:
         swarm_status = self.coordinator.get_swarm_status()
 
         # Record health metrics
-        self.telemetry.record_event('swarm_health_check', swarm_status)
+        self.telemetry.record_event("swarm_health_check", swarm_status)
 
         # Alert on issues
-        if swarm_status['should_terminate']:
-            self.logger.warning(f"Swarm termination recommended: {swarm_status['termination_reason']}")
+        if swarm_status["should_terminate"]:
+            self.logger.warning(
+                f"Swarm termination recommended: {swarm_status['termination_reason']}"
+            )
 
     def _process_pending_messages(self) -> None:
         """Process any pending messages for observability."""
         # This would handle any observability-specific message processing
-        pass
 
-    def get_comprehensive_status(self) -> Dict[str, Any]:
+    def get_comprehensive_status(self) -> dict[str, Any]:
         """Get comprehensive swarm status."""
         return {
-            'telemetry': self.telemetry.get_metrics_summary(),
-            'message_bus': {
-                'registered_agents': len(self.message_bus.agents),
-                'active_channels': len(self.message_bus.broadcast_channels),
-                'message_history_size': len(self.message_bus.message_history)
+            "telemetry": self.telemetry.get_metrics_summary(),
+            "message_bus": {
+                "registered_agents": len(self.message_bus.agents),
+                "active_channels": len(self.message_bus.broadcast_channels),
+                "message_history_size": len(self.message_bus.message_history),
             },
-            'voting_system': {
-                'active_proposals': len(self.voting_system.proposals),
-                'completed_proposals': len(self.voting_system.completed_proposals)
+            "voting_system": {
+                "active_proposals": len(self.voting_system.proposals),
+                "completed_proposals": len(self.voting_system.completed_proposals),
             },
-            'coordinator': self.coordinator.get_swarm_status(),
-            'a2a_protocol': self.a2a_handler.get_protocol_status(),
-            'persistent_queue': {
-                'type': self.persistent_queue.queue_type,
-                'status': 'active'
-            }
+            "coordinator": self.coordinator.get_swarm_status(),
+            "a2a_protocol": self.a2a_handler.get_protocol_status(),
+            "persistent_queue": {"type": self.persistent_queue.queue_type, "status": "active"},
         }
 
-    def create_vote_proposal(self, proposer: str, title: str, description: str,
-                           options: List[str], context: str = "",
-                           required_quorum: float = 0.5,
-                           consensus_threshold: float = 0.66,
-                           min_votes: int = 1) -> str:
+    def create_vote_proposal(
+        self,
+        proposer: str,
+        title: str,
+        description: str,
+        options: list[str],
+        context: str = "",
+        required_quorum: float = 0.5,
+        consensus_threshold: float = 0.66,
+        min_votes: int = 1,
+    ) -> str:
         """Create a voting proposal with full observability.
 
         Accepts optional guardrail parameters that will be applied to the proposal:
@@ -845,44 +869,51 @@ class SwarmObservabilityManager:
         - min_votes: minimum absolute vote count required for consensus
         """
         proposal_id = self.voting_system.create_proposal(
-            proposer, title, description, options, context,
+            proposer,
+            title,
+            description,
+            options,
+            context,
             required_quorum=required_quorum,
             consensus_threshold=consensus_threshold,
-            min_votes=min_votes
+            min_votes=min_votes,
         )
 
-        self.telemetry.record_event('vote_proposal_created', {
-            'proposal_id': proposal_id,
-            'title': title,
-            'proposer': proposer,
-            'options': options,
-            'required_quorum': required_quorum,
-            'consensus_threshold': consensus_threshold,
-            'min_votes': min_votes
-        }, proposer)
+        self.telemetry.record_event(
+            "vote_proposal_created",
+            {
+                "proposal_id": proposal_id,
+                "title": title,
+                "proposer": proposer,
+                "options": options,
+                "required_quorum": required_quorum,
+                "consensus_threshold": consensus_threshold,
+                "min_votes": min_votes,
+            },
+            proposer,
+        )
 
         return proposal_id
 
-    def assign_task(self, task: Dict[str, Any]) -> Optional[str]:
+    def assign_task(self, task: dict[str, Any]) -> str | None:
         """Assign task with observability."""
         agent_name = self.coordinator.assign_task(task)
 
         if agent_name:
-            self.telemetry.record_event('task_assigned', {
-                'task': task,
-                'assigned_agent': agent_name
-            })
+            self.telemetry.record_event(
+                "task_assigned", {"task": task, "assigned_agent": agent_name}
+            )
 
         return agent_name
 
-    def report_task_completion(self, task_id: str, agent_name: str,
-                             success: bool, result: Any = None) -> None:
+    def report_task_completion(
+        self, task_id: str, agent_name: str, success: bool, result: Any = None
+    ) -> None:
         """Report task completion with telemetry."""
         self.coordinator.report_task_completion(task_id, agent_name, success, result)
 
-        self.telemetry.record_event('task_completed', {
-            'task_id': task_id,
-            'agent': agent_name,
-            'success': success,
-            'result': result
-        }, agent_name)
+        self.telemetry.record_event(
+            "task_completed",
+            {"task_id": task_id, "agent": agent_name, "success": success, "result": result},
+            agent_name,
+        )

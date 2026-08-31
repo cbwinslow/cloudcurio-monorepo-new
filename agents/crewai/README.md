@@ -40,7 +40,7 @@ agents:
     tools:
       - search
       - scrape
-  
+
   - name: "agent2"
     role: "Writer"
     goal: "Write clear documentation"
@@ -56,7 +56,7 @@ tasks:
   - description: "Task 1 description"
     agent: "agent1"
     expected_output: "Expected output format"
-  
+
   - description: "Task 2 description"
     agent: "agent2"
     expected_output: "Expected output format"

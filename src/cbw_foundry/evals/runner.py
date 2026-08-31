@@ -1,7 +1,11 @@
 from __future__ import annotations
+
 from pathlib import Path
+
 import yaml
+
 from ..observability.otel import maybe_otel_span
+
 
 def run_golden_suite(path: str | Path) -> tuple[bool, list[str]]:
     with maybe_otel_span("eval_golden_suite"):

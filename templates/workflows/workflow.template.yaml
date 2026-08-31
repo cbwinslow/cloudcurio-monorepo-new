@@ -8,7 +8,7 @@ metadata:
 
 spec:
   coordination: sequential  # sequential, parallel, democratic, hierarchical
-  
+
   steps:
     - id: step_1
       name: "Step 1 Name"
@@ -17,7 +17,7 @@ spec:
         task: "Task description"
       output_var: step_1_result
       timeout: 180
-    
+
     - id: step_2
       name: "Step 2 Name"
       agent: another_agent
@@ -32,6 +32,6 @@ spec:
     retry_failed_steps: true
     max_retries: 2
     continue_on_error: false
-  
+
   outputs:
     final_result: "${step_2_result}"
