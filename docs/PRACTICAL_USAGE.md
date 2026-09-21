@@ -23,11 +23,7 @@ source activate_cloudcurio.sh
 ```python
 from agents.tools.llm_tools import llm_completion_tool
 
-llm = llm_completion_tool({
-    "provider": "ollama",
-    "model": "qwen2.5-coder",
-    "temperature": 0.7
-})
+llm = llm_completion_tool({"provider": "ollama", "model": "qwen2.5-coder", "temperature": 0.7})
 
 result = llm.execute(prompt="Explain Python decorators")
 print(result["text"])
@@ -72,24 +68,15 @@ transformer = data_transform_tool()
 data = [
     {"name": "Alice", "score": 95, "grade": "A"},
     {"name": "Bob", "score": 87, "grade": "B"},
-    {"name": "Charlie", "score": 92, "grade": "A"}
+    {"name": "Charlie", "score": 92, "grade": "A"},
 ]
 
 # Filter
-filtered = transformer.execute(
-    data=data,
-    operation="filter",
-    condition={"grade": "A"}
-)
+filtered = transformer.execute(data=data, operation="filter", condition={"grade": "A"})
 print(filtered["result"])
 
 # Aggregate
-avg = transformer.execute(
-    data=data,
-    operation="aggregate",
-    field="score",
-    function="avg"
-)
+avg = transformer.execute(data=data, operation="aggregate", field="score", function="avg")
 print(f"Average score: {avg['result']}")
 ```
 
@@ -106,10 +93,7 @@ print(f"Memory: {info['memory']['percent']}%")
 
 # Health check
 health = health_check_tool()
-status = health.execute(thresholds={
-    "cpu_percent": 80,
-    "memory_percent": 85
-})
+status = health.execute(thresholds={"cpu_percent": 80, "memory_percent": 85})
 print(f"Healthy: {status['healthy']}")
 ```
 
@@ -153,7 +137,7 @@ from cbw_foundry.agent_cli import run_agent
 result = run_agent(
     spec_path="agents/specs/researcher.agent.yaml",
     input_data={"task": "Research AI trends"},
-    runtime="local"
+    runtime="local",
 )
 print(result)
 ```
@@ -167,14 +151,14 @@ from cbw_foundry.swarm import Swarm, SwarmAgent, SwarmConfig, CoordinationMode
 agents = [
     SwarmAgent(name="researcher", role="worker", confidence=0.9),
     SwarmAgent(name="writer", role="worker", confidence=0.85),
-    SwarmAgent(name="editor", role="reviewer", confidence=0.9)
+    SwarmAgent(name="editor", role="reviewer", confidence=0.9),
 ]
 
 # Create swarm
 swarm = Swarm(
     name="content_team",
     agents=agents,
-    config=SwarmConfig(coordination_mode=CoordinationMode.SEQUENTIAL)
+    config=SwarmConfig(coordination_mode=CoordinationMode.SEQUENTIAL),
 )
 
 # Execute
@@ -211,32 +195,35 @@ from agents.tools.web_tools import search_engine_tool
 from agents.tools.llm_tools import llm_completion_tool
 from agents.tools.file_tools import file_writer_tool
 
+
 def generate_blog_post(topic):
     # Research
     search = search_engine_tool()
     results = search.execute(query=topic, num_results=5)
     sources = results["results"]
-    
+
     # Generate content
     llm = llm_completion_tool()
     prompt = f"""Write a blog post about {topic}.
-    
+
 Use these sources:
 {chr(10).join([f"- {s['title']}" for s in sources])}
 
 Make it engaging and informative.
 """
     content = llm.execute(prompt=prompt)
-    
+
     # Save
     writer = file_writer_tool({"base_path": "output"})
     filename = f"blog_{topic.replace(' ', '_').lower()}.md"
     writer.execute(filepath=filename, content=content["text"])
-    
+
     print(f"Blog post saved to output/{filename}")
+
 
 if __name__ == "__main__":
     import sys
+
     topic = sys.argv[1] if len(sys.argv) > 1 else "AI Trends"
     generate_blog_post(topic)
 ```
@@ -251,46 +238,43 @@ from agents.tools.file_tools import file_reader_tool
 from agents.tools.data_tools import csv_processor_tool, data_transform_tool
 from agents.tools.llm_tools import llm_completion_tool
 
+
 def analyze_data(filepath):
     # Load data
     reader = file_reader_tool()
     data = reader.execute(filepath=filepath)
-    
+
     # Parse CSV
     csv = csv_processor_tool()
     parsed = csv.execute(data=data["content"], action="parse")
     records = parsed["records"]
-    
+
     # Calculate statistics
     transformer = data_transform_tool()
     stats = {}
-    
+
     if records:
-        numeric_fields = [k for k, v in records[0].items() 
-                         if isinstance(v, (int, float))]
-        
+        numeric_fields = [k for k, v in records[0].items() if isinstance(v, (int, float))]
+
         for field in numeric_fields[:5]:
             avg = transformer.execute(
-                data=records,
-                operation="aggregate",
-                field=field,
-                function="avg"
+                data=records, operation="aggregate", field=field, function="avg"
             )
             stats[field] = avg["result"]
-    
+
     # Generate insights
     llm = llm_completion_tool()
-    insights = llm.execute(
-        prompt=f"Analyze this data and provide insights: {stats}"
-    )
-    
+    insights = llm.execute(prompt=f"Analyze this data and provide insights: {stats}")
+
     print(f"Dataset: {filepath}")
     print(f"Records: {len(records)}")
     print(f"\nStatistics: {stats}")
     print(f"\nInsights:\n{insights['text']}")
 
+
 if __name__ == "__main__":
     import sys
+
     filepath = sys.argv[1] if len(sys.argv) > 1 else "data.csv"
     analyze_data(filepath)
 ```
@@ -301,48 +285,50 @@ if __name__ == "__main__":
 #!/usr/bin/env python3
 """Display system health dashboard."""
 
-from agents.tools.system_tools import (
-    system_info_tool,
-    health_check_tool,
-    process_monitor_tool
-)
+from agents.tools.system_tools import system_info_tool, health_check_tool, process_monitor_tool
 import time
+
 
 def show_dashboard():
     sysinfo = system_info_tool()
     health = health_check_tool()
     processes = process_monitor_tool()
-    
+
     while True:
         # Clear screen
         print("\033[2J\033[H")
-        
+
         # System info
         info = sysinfo.execute(info_type="all")
         print("=" * 60)
         print("SYSTEM HEALTH DASHBOARD")
         print("=" * 60)
-        
+
         print(f"\nOS: {info['os']['system']} {info['os']['release']}")
         print(f"CPU: {info['cpu']['cpu_percent']}% | Cores: {info['cpu']['logical_cores']}")
-        print(f"Memory: {info['memory']['percent']}% | {info['memory']['used']//1024//1024}MB used")
-        print(f"Disk: {info['disk']['percent']}% | {info['disk']['free']//1024//1024//1024}GB free")
-        
+        print(
+            f"Memory: {info['memory']['percent']}% | {info['memory']['used'] // 1024 // 1024}MB used"
+        )
+        print(
+            f"Disk: {info['disk']['percent']}% | {info['disk']['free'] // 1024 // 1024 // 1024}GB free"
+        )
+
         # Health status
         health_status = health.execute()
-        status = "✓ HEALTHY" if health_status['healthy'] else "✗ UNHEALTHY"
+        status = "✓ HEALTHY" if health_status["healthy"] else "✗ UNHEALTHY"
         print(f"\nStatus: {status}")
-        
+
         # Top processes
         top = processes.execute(action="list")
         print(f"\nTop Processes:")
-        for proc in top['processes'][:5]:
+        for proc in top["processes"][:5]:
             print(f"  {proc['name']:<20} CPU: {proc['cpu_percent']}%")
-        
+
         print("\n" + "=" * 60)
         print("Press Ctrl+C to exit")
-        
+
         time.sleep(5)
+
 
 if __name__ == "__main__":
     try:
@@ -404,9 +390,7 @@ search = search_engine_tool()
 llm = llm_completion_tool()
 
 results = search.execute(query="Python async", num_results=3)
-summary = llm.execute(
-    prompt=f"Summarize these search results: {results['results']}"
-)
+summary = llm.execute(prompt=f"Summarize these search results: {results['results']}")
 print(summary["text"])
 ```
 
@@ -430,12 +414,14 @@ else:
 from agents.tools.llm_tools import llm_completion_tool
 
 # Custom configuration
-llm = llm_completion_tool({
-    "provider": "ollama",
-    "model": "qwen2.5-coder",
-    "temperature": 0.3,  # Lower for more deterministic
-    "max_tokens": 4000   # Longer responses
-})
+llm = llm_completion_tool(
+    {
+        "provider": "ollama",
+        "model": "qwen2.5-coder",
+        "temperature": 0.3,  # Lower for more deterministic
+        "max_tokens": 4000,  # Longer responses
+    }
+)
 
 result = llm.execute(prompt="Explain in detail...")
 ```

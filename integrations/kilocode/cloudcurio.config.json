@@ -3,7 +3,7 @@
   "version": "0.4.0",
   "description": "CloudCurio AI Agent Framework",
   "type": "mcp-extension",
-  
+
   "mcpServers": {
     "cloudcurio-tools": {
       "command": "python3",
@@ -14,7 +14,7 @@
       }
     }
   },
-  
+
   "tools": [
     {
       "name": "llm_completion",
@@ -59,7 +59,7 @@
       "server": "cloudcurio-tools"
     }
   ],
-  
+
   "agents": [
     {
       "name": "researcher",
@@ -86,7 +86,7 @@
       "capabilities": ["task_decomposition", "agent_delegation"]
     }
   ],
-  
+
   "skills": [
     {
       "command": "/research",
@@ -114,7 +114,7 @@
       "description": "Monitor system health and resources"
     }
   ],
-  
+
   "workflows": [
     {
       "name": "research_and_report",
@@ -132,7 +132,7 @@
       "description": "Democratic decision making with voting"
     }
   ],
-  
+
   "settings": {
     "auto_discover_skills": true,
     "auto_discover_agents": true,

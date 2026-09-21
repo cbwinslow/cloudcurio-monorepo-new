@@ -14,16 +14,12 @@ This module provides an enhanced base agent class that integrates:
 from __future__ import annotations
 
 import asyncio
-import inspect
 import json
 import logging
 import time
-import uuid
-from abc import ABC, abstractmethod
-from collections import defaultdict
-from dataclasses import dataclass, field
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 # Import all the modern AI frameworks
 try:
@@ -50,6 +46,7 @@ try:
     try:
         from crewai import Agent, Crew, Process, Task
         from crewai_tools import BaseTool as CrewAIBaseTool
+
         CREWAI_AVAILABLE = True
     except ImportError:
         CREWAI_AVAILABLE = False
@@ -58,6 +55,7 @@ try:
     try:
         from langgraph.graph import Graph
         from langgraph.prebuilt import HumanNode, ToolNode
+
         LANGRAPH_AVAILABLE = True
     except ImportError:
         LANGRAPH_AVAILABLE = False
@@ -68,6 +66,7 @@ try:
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
         OPENTELEMETRY_AVAILABLE = True
     except ImportError:
         OPENTELEMETRY_AVAILABLE = False
@@ -76,6 +75,7 @@ try:
     try:
         from langfuse import Langfuse
         from langfuse.callback import CallbackHandler
+
         LANGFUSE_AVAILABLE = True
     except ImportError:
         LANGFUSE_AVAILABLE = False
@@ -88,11 +88,12 @@ except ImportError as e:
     logging.warning(f"Failed to import some AI frameworks: {e}")
     logging.warning("Some features may be limited, but core functionality will still work.")
 
+
 # Enhanced Agent Tool with LangChain integration
 class EnhancedAgentTool(AgentTool):
     """Agent tool that integrates with LangChain and other frameworks."""
 
-    def __init__(self, name: str, description: str, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, name: str, description: str, config: dict[str, Any] | None = None):
         """Initialize enhanced agent tool.
 
         Args:
@@ -105,7 +106,9 @@ class EnhancedAgentTool(AgentTool):
         self.crewai_tool = None
         self.langgraph_node = None
 
-    def create_langchain_tool(self, func: Callable, return_direct: bool = False) -> LangChainBaseTool:
+    def create_langchain_tool(
+        self, func: Callable, return_direct: bool = False
+    ) -> LangChainBaseTool:
         """Create a LangChain tool from a function.
 
         Args:
@@ -125,7 +128,7 @@ class EnhancedAgentTool(AgentTool):
         self.langchain_tool = langchain_tool_wrapper
         return self.langchain_tool
 
-    def create_crewai_tool(self, func: Callable) -> Optional[CrewAIBaseTool]:
+    def create_crewai_tool(self, func: Callable) -> CrewAIBaseTool | None:
         """Create a CrewAI tool from a function.
 
         Args:
@@ -137,15 +140,11 @@ class EnhancedAgentTool(AgentTool):
         if not CREWAI_AVAILABLE:
             return None
 
-        crewai_tool = CrewAIBaseTool(
-            name=self.name,
-            description=self.description,
-            func=func
-        )
+        crewai_tool = CrewAIBaseTool(name=self.name, description=self.description, func=func)
         self.crewai_tool = crewai_tool
         return crewai_tool
 
-    def create_langgraph_node(self) -> Optional[ToolNode]:
+    def create_langgraph_node(self) -> ToolNode | None:
         """Create a LangGraph node from this tool.
 
         Returns:
@@ -158,11 +157,12 @@ class EnhancedAgentTool(AgentTool):
         self.langgraph_node = node
         return node
 
+
 # Enhanced Base Agent with all frameworks
 class EnhancedBaseAgent(BaseAgent):
     """Enhanced base agent with all modern AI frameworks integrated."""
 
-    def __init__(self, agent_name: str, config_path: Optional[str] = None):
+    def __init__(self, agent_name: str, config_path: str | None = None):
         """Initialize the enhanced agent.
 
         Args:
@@ -180,11 +180,11 @@ class EnhancedBaseAgent(BaseAgent):
 
         # Initialize framework availability
         self.frameworks_available = {
-            'langchain': True,
-            'crewai': CREWAI_AVAILABLE,
-            'langgraph': LANGRAPH_AVAILABLE,
-            'opentelemetry': OPENTELEMETRY_AVAILABLE,
-            'langfuse': LANGFUSE_AVAILABLE
+            "langchain": True,
+            "crewai": CREWAI_AVAILABLE,
+            "langgraph": LANGRAPH_AVAILABLE,
+            "opentelemetry": OPENTELEMETRY_AVAILABLE,
+            "langfuse": LANGFUSE_AVAILABLE,
         }
 
         # Initialize observability
@@ -199,7 +199,9 @@ class EnhancedBaseAgent(BaseAgent):
         # Initialize LangGraph workflow
         self._initialize_langgraph_workflow()
 
-        self.logger.info(f"Initialized enhanced agent '{self.name}' with frameworks: {self.frameworks_available}")
+        self.logger.info(
+            f"Initialized enhanced agent '{self.name}' with frameworks: {self.frameworks_available}"
+        )
 
     def _initialize_observability(self) -> None:
         """Initialize OpenTelemetry and LangFuse for observability."""
@@ -214,7 +216,7 @@ class EnhancedBaseAgent(BaseAgent):
                 self.logger.info("OpenTelemetry tracing initialized")
             except Exception as e:
                 self.logger.error(f"Failed to initialize OpenTelemetry: {e}")
-                self.frameworks_available['opentelemetry'] = False
+                self.frameworks_available["opentelemetry"] = False
 
         # Initialize LangFuse
         if LANGFUSE_AVAILABLE:
@@ -222,12 +224,12 @@ class EnhancedBaseAgent(BaseAgent):
                 self.langfuse_handler = CallbackHandler(
                     public_key="your-public-key",
                     secret_key="your-secret-key",
-                    host="https://cloud.langfuse.com"
+                    host="https://cloud.langfuse.com",
                 )
                 self.logger.info("LangFuse analytics initialized")
             except Exception as e:
                 self.logger.error(f"Failed to initialize LangFuse: {e}")
-                self.frameworks_available['langfuse'] = False
+                self.frameworks_available["langfuse"] = False
 
     def _initialize_langchain_agent(self) -> None:
         """Initialize LangChain agent with tools."""
@@ -241,12 +243,14 @@ class EnhancedBaseAgent(BaseAgent):
                         langchain_tools.append(langchain_tool)
 
             # Create LangChain prompt template
-            prompt = ChatPromptTemplate.from_messages([
-                SystemMessage(content=self.system_prompt),
-                MessagesPlaceholder(variable_name="chat_history"),
-                HumanMessage(content="{input}"),
-                MessagesPlaceholder(variable_name="agent_scratchpad"),
-            ])
+            prompt = ChatPromptTemplate.from_messages(
+                [
+                    SystemMessage(content=self.system_prompt),
+                    MessagesPlaceholder(variable_name="chat_history"),
+                    HumanMessage(content="{input}"),
+                    MessagesPlaceholder(variable_name="agent_scratchpad"),
+                ]
+            )
 
             # Create LangChain agent
             from langchain.agents import create_openai_functions_agent
@@ -255,11 +259,7 @@ class EnhancedBaseAgent(BaseAgent):
             llm = ChatOpenAI(model=self.model, temperature=0)
 
             # Create the agent
-            agent = create_openai_functions_agent(
-                llm=llm,
-                tools=langchain_tools,
-                prompt=prompt
-            )
+            agent = create_openai_functions_agent(llm=llm, tools=langchain_tools, prompt=prompt)
 
             # Create agent executor
             self.langchain_agent = AgentExecutor(
@@ -267,14 +267,14 @@ class EnhancedBaseAgent(BaseAgent):
                 tools=langchain_tools,
                 verbose=True,
                 handle_parsing_errors=True,
-                callbacks=[self.langfuse_handler] if self.langfuse_handler else None
+                callbacks=[self.langfuse_handler] if self.langfuse_handler else None,
             )
 
             self.logger.info(f"LangChain agent initialized with {len(langchain_tools)} tools")
 
         except Exception as e:
             self.logger.error(f"Failed to initialize LangChain agent: {e}")
-            self.frameworks_available['langchain'] = False
+            self.frameworks_available["langchain"] = False
 
     def _initialize_crewai_agent(self) -> None:
         """Initialize CrewAI agent."""
@@ -297,14 +297,14 @@ class EnhancedBaseAgent(BaseAgent):
                 backstory=f"AI agent specialized in {self.role}",
                 tools=crewai_tools,
                 verbose=True,
-                allow_delegation=True
+                allow_delegation=True,
             )
 
             self.logger.info(f"CrewAI agent initialized with {len(crewai_tools)} tools")
 
         except Exception as e:
             self.logger.error(f"Failed to initialize CrewAI agent: {e}")
-            self.frameworks_available['crewai'] = False
+            self.frameworks_available["crewai"] = False
 
     def _initialize_langgraph_workflow(self) -> None:
         """Initialize LangGraph workflow."""
@@ -332,7 +332,7 @@ class EnhancedBaseAgent(BaseAgent):
 
             # Connect nodes (simple linear workflow for now)
             last_node = "human"
-            for node_name in tool_nodes.keys():
+            for node_name in tool_nodes:
                 workflow.add_edge(last_node, node_name)
                 last_node = node_name
 
@@ -346,9 +346,11 @@ class EnhancedBaseAgent(BaseAgent):
 
         except Exception as e:
             self.logger.error(f"Failed to initialize LangGraph workflow: {e}")
-            self.frameworks_available['langgraph'] = False
+            self.frameworks_available["langgraph"] = False
 
-    def execute_with_langchain(self, task: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def execute_with_langchain(
+        self, task: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Execute a task using LangChain agent.
 
         Args:
@@ -358,17 +360,21 @@ class EnhancedBaseAgent(BaseAgent):
         Returns:
             Dictionary with execution results
         """
-        if not self.frameworks_available['langchain'] or not self.langchain_agent:
+        if not self.frameworks_available["langchain"] or not self.langchain_agent:
             return {"error": "LangChain not available", "success": False}
 
         try:
             # Start observability span
             if self.telemetry_tracer:
-                with self.telemetry_tracer.start_as_current_span(f"{self.name}_langchain_execution"):
-                    result = self.langchain_agent.invoke({
-                        "input": task,
-                        "chat_history": context.get("chat_history", []) if context else []
-                    })
+                with self.telemetry_tracer.start_as_current_span(
+                    f"{self.name}_langchain_execution"
+                ):
+                    result = self.langchain_agent.invoke(
+                        {
+                            "input": task,
+                            "chat_history": context.get("chat_history", []) if context else [],
+                        }
+                    )
 
             # Update confidence metrics
             success = result.get("output", "").strip() != ""
@@ -378,7 +384,7 @@ class EnhancedBaseAgent(BaseAgent):
                 "success": success,
                 "result": result.get("output", ""),
                 "intermediate_steps": result.get("intermediate_steps", []),
-                "framework": "langchain"
+                "framework": "langchain",
             }
 
         except Exception as e:
@@ -386,7 +392,9 @@ class EnhancedBaseAgent(BaseAgent):
             self.update_confidence_after_execution("langchain_execution", False)
             return {"error": str(e), "success": False, "framework": "langchain"}
 
-    def execute_with_crewai(self, task: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def execute_with_crewai(
+        self, task: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Execute a task using CrewAI agent.
 
         Args:
@@ -396,7 +404,7 @@ class EnhancedBaseAgent(BaseAgent):
         Returns:
             Dictionary with execution results
         """
-        if not self.frameworks_available['crewai'] or not self.crewai_agent:
+        if not self.frameworks_available["crewai"] or not self.crewai_agent:
             return {"error": "CrewAI not available", "success": False}
 
         try:
@@ -405,7 +413,7 @@ class EnhancedBaseAgent(BaseAgent):
                 description=task,
                 agent=self.crewai_agent,
                 expected_output="Detailed response to the task",
-                context=context or {}
+                context=context or {},
             )
 
             # Create and execute crew
@@ -413,7 +421,7 @@ class EnhancedBaseAgent(BaseAgent):
                 agents=[self.crewai_agent],
                 tasks=[crewai_task],
                 process=Process.sequential,
-                verbose=True
+                verbose=True,
             )
 
             # Start observability span
@@ -425,18 +433,16 @@ class EnhancedBaseAgent(BaseAgent):
             success = result.strip() != ""
             self.update_confidence_after_execution("crewai_execution", success)
 
-            return {
-                "success": success,
-                "result": result,
-                "framework": "crewai"
-            }
+            return {"success": success, "result": result, "framework": "crewai"}
 
         except Exception as e:
             self.logger.error(f"CrewAI execution failed: {e}")
             self.update_confidence_after_execution("crewai_execution", False)
             return {"error": str(e), "success": False, "framework": "crewai"}
 
-    async def execute_with_langgraph(self, task: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def execute_with_langgraph(
+        self, task: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Execute a task using LangGraph workflow.
 
         Args:
@@ -446,18 +452,19 @@ class EnhancedBaseAgent(BaseAgent):
         Returns:
             Dictionary with execution results
         """
-        if not self.frameworks_available['langgraph'] or not self.langgraph_workflow:
+        if not self.frameworks_available["langgraph"] or not self.langgraph_workflow:
             return {"error": "LangGraph not available", "success": False}
 
         try:
             # Start observability span
             if self.telemetry_tracer:
-                with self.telemetry_tracer.start_as_current_span(f"{self.name}_langgraph_execution"):
+                with self.telemetry_tracer.start_as_current_span(
+                    f"{self.name}_langgraph_execution"
+                ):
                     # Execute workflow
-                    result = await self.langgraph_workflow.ainvoke({
-                        "messages": [HumanMessage(content=task)],
-                        "context": context or {}
-                    })
+                    result = await self.langgraph_workflow.ainvoke(
+                        {"messages": [HumanMessage(content=task)], "context": context or {}}
+                    )
 
             # Update confidence metrics
             success = result.get("messages", [{}])[-1].get("content", "").strip() != ""
@@ -466,7 +473,7 @@ class EnhancedBaseAgent(BaseAgent):
             return {
                 "success": success,
                 "result": result.get("messages", [{}])[-1].get("content", ""),
-                "framework": "langgraph"
+                "framework": "langgraph",
             }
 
         except Exception as e:
@@ -474,7 +481,9 @@ class EnhancedBaseAgent(BaseAgent):
             self.update_confidence_after_execution("langgraph_execution", False)
             return {"error": str(e), "success": False, "framework": "langgraph"}
 
-    def execute_task(self, task: str, framework: str = "auto", context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def execute_task(
+        self, task: str, framework: str = "auto", context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Execute a task using the specified framework.
 
         Args:
@@ -490,11 +499,11 @@ class EnhancedBaseAgent(BaseAgent):
         # Auto-select framework based on availability and confidence
         if framework == "auto":
             # Try frameworks in order of preference
-            if self.frameworks_available['langgraph']:
+            if self.frameworks_available["langgraph"]:
                 return self.execute_with_langgraph(task, context)
-            elif self.frameworks_available['crewai']:
+            elif self.frameworks_available["crewai"]:
                 return self.execute_with_crewai(task, context)
-            elif self.frameworks_available['langchain']:
+            elif self.frameworks_available["langchain"]:
                 return self.execute_with_langchain(task, context)
             else:
                 return {"error": "No AI frameworks available", "success": False}
@@ -509,7 +518,7 @@ class EnhancedBaseAgent(BaseAgent):
         else:
             return {"error": f"Unknown framework: {framework}", "success": False}
 
-    def get_available_frameworks(self) -> Dict[str, bool]:
+    def get_available_frameworks(self) -> dict[str, bool]:
         """Get availability status of all frameworks.
 
         Returns:
@@ -517,7 +526,7 @@ class EnhancedBaseAgent(BaseAgent):
         """
         return self.frameworks_available.copy()
 
-    def get_framework_status(self) -> Dict[str, Any]:
+    def get_framework_status(self) -> dict[str, Any]:
         """Get detailed status of all framework integrations.
 
         Returns:
@@ -531,13 +540,14 @@ class EnhancedBaseAgent(BaseAgent):
             "langgraph_workflow": bool(self.langgraph_workflow),
             "observability": {
                 "opentelemetry": bool(self.telemetry_tracer),
-                "langfuse": bool(self.langfuse_handler)
-            }
+                "langfuse": bool(self.langfuse_handler),
+            },
         }
         return status
 
-    def enhanced_execute_tool(self, tool_name: str, parameters: Dict[str, Any],
-                            framework: str = "auto") -> Dict[str, Any]:
+    def enhanced_execute_tool(
+        self, tool_name: str, parameters: dict[str, Any], framework: str = "auto"
+    ) -> dict[str, Any]:
         """Execute a tool using enhanced framework capabilities.
 
         Args:
@@ -565,7 +575,7 @@ class EnhancedBaseAgent(BaseAgent):
         framework_result = self.execute_task(
             f"Execute tool {tool_name} with parameters {parameters}",
             framework=framework,
-            context={"tool_result": base_result.to_dict()}
+            context={"tool_result": base_result.to_dict()},
         )
 
         # Combine results
@@ -573,10 +583,12 @@ class EnhancedBaseAgent(BaseAgent):
             "base_result": base_result.to_dict(),
             "framework_result": framework_result,
             "success": base_result.success and framework_result.get("success", False),
-            "framework_used": framework
+            "framework_used": framework,
         }
 
-    def create_enhanced_workflow(self, workflow_name: str, steps: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def create_enhanced_workflow(
+        self, workflow_name: str, steps: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Create an enhanced workflow using all available frameworks.
 
         Args:
@@ -591,11 +603,11 @@ class EnhancedBaseAgent(BaseAgent):
             "steps": steps,
             "frameworks_used": [],
             "creation_time": time.time(),
-            "status": "created"
+            "status": "created",
         }
 
         # Create LangChain workflow
-        if self.frameworks_available['langchain']:
+        if self.frameworks_available["langchain"]:
             try:
                 from langchain.chains import LLMChain
                 from langchain.prompts import PromptTemplate
@@ -612,14 +624,14 @@ class EnhancedBaseAgent(BaseAgent):
                 self.logger.error(f"Failed to create LangChain workflow: {e}")
 
         # Create CrewAI workflow
-        if self.frameworks_available['crewai']:
+        if self.frameworks_available["crewai"]:
             try:
                 crewai_tasks = []
                 for i, step in enumerate(steps):
                     task = Task(
-                        description=step.get("description", f"Step {i+1}"),
+                        description=step.get("description", f"Step {i + 1}"),
                         agent=self.crewai_agent,
-                        expected_output=step.get("expected_output", "Step completion")
+                        expected_output=step.get("expected_output", "Step completion"),
                     )
                     crewai_tasks.append(task)
 
@@ -630,25 +642,27 @@ class EnhancedBaseAgent(BaseAgent):
                 self.logger.error(f"Failed to create CrewAI workflow: {e}")
 
         # Create LangGraph workflow
-        if self.frameworks_available['langgraph']:
+        if self.frameworks_available["langgraph"]:
             try:
                 graph = Graph()
 
                 # Add nodes for each step
                 for i, step in enumerate(steps):
-                    node_name = f"step_{i+1}"
+                    node_name = f"step_{i + 1}"
 
                     # Define the tool function
                     def create_step_tool(step_num: int):
                         def step_tool(step_desc: str) -> str:
                             """Execute workflow step."""
                             return f"Executed step {step_num}: {step_desc}"
+
                         return step_tool
 
-                    step_tool_func = create_step_tool(i+1)
+                    step_tool_func = create_step_tool(i + 1)
 
                     # Create LangChain tool
                     from langchain_core.tools import tool
+
                     step_tool_lc = tool(step_tool_func)
 
                     graph.add_node(node_name, ToolNode([step_tool_lc]))
@@ -670,7 +684,9 @@ class EnhancedBaseAgent(BaseAgent):
         workflow["status"] = "ready" if workflow["frameworks_used"] else "failed"
         return workflow
 
-    def execute_enhanced_workflow(self, workflow: Dict[str, Any], inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_enhanced_workflow(
+        self, workflow: dict[str, Any], inputs: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute an enhanced workflow created with create_enhanced_workflow.
 
         Args:
@@ -684,54 +700,56 @@ class EnhancedBaseAgent(BaseAgent):
             "workflow_name": workflow["name"],
             "framework_results": {},
             "success": True,
-            "errors": []
+            "errors": [],
         }
 
         # Execute with each framework that was used to create the workflow
         for framework in workflow.get("frameworks_used", []):
             try:
                 if framework == "langchain" and "langchain_chain" in workflow:
-                    langchain_result = workflow["langchain_chain"].run({
-                        "workflow_name": workflow["name"],
-                        "steps": str(workflow["steps"])
-                    })
+                    langchain_result = workflow["langchain_chain"].run(
+                        {"workflow_name": workflow["name"], "steps": str(workflow["steps"])}
+                    )
                     results["framework_results"]["langchain"] = {
                         "success": True,
-                        "result": langchain_result
+                        "result": langchain_result,
                     }
 
                 elif framework == "crewai" and "crewai_tasks" in workflow:
                     crew = Crew(
                         agents=[self.crewai_agent],
                         tasks=workflow["crewai_tasks"],
-                        process=Process.sequential
+                        process=Process.sequential,
                     )
                     crewai_result = crew.kickoff()
                     results["framework_results"]["crewai"] = {
                         "success": True,
-                        "result": crewai_result
+                        "result": crewai_result,
                     }
 
                 elif framework == "langgraph" and "langgraph_workflow" in workflow:
-                    langgraph_result = asyncio.run(workflow["langgraph_workflow"].ainvoke({
-                        "messages": [HumanMessage(content=f"Execute workflow {workflow['name']}")]
-                    }))
+                    langgraph_result = asyncio.run(
+                        workflow["langgraph_workflow"].ainvoke(
+                            {
+                                "messages": [
+                                    HumanMessage(content=f"Execute workflow {workflow['name']}")
+                                ]
+                            }
+                        )
+                    )
                     results["framework_results"]["langgraph"] = {
                         "success": True,
-                        "result": langgraph_result
+                        "result": langgraph_result,
                     }
 
             except Exception as e:
-                results["framework_results"][framework] = {
-                    "success": False,
-                    "error": str(e)
-                }
+                results["framework_results"][framework] = {"success": False, "error": str(e)}
                 results["success"] = False
-                results["errors"].append(f"{framework}: {str(e)}")
+                results["errors"].append(f"{framework}: {e!s}")
 
         return results
 
-    def get_enhanced_status(self) -> Dict[str, Any]:
+    def get_enhanced_status(self) -> dict[str, Any]:
         """Get comprehensive status of the enhanced agent.
 
         Returns:
@@ -746,21 +764,24 @@ class EnhancedBaseAgent(BaseAgent):
             "enhanced_capabilities": {
                 "multi_framework_execution": True,
                 "observability_integration": any([self.telemetry_tracer, self.langfuse_handler]),
-                "workflow_orchestration": any([
-                    self.frameworks_available['langchain'],
-                    self.frameworks_available['crewai'],
-                    self.frameworks_available['langgraph']
-                ]),
+                "workflow_orchestration": any(
+                    [
+                        self.frameworks_available["langchain"],
+                        self.frameworks_available["crewai"],
+                        self.frameworks_available["langgraph"],
+                    ]
+                ),
                 "democratic_decision_making": True,
-                "confidence_tracking": True
-            }
+                "confidence_tracking": True,
+            },
         }
+
 
 # Enhanced Tool-Based Agent
 class EnhancedToolBasedAgent(EnhancedBaseAgent):
     """Enhanced agent that uses framework-integrated tools."""
 
-    def _initialize_tools(self) -> Dict[str, AgentTool]:
+    def _initialize_tools(self) -> dict[str, AgentTool]:
         """Initialize enhanced tools from agent configuration."""
         tools = {}
 
@@ -774,9 +795,7 @@ class EnhancedToolBasedAgent(EnhancedBaseAgent):
 
             # Create enhanced agent tool wrapper
             enhanced_tool = EnhancedAgentTool(
-                name=tool_name,
-                description=tool_description,
-                config=tool_params_config
+                name=tool_name, description=tool_description, config=tool_params_config
             )
 
             # Create LangChain tool
@@ -794,11 +813,12 @@ class EnhancedToolBasedAgent(EnhancedBaseAgent):
 
         return tools
 
+
 # Enhanced Workflow Orchestrator
 class EnhancedWorkflowOrchestrator:
     """Orchestrates multi-agent workflows with all framework integrations."""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """Initialize enhanced workflow orchestrator.
 
         Args:
@@ -806,7 +826,7 @@ class EnhancedWorkflowOrchestrator:
         """
         self.config_path = config_path or "agents_config.json"
         self.config = self._load_config()
-        self.agents: Dict[str, EnhancedBaseAgent] = {}
+        self.agents: dict[str, EnhancedBaseAgent] = {}
         self.workflows = self.config.get("workflows", {})
 
         # Initialize framework integrations
@@ -814,13 +834,13 @@ class EnhancedWorkflowOrchestrator:
         self.langfuse_handler = None
         self._initialize_observability()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load configuration from agents_config.json."""
         config_file = Path(self.config_path)
         if not config_file.exists():
             raise FileNotFoundError(f"Configuration file not found: {self.config_path}")
 
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             return json.load(f)
 
     def _initialize_observability(self) -> None:
@@ -840,7 +860,7 @@ class EnhancedWorkflowOrchestrator:
                 self.langfuse_handler = CallbackHandler(
                     public_key="your-public-key",
                     secret_key="your-secret-key",
-                    host="https://cloud.langfuse.com"
+                    host="https://cloud.langfuse.com",
                 )
             except Exception as e:
                 logging.error(f"Failed to initialize LangFuse for orchestrator: {e}")
@@ -859,8 +879,9 @@ class EnhancedWorkflowOrchestrator:
 
         return self.agents[agent_name]
 
-    def execute_enhanced_workflow(self, workflow_name: str, inputs: Dict[str, Any],
-                                framework: str = "auto") -> Dict[str, Any]:
+    def execute_enhanced_workflow(
+        self, workflow_name: str, inputs: dict[str, Any], framework: str = "auto"
+    ) -> dict[str, Any]:
         """Execute a multi-agent workflow with enhanced framework capabilities.
 
         Args:
@@ -881,12 +902,19 @@ class EnhancedWorkflowOrchestrator:
         # Start observability span
         if self.telemetry_tracer:
             with self.telemetry_tracer.start_as_current_span(f"workflow_{workflow_name}_execution"):
-                return self._execute_workflow_steps(workflow_name, workflow_steps, inputs, framework)
+                return self._execute_workflow_steps(
+                    workflow_name, workflow_steps, inputs, framework
+                )
         else:
             return self._execute_workflow_steps(workflow_name, workflow_steps, inputs, framework)
 
-    def _execute_workflow_steps(self, workflow_name: str, steps: List[Dict[str, Any]],
-                              inputs: Dict[str, Any], framework: str) -> Dict[str, Any]:
+    def _execute_workflow_steps(
+        self,
+        workflow_name: str,
+        steps: list[dict[str, Any]],
+        inputs: dict[str, Any],
+        framework: str,
+    ) -> dict[str, Any]:
         """Execute workflow steps with the specified framework.
 
         Args:
@@ -916,7 +944,7 @@ class EnhancedWorkflowOrchestrator:
             step_result = agent.execute_task(
                 f"Execute action {action} with parameters {step_parameters}",
                 framework=framework,
-                context={"step": step, "workflow": workflow_name}
+                context={"step": step, "workflow": workflow_name},
             )
 
             # Store result
@@ -940,11 +968,12 @@ class EnhancedWorkflowOrchestrator:
             "steps_executed": len(results),
             "results": results,
             "inputs": inputs,
-            "framework_used": framework
+            "framework_used": framework,
         }
 
-    def _resolve_step_inputs(self, input_spec: str, context: Dict[str, Any],
-                           results: Dict[str, Any]) -> Dict[str, Any]:
+    def _resolve_step_inputs(
+        self, input_spec: str, context: dict[str, Any], results: dict[str, Any]
+    ) -> dict[str, Any]:
         """Resolve step inputs from specification.
 
         Args:
@@ -969,7 +998,9 @@ class EnhancedWorkflowOrchestrator:
         # Default to entire context
         return context
 
-    def create_multi_framework_workflow(self, workflow_name: str, steps: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def create_multi_framework_workflow(
+        self, workflow_name: str, steps: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Create a workflow that can be executed with multiple frameworks.
 
         Args:
@@ -982,12 +1013,8 @@ class EnhancedWorkflowOrchestrator:
         workflow = {
             "name": workflow_name,
             "steps": steps,
-            "frameworks": {
-                "langchain": None,
-                "crewai": None,
-                "langgraph": None
-            },
-            "creation_time": time.time()
+            "frameworks": {"langchain": None, "crewai": None, "langgraph": None},
+            "creation_time": time.time(),
         }
 
         # Create LangChain version
@@ -1011,14 +1038,14 @@ class EnhancedWorkflowOrchestrator:
                 crewai_tasks = []
                 for i, step in enumerate(steps):
                     task = Task(
-                        description=step.get("description", f"Step {i+1}"),
-                        expected_output=step.get("expected_output", "Step completion")
+                        description=step.get("description", f"Step {i + 1}"),
+                        expected_output=step.get("expected_output", "Step completion"),
                     )
                     crewai_tasks.append(task)
 
                 workflow["frameworks"]["crewai"] = {
                     "tasks": crewai_tasks,
-                    "process": Process.sequential
+                    "process": Process.sequential,
                 }
 
             except Exception as e:
@@ -1031,19 +1058,21 @@ class EnhancedWorkflowOrchestrator:
 
                 # Add nodes for each step
                 for i, step in enumerate(steps):
-                    node_name = f"step_{i+1}"
+                    node_name = f"step_{i + 1}"
 
                     # Define the tool function
                     def create_step_tool(step_num: int):
                         def step_tool(step_desc: str) -> str:
                             """Execute workflow step."""
                             return f"Executed step {step_num}: {step_desc}"
+
                         return step_tool
 
-                    step_tool_func = create_step_tool(i+1)
+                    step_tool_func = create_step_tool(i + 1)
 
                     # Create LangChain tool
                     from langchain_core.tools import tool
+
                     step_tool_lc = tool(step_tool_func)
 
                     graph.add_node(node_name, ToolNode([step_tool_lc]))
@@ -1063,7 +1092,7 @@ class EnhancedWorkflowOrchestrator:
 
         return workflow
 
-    def get_available_frameworks(self) -> Dict[str, bool]:
+    def get_available_frameworks(self) -> dict[str, bool]:
         """Get availability of all frameworks.
 
         Returns:
@@ -1074,5 +1103,5 @@ class EnhancedWorkflowOrchestrator:
             "crewai": CREWAI_AVAILABLE,
             "langgraph": LANGRAPH_AVAILABLE,
             "opentelemetry": OPENTELEMETRY_AVAILABLE,
-            "langfuse": LANGFUSE_AVAILABLE
+            "langfuse": LANGFUSE_AVAILABLE,
         }

@@ -5,9 +5,9 @@ This module defines custom exceptions and error handling utilities that provide
 robust, informative, and actionable error management across all tools.
 """
 
-from typing import Any, Dict, Optional, List
-import traceback
 import logging
+import traceback
+from typing import Any
 
 
 class ToolError(Exception):
@@ -21,12 +21,14 @@ class ToolError(Exception):
     - Stack trace
     """
 
-    def __init__(self,
-                 message: str,
-                 error_type: str = "generic",
-                 context: Optional[Dict[str, Any]] = None,
-                 recovery_suggestions: Optional[List[str]] = None,
-                 original_exception: Optional[Exception] = None):
+    def __init__(
+        self,
+        message: str,
+        error_type: str = "generic",
+        context: dict[str, Any] | None = None,
+        recovery_suggestions: list[str] | None = None,
+        original_exception: Exception | None = None,
+    ):
         """
         Initialize a ToolError.
 
@@ -48,21 +50,21 @@ class ToolError(Exception):
 
         super().__init__(self._format_error_message())
 
-    def _generate_error_info(self) -> Dict[str, Any]:
+    def _generate_error_info(self) -> dict[str, Any]:
         """Generate comprehensive error information dictionary."""
         error_info = {
-            'message': self.message,
-            'type': self.error_type,
-            'context': self.context,
-            'recovery_suggestions': self.recovery_suggestions,
-            'timestamp': self._get_current_timestamp()
+            "message": self.message,
+            "type": self.error_type,
+            "context": self.context,
+            "recovery_suggestions": self.recovery_suggestions,
+            "timestamp": self._get_current_timestamp(),
         }
 
         if self.original_exception:
-            error_info['original_error'] = {
-                'type': type(self.original_exception).__name__,
-                'message': str(self.original_exception),
-                'stack_trace': self._get_stack_trace()
+            error_info["original_error"] = {
+                "type": type(self.original_exception).__name__,
+                "message": str(self.original_exception),
+                "stack_trace": self._get_stack_trace(),
             }
 
         return error_info
@@ -70,12 +72,13 @@ class ToolError(Exception):
     def _get_current_timestamp(self) -> str:
         """Get current timestamp in ISO format."""
         from datetime import datetime
+
         return datetime.now().isoformat()
 
     def _get_stack_trace(self) -> str:
         """Get stack trace from original exception."""
         if self.original_exception:
-            return ''.join(traceback.format_tb(self.original_exception.__traceback__))
+            return "".join(traceback.format_tb(self.original_exception.__traceback__))
         return "No stack trace available"
 
     def _format_error_message(self) -> str:
@@ -83,7 +86,7 @@ class ToolError(Exception):
         lines = [
             f"=== {self.error_type.upper()} ERROR ===",
             f"Message: {self.message}",
-            f"Timestamp: {self.error_info['timestamp']}"
+            f"Timestamp: {self.error_info['timestamp']}",
         ]
 
         if self.context:
@@ -98,15 +101,15 @@ class ToolError(Exception):
 
         if self.original_exception:
             lines.append(f"Original Error: {type(self.original_exception).__name__}")
-            lines.append(f"Original Message: {str(self.original_exception)}")
+            lines.append(f"Original Message: {self.original_exception!s}")
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
-    def get_error_info(self) -> Dict[str, Any]:
+    def get_error_info(self) -> dict[str, Any]:
         """Get comprehensive error information."""
         return self.error_info.copy()
 
-    def log_error(self, logger: Optional[logging.Logger] = None) -> None:
+    def log_error(self, logger: logging.Logger | None = None) -> None:
         """Log the error using provided logger or print to console."""
         error_message = self._format_error_message()
 
@@ -131,10 +134,12 @@ class ToolConfigError(ToolError):
     Used when tool configuration is invalid or missing required parameters.
     """
 
-    def __init__(self,
-                 message: str,
-                 context: Optional[Dict[str, Any]] = None,
-                 original_exception: Optional[Exception] = None):
+    def __init__(
+        self,
+        message: str,
+        context: dict[str, Any] | None = None,
+        original_exception: Exception | None = None,
+    ):
         """
         Initialize a configuration error.
 
@@ -147,7 +152,7 @@ class ToolConfigError(ToolError):
             "Check tool configuration file for syntax errors",
             "Verify all required parameters are present",
             "Validate configuration values against expected types",
-            "Consult tool documentation for configuration requirements"
+            "Consult tool documentation for configuration requirements",
         ]
 
         super().__init__(
@@ -155,7 +160,7 @@ class ToolConfigError(ToolError):
             error_type="configuration",
             context=context,
             recovery_suggestions=recovery_suggestions,
-            original_exception=original_exception
+            original_exception=original_exception,
         )
 
 
@@ -166,10 +171,12 @@ class ToolValidationError(ToolError):
     Used when tool input fails validation checks.
     """
 
-    def __init__(self,
-                 message: str,
-                 context: Optional[Dict[str, Any]] = None,
-                 original_exception: Optional[Exception] = None):
+    def __init__(
+        self,
+        message: str,
+        context: dict[str, Any] | None = None,
+        original_exception: Exception | None = None,
+    ):
         """
         Initialize a validation error.
 
@@ -182,7 +189,7 @@ class ToolValidationError(ToolError):
             "Check input parameters against tool requirements",
             "Validate data types and formats",
             "Ensure required fields are provided",
-            "Consult tool documentation for input specifications"
+            "Consult tool documentation for input specifications",
         ]
 
         super().__init__(
@@ -190,7 +197,7 @@ class ToolValidationError(ToolError):
             error_type="validation",
             context=context,
             recovery_suggestions=recovery_suggestions,
-            original_exception=original_exception
+            original_exception=original_exception,
         )
 
 
@@ -201,10 +208,12 @@ class ToolExecutionError(ToolError):
     Used when tool execution fails during processing.
     """
 
-    def __init__(self,
-                 message: str,
-                 context: Optional[Dict[str, Any]] = None,
-                 original_exception: Optional[Exception] = None):
+    def __init__(
+        self,
+        message: str,
+        context: dict[str, Any] | None = None,
+        original_exception: Exception | None = None,
+    ):
         """
         Initialize an execution error.
 
@@ -217,7 +226,7 @@ class ToolExecutionError(ToolError):
             "Check system resources and availability",
             "Verify input data integrity",
             "Review tool logs for detailed error information",
-            "Consider retrying the operation with adjusted parameters"
+            "Consider retrying the operation with adjusted parameters",
         ]
 
         super().__init__(
@@ -225,7 +234,7 @@ class ToolExecutionError(ToolError):
             error_type="execution",
             context=context,
             recovery_suggestions=recovery_suggestions,
-            original_exception=original_exception
+            original_exception=original_exception,
         )
 
 
@@ -236,11 +245,13 @@ class ToolTimeoutError(ToolError):
     Used when tool execution exceeds maximum allowed time.
     """
 
-    def __init__(self,
-                 message: str,
-                 timeout: float,
-                 context: Optional[Dict[str, Any]] = None,
-                 original_exception: Optional[Exception] = None):
+    def __init__(
+        self,
+        message: str,
+        timeout: float,
+        context: dict[str, Any] | None = None,
+        original_exception: Exception | None = None,
+    ):
         """
         Initialize a timeout error.
 
@@ -254,18 +265,18 @@ class ToolTimeoutError(ToolError):
             f"Increase timeout threshold (current: {timeout}s)",
             "Optimize tool performance",
             "Reduce input data size",
-            "Check for system resource constraints"
+            "Check for system resource constraints",
         ]
 
         context = context or {}
-        context['timeout_seconds'] = timeout
+        context["timeout_seconds"] = timeout
 
         super().__init__(
             message=message,
             error_type="timeout",
             context=context,
             recovery_suggestions=recovery_suggestions,
-            original_exception=original_exception
+            original_exception=original_exception,
         )
 
 
@@ -276,11 +287,13 @@ class ToolDependencyError(ToolError):
     Used when required dependencies are not available.
     """
 
-    def __init__(self,
-                 message: str,
-                 missing_dependencies: Optional[List[str]] = None,
-                 context: Optional[Dict[str, Any]] = None,
-                 original_exception: Optional[Exception] = None):
+    def __init__(
+        self,
+        message: str,
+        missing_dependencies: list[str] | None = None,
+        context: dict[str, Any] | None = None,
+        original_exception: Exception | None = None,
+    ):
         """
         Initialize a dependency error.
 
@@ -294,19 +307,19 @@ class ToolDependencyError(ToolError):
             "Install missing dependencies using package manager",
             "Check dependency versions for compatibility",
             "Verify system requirements",
-            "Consult tool documentation for dependency information"
+            "Consult tool documentation for dependency information",
         ]
 
         context = context or {}
         if missing_dependencies:
-            context['missing_dependencies'] = missing_dependencies
+            context["missing_dependencies"] = missing_dependencies
 
         super().__init__(
             message=message,
             error_type="dependency",
             context=context,
             recovery_suggestions=recovery_suggestions,
-            original_exception=original_exception
+            original_exception=original_exception,
         )
 
 
@@ -314,71 +327,130 @@ class ToolDependencyError(ToolError):
 class VideoAnalysisError(ToolError):
     """Error raised for video analysis specific failures."""
 
-    def __init__(self, message: str, context: Optional[Dict[str, Any]] = None, recovery_suggestions: Optional[List[str]] = None, original_exception: Optional[Exception] = None):
+    def __init__(
+        self,
+        message: str,
+        context: dict[str, Any] | None = None,
+        recovery_suggestions: list[str] | None = None,
+        original_exception: Exception | None = None,
+    ):
         if recovery_suggestions is None:
             recovery_suggestions = [
                 "Verify the input video file path and accessibility",
                 "Check the installed video processing dependencies",
                 "Ensure sufficient system resources for analysis",
             ]
-        super().__init__(message=message, error_type="video_analysis", context=context, recovery_suggestions=recovery_suggestions, original_exception=original_exception)
+        super().__init__(
+            message=message,
+            error_type="video_analysis",
+            context=context,
+            recovery_suggestions=recovery_suggestions,
+            original_exception=original_exception,
+        )
 
 
 class AudioProcessingError(ToolError):
     """Error raised for audio processing failures."""
 
-    def __init__(self, message: str, context: Optional[Dict[str, Any]] = None, recovery_suggestions: Optional[List[str]] = None, original_exception: Optional[Exception] = None):
+    def __init__(
+        self,
+        message: str,
+        context: dict[str, Any] | None = None,
+        recovery_suggestions: list[str] | None = None,
+        original_exception: Exception | None = None,
+    ):
         if recovery_suggestions is None:
             recovery_suggestions = [
                 "Verify the input audio file format and codecs",
                 "Confirm required audio tooling (ffmpeg, sox) is installed",
-                "Reduce processing quality to fit resource constraints"
+                "Reduce processing quality to fit resource constraints",
             ]
-        super().__init__(message=message, error_type="audio_processing", context=context, recovery_suggestions=recovery_suggestions, original_exception=original_exception)
+        super().__init__(
+            message=message,
+            error_type="audio_processing",
+            context=context,
+            recovery_suggestions=recovery_suggestions,
+            original_exception=original_exception,
+        )
 
 
 class SchedulingError(ToolError):
     """Error raised for general scheduling failures."""
 
-    def __init__(self, message: str, context: Optional[Dict[str, Any]] = None, recovery_suggestions: Optional[List[str]] = None, original_exception: Optional[Exception] = None):
+    def __init__(
+        self,
+        message: str,
+        context: dict[str, Any] | None = None,
+        recovery_suggestions: list[str] | None = None,
+        original_exception: Exception | None = None,
+    ):
         if recovery_suggestions is None:
             recovery_suggestions = [
                 "Check scheduling service availability",
                 "Verify platform API credentials and scopes",
-                "Retry the scheduling operation after a short delay"
+                "Retry the scheduling operation after a short delay",
             ]
-        super().__init__(message=message, error_type="scheduling", context=context, recovery_suggestions=recovery_suggestions, original_exception=original_exception)
+        super().__init__(
+            message=message,
+            error_type="scheduling",
+            context=context,
+            recovery_suggestions=recovery_suggestions,
+            original_exception=original_exception,
+        )
 
 
 class SchedulingConflictError(SchedulingError):
     """Raised when a scheduling conflict occurs (overlapping times)."""
 
-    def __init__(self, message: str, conflicting_items: Optional[List[str]] = None, context: Optional[Dict[str, Any]] = None, recovery_suggestions: Optional[List[str]] = None):
+    def __init__(
+        self,
+        message: str,
+        conflicting_items: list[str] | None = None,
+        context: dict[str, Any] | None = None,
+        recovery_suggestions: list[str] | None = None,
+    ):
         ctx = context or {}
         if conflicting_items:
-            ctx['conflicts'] = conflicting_items
+            ctx["conflicts"] = conflicting_items
         if recovery_suggestions is None:
             recovery_suggestions = [
                 "Adjust scheduled times to avoid conflicts",
-                "Check the timezone settings for scheduled items"
+                "Check the timezone settings for scheduled items",
             ]
-        super().__init__(message=message, context=ctx, recovery_suggestions=recovery_suggestions, original_exception=None)
+        super().__init__(
+            message=message,
+            context=ctx,
+            recovery_suggestions=recovery_suggestions,
+            original_exception=None,
+        )
 
 
 class SchedulingValidationError(SchedulingError):
     """Raised for validation errors related to scheduling input."""
 
-    def __init__(self, message: str, field: Optional[str] = None, value: Optional[str] = None, context: Optional[Dict[str, Any]] = None, recovery_suggestions: Optional[List[str]] = None):
+    def __init__(
+        self,
+        message: str,
+        field: str | None = None,
+        value: str | None = None,
+        context: dict[str, Any] | None = None,
+        recovery_suggestions: list[str] | None = None,
+    ):
         ctx = context or {}
         if field:
-            ctx['field'] = field
-            ctx['invalid_value'] = value
+            ctx["field"] = field
+            ctx["invalid_value"] = value
         if recovery_suggestions is None:
             recovery_suggestions = [
                 "Check input field format and values",
-                "Ensure required fields are provided"
+                "Ensure required fields are provided",
             ]
-        super().__init__(message=message, context=ctx, recovery_suggestions=recovery_suggestions, original_exception=None)
+        super().__init__(
+            message=message,
+            context=ctx,
+            recovery_suggestions=recovery_suggestions,
+            original_exception=None,
+        )
 
 
 class ErrorHandler:
@@ -389,7 +461,7 @@ class ErrorHandler:
     recovery attempts, and error reporting.
     """
 
-    def __init__(self, logger: Optional[logging.Logger] = None):
+    def __init__(self, logger: logging.Logger | None = None):
         """
         Initialize the error handler.
 
@@ -397,13 +469,15 @@ class ErrorHandler:
             logger: Logger instance for error logging
         """
         self.logger = logger or logging.getLogger(__name__)
-        self.error_history: List[Dict[str, Any]] = []
+        self.error_history: list[dict[str, Any]] = []
 
-    def handle_error(self,
-                    error: Exception,
-                    context: Optional[Dict[str, Any]] = None,
-                    max_retry_attempts: int = 3,
-                    retry_delay: float = 1.0) -> None:
+    def handle_error(
+        self,
+        error: Exception,
+        context: dict[str, Any] | None = None,
+        max_retry_attempts: int = 3,
+        retry_delay: float = 1.0,
+    ) -> None:
         """
         Handle an error with retry logic and comprehensive reporting.
 
@@ -431,37 +505,35 @@ class ErrorHandler:
         # If we get here, recovery failed
         raise tool_error
 
-    def _convert_to_tool_error(self,
-                              error: Exception,
-                              context: Optional[Dict[str, Any]] = None) -> ToolError:
+    def _convert_to_tool_error(
+        self, error: Exception, context: dict[str, Any] | None = None
+    ) -> ToolError:
         """Convert any exception to a ToolError."""
         if isinstance(error, ToolError):
             return error
 
         return ToolError(
-            message=str(error),
-            error_type="unexpected",
-            context=context,
-            original_exception=error
+            message=str(error), error_type="unexpected", context=context, original_exception=error
         )
 
     def _add_to_error_history(self, error: ToolError) -> None:
         """Add error to history for tracking and analysis."""
-        self.error_history.append({
-            'timestamp': error.error_info['timestamp'],
-            'type': error.error_type,
-            'message': error.message,
-            'context': error.context
-        })
+        self.error_history.append(
+            {
+                "timestamp": error.error_info["timestamp"],
+                "type": error.error_type,
+                "message": error.message,
+                "context": error.context,
+            }
+        )
 
         # Keep history size manageable
         if len(self.error_history) > 100:
             self.error_history = self.error_history[-100:]
 
-    def _attempt_recovery(self,
-                         error: ToolError,
-                         max_retry_attempts: int,
-                         retry_delay: float) -> None:
+    def _attempt_recovery(
+        self, error: ToolError, max_retry_attempts: int, retry_delay: float
+    ) -> None:
         """Attempt to recover from the error."""
         for attempt in range(max_retry_attempts):
             try:
@@ -474,7 +546,7 @@ class ErrorHandler:
                 return
 
             except Exception as recovery_error:
-                self.logger.warning(f"Recovery attempt {attempt + 1} failed: {str(recovery_error)}")
+                self.logger.warning(f"Recovery attempt {attempt + 1} failed: {recovery_error!s}")
 
                 if attempt < max_retry_attempts - 1:
                     time.sleep(retry_delay)
@@ -484,11 +556,11 @@ class ErrorHandler:
     def _apply_recovery_strategy(self, error: ToolError, attempt: int) -> None:
         """Apply error-specific recovery strategy."""
         recovery_strategies = {
-            'configuration': self._recover_from_config_error,
-            'validation': self._recover_from_validation_error,
-            'execution': self._recover_from_execution_error,
-            'timeout': self._recover_from_timeout_error,
-            'dependency': self._recover_from_dependency_error
+            "configuration": self._recover_from_config_error,
+            "validation": self._recover_from_validation_error,
+            "execution": self._recover_from_execution_error,
+            "timeout": self._recover_from_timeout_error,
+            "dependency": self._recover_from_dependency_error,
         }
 
         strategy = recovery_strategies.get(error.error_type, self._default_recovery)
@@ -524,7 +596,7 @@ class ErrorHandler:
         self.logger.info(f"Attempting default error recovery (attempt {attempt + 1})")
         # Implement default recovery logic
 
-    def get_error_history(self) -> List[Dict[str, Any]]:
+    def get_error_history(self) -> list[dict[str, Any]]:
         """Get the error history."""
         return self.error_history.copy()
 

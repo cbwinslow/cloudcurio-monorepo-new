@@ -20,15 +20,13 @@ import logging
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
-
-from agents.diagnostic_system import SwarmDiagnosticSystem
+from typing import Any
 
 from agents.base_agent import BaseAgent
+from agents.diagnostic_system import SwarmDiagnosticSystem
 from agents.efficiency_enforcer import (
     EfficiencyEnforcer,
     SwarmAction,
-    get_efficiency_enforcer,
     integrate_with_swarm,
 )
 from agents.swarm_communication import SwarmCommunication
@@ -38,6 +36,7 @@ from agents.swarm_monitoring import SwarmMonitoring
 @dataclass
 class TaskResult:
     """Result of a swarm task execution."""
+
     success: bool
     agent_name: str = ""
     data: Any = None
@@ -50,14 +49,15 @@ class TaskResult:
 @dataclass
 class SwarmHealth:
     """Swarm health status."""
+
     overall_health_score: float = 0.0
-    agent_health: Dict[str, float] = field(default_factory=dict)
+    agent_health: dict[str, float] = field(default_factory=dict)
     task_success_rate: float = 0.0
     average_response_time: float = 0.0
-    critical_issues: List[Dict[str, Any]] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
+    critical_issues: list[dict[str, Any]] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
     health_status: str = "unknown"
-    detailed_analysis: Dict[str, Any] = field(default_factory=dict)
+    detailed_analysis: dict[str, Any] = field(default_factory=dict)
 
 
 class PydanticAISwarmOrchestrator:
@@ -82,7 +82,7 @@ class PydanticAISwarmOrchestrator:
         enable_monitoring: bool = True,
         enable_benchmarking: bool = False,
         voting_timeout_seconds: int = 300,
-        max_concurrent_tasks: int = 10
+        max_concurrent_tasks: int = 10,
     ):
         """
         Initialize the swarm orchestrator.
@@ -103,8 +103,8 @@ class PydanticAISwarmOrchestrator:
         self.max_concurrent_tasks = max_concurrent_tasks
 
         # Core components
-        self.agents: Dict[str, BaseAgent] = {}
-        self.active_tasks: Set[str] = set()
+        self.agents: dict[str, BaseAgent] = {}
+        self.active_tasks: set[str] = set()
         self.task_queue: asyncio.Queue = asyncio.Queue()
 
         # Communication and monitoring
@@ -113,12 +113,12 @@ class PydanticAISwarmOrchestrator:
         self.diagnostics = SwarmDiagnosticSystem(self) if enable_diagnostics else None
 
         # Efficiency enforcement
-        self.efficiency_enforcer: Optional[EfficiencyEnforcer] = None
+        self.efficiency_enforcer: EfficiencyEnforcer | None = None
 
         # State tracking
         self.is_active = False
         self.start_time = None
-        self.task_history: List[Dict[str, Any]] = []
+        self.task_history: list[dict[str, Any]] = []
 
         # Performance metrics
         self.metrics = {
@@ -135,7 +135,7 @@ class PydanticAISwarmOrchestrator:
         self.logger.setLevel(logging.INFO)
 
         # Background tasks
-        self._background_tasks: Set[asyncio.Task] = set()
+        self._background_tasks: set[asyncio.Task] = set()
 
     async def start_swarm(self) -> bool:
         """
@@ -176,7 +176,9 @@ class PydanticAISwarmOrchestrator:
             if self.diagnostics:
                 await self.diagnostics.start_monitoring()
 
-            self.logger.info(f"Swarm '{self.swarm_name}' started successfully with {len(self.agents)} agents")
+            self.logger.info(
+                f"Swarm '{self.swarm_name}' started successfully with {len(self.agents)} agents"
+            )
             return True
 
         except Exception as e:
@@ -243,14 +245,16 @@ class PydanticAISwarmOrchestrator:
                     description=f"Register agent {agent_name}",
                     target=agent_name,
                     metadata={
-                        "capabilities": getattr(agent, 'domain_expertise', []),
-                        "agent_type": type(agent).__name__
-                    }
+                        "capabilities": getattr(agent, "domain_expertise", []),
+                        "agent_type": type(agent).__name__,
+                    },
                 )
 
                 enforcement = await self.efficiency_enforcer.enforce_action(action)
                 if not enforcement.approved:
-                    self.logger.warning(f"Agent registration blocked by efficiency rules: {enforcement.reason}")
+                    self.logger.warning(
+                        f"Agent registration blocked by efficiency rules: {enforcement.reason}"
+                    )
                     alternatives = enforcement.alternatives
                     if alternatives:
                         self.logger.info("Suggested alternatives:")
@@ -264,7 +268,7 @@ class PydanticAISwarmOrchestrator:
 
             # Register capabilities with efficiency enforcer
             if self.efficiency_enforcer:
-                capabilities = getattr(agent, 'domain_expertise', [])
+                capabilities = getattr(agent, "domain_expertise", [])
                 for capability in capabilities:
                     await self.efficiency_enforcer.register_agent_capability(agent_name, capability)
 
@@ -307,9 +311,7 @@ class PydanticAISwarmOrchestrator:
             return False
 
     async def execute_task(
-        self,
-        task_description: str,
-        context: Optional[Dict[str, Any]] = None
+        self, task_description: str, context: dict[str, Any] | None = None
     ) -> TaskResult:
         """
         Execute a task through democratic agent coordination.
@@ -330,7 +332,7 @@ class PydanticAISwarmOrchestrator:
                 return TaskResult(
                     success=False,
                     error="Swarm is not active",
-                    execution_time=time.time() - start_time
+                    execution_time=time.time() - start_time,
                 )
 
             # Perform democratic task assignment
@@ -342,7 +344,7 @@ class PydanticAISwarmOrchestrator:
                 return TaskResult(
                     success=False,
                     error="No agent available for task",
-                    execution_time=time.time() - start_time
+                    execution_time=time.time() - start_time,
                 )
 
             # Execute task through assigned agent
@@ -353,43 +355,39 @@ class PydanticAISwarmOrchestrator:
             self._update_task_metrics(result.success, execution_time)
 
             # Record in history
-            self.task_history.append({
-                "timestamp": datetime.now().isoformat(),
-                "task": task_description,
-                "agent": assigned_agent.agent_name,
-                "success": result.success,
-                "execution_time": execution_time,
-                "confidence": confidence
-            })
+            self.task_history.append(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "task": task_description,
+                    "agent": assigned_agent.agent_name,
+                    "success": result.success,
+                    "execution_time": execution_time,
+                    "confidence": confidence,
+                }
+            )
 
             return TaskResult(
                 success=result.success,
                 agent_name=assigned_agent.agent_name,
-                data=result.data if hasattr(result, 'data') else None,
-                error=result.error if hasattr(result, 'error') else "",
+                data=result.data if hasattr(result, "data") else None,
+                error=result.error if hasattr(result, "error") else "",
                 execution_time=execution_time,
                 confidence_score=confidence,
-                consensus_level=confidence
+                consensus_level=confidence,
             )
 
         except Exception as e:
             execution_time = time.time() - start_time
-            error_msg = f"Task execution failed: {str(e)}"
+            error_msg = f"Task execution failed: {e!s}"
 
             self.logger.error(error_msg)
             self._update_task_metrics(False, execution_time)
 
-            return TaskResult(
-                success=False,
-                error=error_msg,
-                execution_time=execution_time
-            )
+            return TaskResult(success=False, error=error_msg, execution_time=execution_time)
 
     async def _assign_task_democratically(
-        self,
-        task_description: str,
-        context: Dict[str, Any]
-    ) -> tuple[Optional[BaseAgent], float]:
+        self, task_description: str, context: dict[str, Any]
+    ) -> tuple[BaseAgent | None, float]:
         """
         Assign task to agent through democratic voting.
 
@@ -410,11 +408,13 @@ class PydanticAISwarmOrchestrator:
                 should_abstain = await agent.should_abstain_from_vote(task_description)
 
                 if not should_abstain and confidence > 0.3:  # Minimum confidence threshold
-                    votes.append({
-                        "agent": agent,
-                        "confidence": confidence,
-                        "weight": confidence  # Higher confidence = higher voting weight
-                    })
+                    votes.append(
+                        {
+                            "agent": agent,
+                            "confidence": confidence,
+                            "weight": confidence,  # Higher confidence = higher voting weight
+                        }
+                    )
 
             except Exception as e:
                 self.logger.warning(f"Agent {agent.agent_name} failed to vote: {e}")
@@ -430,8 +430,10 @@ class PydanticAISwarmOrchestrator:
         assigned_agent = votes[0]["agent"]
         confidence = votes[0]["confidence"]
 
-        self.logger.info(f"Democratically assigned task to {assigned_agent.agent_name} "
-                        f"(confidence: {confidence:.2f})")
+        self.logger.info(
+            f"Democratically assigned task to {assigned_agent.agent_name} "
+            f"(confidence: {confidence:.2f})"
+        )
 
         return assigned_agent, confidence
 
@@ -496,25 +498,31 @@ class PydanticAISwarmOrchestrator:
 
             # Check for critical issues
             if len(self.agents) == 0:
-                health.critical_issues.append({
-                    "title": "No Agents Registered",
-                    "description": "Swarm has no registered agents",
-                    "severity": "critical"
-                })
+                health.critical_issues.append(
+                    {
+                        "title": "No Agents Registered",
+                        "description": "Swarm has no registered agents",
+                        "severity": "critical",
+                    }
+                )
 
             if health.overall_health_score < 0.3:
-                health.critical_issues.append({
-                    "title": "Low Agent Health",
-                    "description": "Agent health scores are critically low",
-                    "severity": "critical"
-                })
+                health.critical_issues.append(
+                    {
+                        "title": "Low Agent Health",
+                        "description": "Agent health scores are critically low",
+                        "severity": "critical",
+                    }
+                )
 
             if health.task_success_rate < 0.5 and total_tasks > 5:
-                health.critical_issues.append({
-                    "title": "Low Task Success Rate",
-                    "description": f"Only {health.task_success_rate:.1f} of tasks succeed",
-                    "severity": "high"
-                })
+                health.critical_issues.append(
+                    {
+                        "title": "Low Task Success Rate",
+                        "description": f"Only {health.task_success_rate:.1f} of tasks succeed",
+                        "severity": "high",
+                    }
+                )
 
             # Generate recommendations
             if len(self.agents) < 3:
@@ -528,18 +536,22 @@ class PydanticAISwarmOrchestrator:
             health.detailed_analysis = {
                 "agents": {
                     "total": len(self.agents),
-                    "active": len([a for a in self.agents.values() if getattr(a, 'is_active', False)]),
-                    "health_scores": health.agent_health
+                    "active": len(
+                        [a for a in self.agents.values() if getattr(a, "is_active", False)]
+                    ),
+                    "health_scores": health.agent_health,
                 },
                 "tasks": {
                     "total_processed": self.metrics["total_tasks_processed"],
                     "success_rate": health.task_success_rate,
-                    "average_duration": health.average_response_time
+                    "average_duration": health.average_response_time,
                 },
                 "performance": {
                     "uptime_seconds": time.time() - (self.start_time or time.time()),
-                    "efficiency_metrics": self.efficiency_enforcer.get_efficiency_report() if self.efficiency_enforcer else {}
-                }
+                    "efficiency_metrics": self.efficiency_enforcer.get_efficiency_report()
+                    if self.efficiency_enforcer
+                    else {},
+                },
             }
 
             return health
@@ -549,14 +561,16 @@ class PydanticAISwarmOrchestrator:
             return SwarmHealth(
                 overall_health_score=0.0,
                 health_status="error",
-                critical_issues=[{
-                    "title": "Health Analysis Failed",
-                    "description": f"Error during health check: {str(e)}",
-                    "severity": "critical"
-                }]
+                critical_issues=[
+                    {
+                        "title": "Health Analysis Failed",
+                        "description": f"Error during health check: {e!s}",
+                        "severity": "critical",
+                    }
+                ],
             )
 
-    async def generate_performance_report(self) -> Dict[str, Any]:
+    async def generate_performance_report(self) -> dict[str, Any]:
         """
         Generate comprehensive performance report.
 
@@ -581,7 +595,7 @@ class PydanticAISwarmOrchestrator:
                     agent_performance[agent_name] = {
                         "confidence": status.get("confidence", {}).get("overall", 0.0),
                         "tasks_processed": status.get("tasks_processed", 0),
-                        "success_rate": status.get("success_rate", 0.0)
+                        "success_rate": status.get("success_rate", 0.0),
                     }
                 except Exception:
                     agent_performance[agent_name] = {"error": "Status unavailable"}
@@ -605,7 +619,7 @@ class PydanticAISwarmOrchestrator:
                 "time_range": {
                     "start_time": self.start_time,
                     "end_time": time.time(),
-                    "duration_hours": (time.time() - (self.start_time or time.time())) / 3600
+                    "duration_hours": (time.time() - (self.start_time or time.time())) / 3600,
                 },
                 "summary_metrics": {
                     "total_tasks": total_tasks,
@@ -613,22 +627,22 @@ class PydanticAISwarmOrchestrator:
                     "failed_tasks": failed_tasks,
                     "success_rate": success_rate,
                     "average_task_duration": avg_execution_time,
-                    "peak_memory_mb": self.metrics["peak_memory_usage_mb"]
+                    "peak_memory_mb": self.metrics["peak_memory_usage_mb"],
                 },
                 "agent_performance": agent_performance,
                 "recommendations": recommendations,
                 "efficiency_analysis": efficiency_report,
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }
 
         except Exception as e:
             self.logger.error(f"Performance report generation failed: {e}")
             return {
-                "error": f"Report generation failed: {str(e)}",
-                "generated_at": datetime.now().isoformat()
+                "error": f"Report generation failed: {e!s}",
+                "generated_at": datetime.now().isoformat(),
             }
 
-    async def get_swarm_status(self) -> Dict[str, Any]:
+    async def get_swarm_status(self) -> dict[str, Any]:
         """
         Get current swarm status.
 
@@ -641,7 +655,7 @@ class PydanticAISwarmOrchestrator:
         active_agents = 0
         for agent in self.agents.values():
             try:
-                if getattr(agent, 'is_active', False):
+                if getattr(agent, "is_active", False):
                     active_agents += 1
             except Exception:
                 continue
@@ -650,19 +664,16 @@ class PydanticAISwarmOrchestrator:
             "swarm_name": self.swarm_name,
             "is_active": self.is_active,
             "uptime_seconds": uptime,
-            "agents": {
-                "total": len(self.agents),
-                "active": active_agents
-            },
+            "agents": {"total": len(self.agents), "active": active_agents},
             "tasks": {
                 "total_processed": self.metrics["total_tasks_processed"],
                 "successful": self.metrics["successful_tasks"],
-                "failed": self.metrics["failed_tasks"]
+                "failed": self.metrics["failed_tasks"],
             },
-            "health": {
-                "overall_score": (await self.analyze_swarm_health()).overall_health_score
-            },
-            "efficiency": self.efficiency_enforcer.get_efficiency_report() if self.efficiency_enforcer else {}
+            "health": {"overall_score": (await self.analyze_swarm_health()).overall_health_score},
+            "efficiency": self.efficiency_enforcer.get_efficiency_report()
+            if self.efficiency_enforcer
+            else {},
         }
 
     def _start_background_tasks(self):
@@ -683,26 +694,22 @@ class PydanticAISwarmOrchestrator:
         while self.is_active:
             try:
                 # Wait for task with timeout
-                task_data = await asyncio.wait_for(
-                    self.task_queue.get(),
-                    timeout=1.0
-                )
+                task_data = await asyncio.wait_for(self.task_queue.get(), timeout=1.0)
 
                 # Process task
                 await self._handle_queued_task(task_data)
 
                 self.task_queue.task_done()
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue  # No tasks, continue loop
             except Exception as e:
                 self.logger.error(f"Task queue processing error: {e}")
 
-    async def _handle_queued_task(self, task_data: Dict[str, Any]):
+    async def _handle_queued_task(self, task_data: dict[str, Any]):
         """Handle a queued task."""
         # Implementation for queued task processing
         # This would handle asynchronous task queuing if needed
-        pass
 
     async def _periodic_health_check(self):
         """Perform periodic health checks."""
@@ -727,7 +734,7 @@ class PydanticAISwarmOrchestrator:
         # Stop any agents that may have started
         for agent in self.agents.values():
             try:
-                if getattr(agent, 'is_active', False):
+                if getattr(agent, "is_active", False):
                     await agent.stop()
             except Exception:
                 pass

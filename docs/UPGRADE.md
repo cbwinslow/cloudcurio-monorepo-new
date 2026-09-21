@@ -327,7 +327,7 @@ cp -r ../FINAL/cloudcurio-monorepo/.github/ .github/
    agent:
      name: my_agent
      tools: [tool1, tool2]
-   
+
    # New format (v4)
    name: my_agent
    version: "1.0.0"
@@ -347,7 +347,7 @@ cp -r ../FINAL/cloudcurio-monorepo/.github/ .github/
    ```bash
    # Old
    ./bin/cbw run my_agent.yaml
-   
+
    # New
    ./bin/cbw-agent run my_agent.yaml --runtime local
    ```
@@ -375,14 +375,16 @@ cp -r ../FINAL/cloudcurio-monorepo/.github/ .github/
    # Old (v2)
    def my_tool(input):
        return result
-   
+
+
    # New (v4)
    from cbw_foundry.tools import BaseTool
-   
+
+
    class MyTool(BaseTool):
        name = "my_tool"
        description = "Description"
-       
+
        def execute(self, **kwargs):
            return result
    ```
@@ -393,7 +395,7 @@ cp -r ../FINAL/cloudcurio-monorepo/.github/ .github/
    version: "1.0.0"
    name: my_workflow
    description: "Workflow description"
-   
+
    steps:
      - name: step1
        agent: agent1
@@ -662,7 +664,7 @@ make test
 # Old
 from cbw import Agent
 
-# New  
+# New
 from cbw_foundry.spec.models import AgentSpec
 ```
 
@@ -672,10 +674,11 @@ from cbw_foundry.spec.models import AgentSpec
 ```python
 from cbw_foundry.tools import BaseTool
 
+
 class MyCustomTool(BaseTool):
     name = "my_custom_tool"
     description = "Description"
-    
+
     def execute(self, **kwargs):
         # Your existing tool code
         return result

@@ -9,39 +9,39 @@ metadata:
 
 spec:
   command: /generate
-  
+
   parameters:
     - name: type
       type: string
       description: Content type (blog, docs, code, summary)
       required: true
-    
+
     - name: topic
       type: string
       description: Topic or subject
       required: true
-    
+
     - name: length
       type: string
       description: Content length (short, medium, long)
       required: false
       default: "medium"
-    
+
     - name: tone
       type: string
       description: Writing tone (technical, casual, formal)
       required: false
       default: "technical"
-  
+
   agents:
     - writer
     - editor
-  
+
   examples:
     - command: '/generate type="blog" topic="AI trends" length="long"'
       description: "Generate a long blog post about AI trends"
       expected_output: "Blog post content"
-    
+
     - command: '/generate type="docs" topic="API reference" tone="technical"'
       description: "Generate technical API documentation"
       expected_output: "API documentation"

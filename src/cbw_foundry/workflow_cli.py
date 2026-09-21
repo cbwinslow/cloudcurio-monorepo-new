@@ -1,8 +1,11 @@
 from __future__ import annotations
+
 import argparse
 import subprocess
 from pathlib import Path
+
 import yaml
+
 
 def main() -> None:
     ap = argparse.ArgumentParser(prog="cbw-workflow")

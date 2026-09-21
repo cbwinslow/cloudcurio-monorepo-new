@@ -1,20 +1,26 @@
 from __future__ import annotations
+
 import argparse
+import subprocess
+import textwrap
 from datetime import datetime
 from pathlib import Path
-import textwrap
-import subprocess
+
 
 def _ts() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
+
 
 def _write(p: Path, content: str) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(content, encoding="utf-8")
 
+
 def new_agent(name: str) -> Path:
     p = Path("agents/specs") / f"{name}.agent.yaml"
-    _write(p, textwrap.dedent(f"""\
+    _write(
+        p,
+        textwrap.dedent(f"""\
     api_version: v1
     kind: Agent
     metadata:
@@ -34,12 +40,16 @@ def new_agent(name: str) -> Path:
         supported: [local]
       eval:
         suites: []
-    """))
+    """),
+    )
     return p
+
 
 def new_workflow(name: str) -> Path:
     p = Path("workflows/library") / f"{name}.workflow.yaml"
-    _write(p, textwrap.dedent(f"""\
+    _write(
+        p,
+        textwrap.dedent(f"""\
     api_version: v1
     kind: Workflow
     metadata:
@@ -52,13 +62,17 @@ def new_workflow(name: str) -> Path:
           action: shell
           with:
             cmd: "echo hello"
-    """))
+    """),
+    )
     return p
+
 
 def new_kb(slug: str, title: str) -> Path:
     p = Path("kb/notes") / f"{_ts()}_{slug}.md"
     today = datetime.now().strftime("%Y-%m-%d")
-    _write(p, textwrap.dedent(f"""\
+    _write(
+        p,
+        textwrap.dedent(f"""\
     ---
     title: {title}
     tags: [note]
@@ -68,8 +82,10 @@ def new_kb(slug: str, title: str) -> Path:
 
     # {title}
 
-    """))
+    """),
+    )
     return p
+
 
 def main() -> None:
     ap = argparse.ArgumentParser(prog="cbw-capture")

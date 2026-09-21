@@ -1,18 +1,22 @@
 from __future__ import annotations
+
 import argparse
-from datetime import datetime
-from pathlib import Path
 import re
 import subprocess
+from datetime import datetime
+from pathlib import Path
+
 import yaml
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
+
 
 def _run(cmd: list[str]) -> bool:
     try:
         return subprocess.run(cmd, check=False, capture_output=True).returncode == 0
     except Exception:
         return False
+
 
 def _parse_frontmatter(md_text: str) -> dict | None:
     m = FRONTMATTER_RE.search(md_text)
@@ -23,12 +27,14 @@ def _parse_frontmatter(md_text: str) -> dict | None:
     except Exception:
         return None
 
+
 def _days_since(date_str: str) -> int | None:
     try:
         d = datetime.fromisoformat(date_str).date()
         return (datetime.now().date() - d).days
     except Exception:
         return None
+
 
 def main() -> None:
     ap = argparse.ArgumentParser(prog="cbw-doctor")

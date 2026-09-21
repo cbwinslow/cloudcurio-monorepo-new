@@ -78,15 +78,16 @@ Pydantic models for agent specifications.
 ```python
 from cbw_foundry.spec.models import AgentSpec
 
+
 class AgentSpec(BaseModel):
     """Agent specification model."""
-    
-    name: str                    # Unique identifier
-    version: str                 # Semantic version
-    description: str             # Brief description
-    system_prompt: str           # Core instructions
-    tools: List[ToolSpec] = []   # Tool configurations
-    runtime: RuntimeConfig       # Runtime settings
+
+    name: str  # Unique identifier
+    version: str  # Semantic version
+    description: str  # Brief description
+    system_prompt: str  # Core instructions
+    tools: List[ToolSpec] = []  # Tool configurations
+    runtime: RuntimeConfig  # Runtime settings
     metadata: Optional[Dict] = None  # Additional info
 ```
 
@@ -110,10 +111,7 @@ spec = AgentSpec(
     version="1.0.0",
     description="My custom agent",
     system_prompt="You are a helpful agent.",
-    runtime=RuntimeConfig(
-        framework="local",
-        model="gpt-4"
-    )
+    runtime=RuntimeConfig(framework="local", model="gpt-4"),
 )
 ```
 
@@ -122,12 +120,13 @@ spec = AgentSpec(
 ```python
 from cbw_foundry.spec.models import ToolSpec
 
+
 class ToolSpec(BaseModel):
     """Tool specification model."""
-    
-    name: str                    # Tool identifier
-    description: str             # What the tool does
-    required: bool = False       # Whether tool is required
+
+    name: str  # Tool identifier
+    description: str  # What the tool does
+    required: bool = False  # Whether tool is required
     config: Optional[Dict] = {}  # Tool-specific config
 ```
 
@@ -140,7 +139,7 @@ tool = ToolSpec(
     name="web_search",
     description="Search the web for information",
     required=True,
-    config={"max_results": 10}
+    config={"max_results": 10},
 )
 ```
 
@@ -149,14 +148,15 @@ tool = ToolSpec(
 ```python
 from cbw_foundry.spec.models import RuntimeConfig
 
+
 class RuntimeConfig(BaseModel):
     """Runtime configuration model."""
-    
-    framework: str               # local, crewai, langchain, pydanticai
-    model: str = "gpt-4"        # LLM model
-    temperature: float = 0.7     # Creativity (0.0-1.0)
-    max_tokens: int = 2000      # Max response length
-    timeout: int = 300          # Timeout in seconds
+
+    framework: str  # local, crewai, langchain, pydanticai
+    model: str = "gpt-4"  # LLM model
+    temperature: float = 0.7  # Creativity (0.0-1.0)
+    max_tokens: int = 2000  # Max response length
+    timeout: int = 300  # Timeout in seconds
 ```
 
 **Example:**
@@ -165,11 +165,7 @@ class RuntimeConfig(BaseModel):
 from cbw_foundry.spec.models import RuntimeConfig
 
 config = RuntimeConfig(
-    framework="local",
-    model="gpt-4",
-    temperature=0.5,
-    max_tokens=1000,
-    timeout=600
+    framework="local", model="gpt-4", temperature=0.5, max_tokens=1000, timeout=600
 )
 ```
 
@@ -182,16 +178,17 @@ File I/O operations for agent specifications.
 ```python
 from cbw_foundry.spec.io import load_agent_spec
 
+
 def load_agent_spec(path: str) -> AgentSpec:
     """
     Load agent specification from YAML file.
-    
+
     Args:
         path: Path to YAML file
-        
+
     Returns:
         AgentSpec: Parsed and validated spec
-        
+
     Raises:
         FileNotFoundError: If file doesn't exist
         ValidationError: If spec is invalid
@@ -212,10 +209,11 @@ print(f"Loaded agent: {spec.name} v{spec.version}")
 ```python
 from cbw_foundry.spec.io import save_agent_spec
 
+
 def save_agent_spec(spec: AgentSpec, path: str) -> None:
     """
     Save agent specification to YAML file.
-    
+
     Args:
         spec: Agent specification
         path: Output file path
@@ -239,14 +237,11 @@ Compile YAML specs to optimized JSON artifacts.
 ```python
 from cbw_foundry.spec.compiler import compile_agent
 
-def compile_agent(
-    yaml_path: str,
-    json_path: str,
-    optimize: bool = True
-) -> None:
+
+def compile_agent(yaml_path: str, json_path: str, optimize: bool = True) -> None:
     """
     Compile agent spec from YAML to JSON.
-    
+
     Args:
         yaml_path: Input YAML file
         json_path: Output JSON file
@@ -262,7 +257,7 @@ from cbw_foundry.spec.compiler import compile_agent
 compile_agent(
     yaml_path="agents/specs/my_agent.agent.yaml",
     json_path="dist/agents/my_agent.agent.json",
-    optimize=True
+    optimize=True,
 )
 ```
 
@@ -274,6 +269,7 @@ Main CLI entry point.
 
 ```python
 from cbw_foundry.cli import cli
+
 
 @click.group()
 def cli():
@@ -290,14 +286,15 @@ Agent operations.
 ```python
 from cbw_foundry.agent_cli import validate_agent
 
+
 def validate_agent(spec_path: str, verbose: bool = False) -> bool:
     """
     Validate agent specification.
-    
+
     Args:
         spec_path: Path to agent YAML file
         verbose: Show detailed errors
-        
+
     Returns:
         bool: True if valid, False otherwise
     """
@@ -308,10 +305,8 @@ def validate_agent(spec_path: str, verbose: bool = False) -> bool:
 ```python
 from cbw_foundry.agent_cli import compile_agent_cli
 
-def compile_agent_cli(
-    spec_path: str,
-    output_dir: str = "dist/agents"
-) -> None:
+
+def compile_agent_cli(spec_path: str, output_dir: str = "dist/agents") -> None:
     """Compile agent to JSON."""
 ```
 
@@ -320,21 +315,19 @@ def compile_agent_cli(
 ```python
 from cbw_foundry.agent_cli import run_agent
 
+
 def run_agent(
-    spec_path: str,
-    input_text: str,
-    runtime: str = "local",
-    verbose: bool = False
+    spec_path: str, input_text: str, runtime: str = "local", verbose: bool = False
 ) -> str:
     """
     Run agent with input.
-    
+
     Args:
         spec_path: Agent specification path
         input_text: Input to agent
         runtime: Runtime to use (local, crewai, etc.)
         verbose: Enable verbose output
-        
+
     Returns:
         str: Agent output
     """
@@ -345,17 +338,15 @@ def run_agent(
 ```python
 from cbw_foundry.agent_cli import eval_agent
 
-def eval_agent(
-    spec_path: str,
-    verbose: bool = False
-) -> Dict[str, Any]:
+
+def eval_agent(spec_path: str, verbose: bool = False) -> Dict[str, Any]:
     """
     Run golden test suite for agent.
-    
+
     Args:
         spec_path: Agent specification path
         verbose: Show detailed results
-        
+
     Returns:
         dict: Test results with pass/fail counts
     """
@@ -373,24 +364,20 @@ Abstract runtime interface.
 from cbw_foundry.runtime.base import BaseRuntime
 from abc import ABC, abstractmethod
 
+
 class BaseRuntime(ABC):
     """Base class for all runtime adapters."""
-    
+
     @abstractmethod
-    def run(
-        self,
-        spec: AgentSpec,
-        input: str,
-        **kwargs
-    ) -> str:
+    def run(self, spec: AgentSpec, input: str, **kwargs) -> str:
         """
         Execute agent with given input.
-        
+
         Args:
             spec: Agent specification
             input: Input string
             **kwargs: Runtime-specific options
-            
+
         Returns:
             str: Agent output
         """
@@ -403,9 +390,10 @@ class BaseRuntime(ABC):
 from cbw_foundry.runtime.base import BaseRuntime
 from cbw_foundry.spec.models import AgentSpec
 
+
 class MyCustomRuntime(BaseRuntime):
     """Custom runtime adapter."""
-    
+
     def run(self, spec: AgentSpec, input: str, **kwargs) -> str:
         # Your implementation
         return result
@@ -420,12 +408,13 @@ Local execution runtime.
 ```python
 from cbw_foundry.runtime.local_runtime import LocalRuntime
 
+
 class LocalRuntime(BaseRuntime):
     """Local execution runtime (fully implemented)."""
-    
+
     def __init__(self, model: str = "gpt-4"):
         self.model = model
-        
+
     def run(self, spec: AgentSpec, input: str, **kwargs) -> str:
         """Execute agent locally."""
 ```
@@ -458,7 +447,7 @@ from cbw_foundry.runtime.adapters import CrewAIAdapter
 
 class CrewAIAdapter(BaseRuntime):
     """CrewAI framework adapter."""
-    
+
     def run(self, spec: AgentSpec, input: str, **kwargs) -> str:
         # CrewAI integration
 ```
@@ -468,6 +457,7 @@ class CrewAIAdapter(BaseRuntime):
 ```python
 from cbw_foundry.runtime.adapters import LangChainAdapter
 
+
 class LangChainAdapter(BaseRuntime):
     """LangChain framework adapter (stub)."""
 ```
@@ -476,6 +466,7 @@ class LangChainAdapter(BaseRuntime):
 
 ```python
 from cbw_foundry.runtime.adapters import PydanticAIAdapter
+
 
 class PydanticAIAdapter(BaseRuntime):
     """PydanticAI framework adapter."""
@@ -497,7 +488,7 @@ try:
         version="1.0.0",
         description="Test agent",
         system_prompt="You are helpful.",
-        runtime={"framework": "local"}
+        runtime={"framework": "local"},
     )
 except ValidationError as e:
     print(f"Validation error: {e}")
@@ -525,13 +516,13 @@ OpenTelemetry integration for distributed tracing.
 ```python
 from cbw_foundry.observability.otel import setup_observability
 
+
 def setup_observability(
-    service_name: str = "cloudcurio",
-    endpoint: str = "http://localhost:4317"
+    service_name: str = "cloudcurio", endpoint: str = "http://localhost:4317"
 ) -> None:
     """
     Initialize OpenTelemetry.
-    
+
     Args:
         service_name: Service identifier
         endpoint: OTLP endpoint
@@ -544,10 +535,7 @@ def setup_observability(
 from cbw_foundry.observability.otel import setup_observability
 
 # Enable tracing
-setup_observability(
-    service_name="my-agent-service",
-    endpoint="http://jaeger:4317"
-)
+setup_observability(service_name="my-agent-service", endpoint="http://jaeger:4317")
 
 # Now all operations are traced
 ```
@@ -557,6 +545,7 @@ setup_observability(
 ```python
 from cbw_foundry.observability.otel import trace_agent_execution
 from opentelemetry import trace
+
 
 @trace_agent_execution
 def run_my_agent(input: str) -> str:
@@ -576,13 +565,14 @@ Filesystem utilities.
 ```python
 from cbw_foundry.util.fs import find_agent_specs
 
+
 def find_agent_specs(directory: str = "agents/specs") -> List[str]:
     """
     Find all agent spec files.
-    
+
     Args:
         directory: Root directory to search
-        
+
     Returns:
         list: Paths to agent spec files
     """
@@ -592,6 +582,7 @@ def find_agent_specs(directory: str = "agents/specs") -> List[str]:
 
 ```python
 from cbw_foundry.util.fs import ensure_directory
+
 
 def ensure_directory(path: str) -> None:
     """Create directory if it doesn't exist."""
@@ -612,10 +603,7 @@ spec = load_agent_spec("agents/specs/research_agent.agent.yaml")
 runtime = LocalRuntime()
 
 # Execute agent
-result = runtime.run(
-    spec=spec,
-    input="Research quantum computing advances in 2024"
-)
+result = runtime.run(spec=spec, input="Research quantum computing advances in 2024")
 
 print(f"Agent output: {result}")
 ```
@@ -636,20 +624,10 @@ spec = AgentSpec(
     Analyze data and provide insights.
     """,
     tools=[
-        ToolSpec(
-            name="data_loader",
-            description="Load data from sources"
-        ),
-        ToolSpec(
-            name="statistical_analyzer",
-            description="Perform statistical analysis"
-        )
+        ToolSpec(name="data_loader", description="Load data from sources"),
+        ToolSpec(name="statistical_analyzer", description="Perform statistical analysis"),
     ],
-    runtime=RuntimeConfig(
-        framework="local",
-        model="gpt-4",
-        temperature=0.3
-    )
+    runtime=RuntimeConfig(framework="local", model="gpt-4", temperature=0.3),
 )
 
 # Save to file
@@ -662,17 +640,11 @@ save_agent_spec(spec, "agents/specs/custom_analyzer.agent.yaml")
 from cbw_foundry.agent_cli import validate_agent, compile_agent_cli
 
 # Validate
-is_valid = validate_agent(
-    spec_path="agents/specs/my_agent.agent.yaml",
-    verbose=True
-)
+is_valid = validate_agent(spec_path="agents/specs/my_agent.agent.yaml", verbose=True)
 
 if is_valid:
     # Compile
-    compile_agent_cli(
-        spec_path="agents/specs/my_agent.agent.yaml",
-        output_dir="dist/agents"
-    )
+    compile_agent_cli(spec_path="agents/specs/my_agent.agent.yaml", output_dir="dist/agents")
     print("✓ Agent compiled successfully")
 else:
     print("✗ Validation failed")
@@ -684,17 +656,14 @@ else:
 from cbw_foundry.agent_cli import eval_agent
 
 # Run golden tests
-results = eval_agent(
-    spec_path="agents/specs/my_agent.agent.yaml",
-    verbose=True
-)
+results = eval_agent(spec_path="agents/specs/my_agent.agent.yaml", verbose=True)
 
 print(f"Tests passed: {results['passed']}/{results['total']}")
 print(f"Coverage: {results['coverage']}%")
 
-if results['failed'] > 0:
+if results["failed"] > 0:
     print("Failed tests:")
-    for test in results['failures']:
+    for test in results["failures"]:
         print(f"  - {test['name']}: {test['reason']}")
 ```
 
@@ -704,26 +673,28 @@ if results['failed'] > 0:
 from cbw_foundry.runtime.base import BaseRuntime
 from cbw_foundry.spec.models import AgentSpec
 
+
 class MyFrameworkRuntime(BaseRuntime):
     """Custom framework integration."""
-    
+
     def __init__(self, api_key: str):
         self.api_key = api_key
-        
+
     def run(self, spec: AgentSpec, input: str, **kwargs) -> str:
         """Execute using custom framework."""
         # Initialize framework
         agent = self._create_agent(spec)
-        
+
         # Execute
         result = agent.process(input)
-        
+
         return result
-    
+
     def _create_agent(self, spec: AgentSpec):
         """Create agent from spec."""
         # Framework-specific initialization
         pass
+
 
 # Use custom runtime
 runtime = MyFrameworkRuntime(api_key="...")
@@ -756,11 +727,11 @@ from pydantic import ValidationError
 try:
     # Load and validate
     spec = load_agent_spec("agents/specs/my_agent.agent.yaml")
-    
+
     # Run
     runtime = LocalRuntime()
     result = runtime.run(spec, input="test")
-    
+
 except FileNotFoundError as e:
     print(f"Agent spec not found: {e}")
 except ValidationError as e:
@@ -780,11 +751,9 @@ from cbw_foundry.spec.models import AgentSpec
 from cbw_foundry.runtime.base import BaseRuntime
 from typing import Optional, Dict, Any
 
+
 def process_agent(
-    spec: AgentSpec,
-    runtime: BaseRuntime,
-    input_data: str,
-    config: Optional[Dict[str, Any]] = None
+    spec: AgentSpec, runtime: BaseRuntime, input_data: str, config: Optional[Dict[str, Any]] = None
 ) -> str:
     """Fully type-hinted function."""
     pass
@@ -796,6 +765,7 @@ def process_agent(
 import pytest
 from cbw_foundry.spec.models import AgentSpec, RuntimeConfig
 
+
 def test_agent_spec_creation():
     """Test creating an agent spec."""
     spec = AgentSpec(
@@ -803,11 +773,12 @@ def test_agent_spec_creation():
         version="1.0.0",
         description="Test",
         system_prompt="Test prompt",
-        runtime=RuntimeConfig(framework="local")
+        runtime=RuntimeConfig(framework="local"),
     )
-    
+
     assert spec.name == "test_agent"
     assert spec.version == "1.0.0"
+
 
 def test_agent_spec_validation():
     """Test spec validation."""
@@ -817,7 +788,7 @@ def test_agent_spec_validation():
             version="1.0.0",
             description="Test",
             system_prompt="Test",
-            runtime=RuntimeConfig(framework="local")
+            runtime=RuntimeConfig(framework="local"),
         )
 ```
 
@@ -830,6 +801,6 @@ def test_agent_spec_validation():
 
 ---
 
-**Last Updated:** 2026-01-15  
-**API Version:** 0.4.0  
+**Last Updated:** 2026-01-15
+**API Version:** 0.4.0
 **Maintained By:** @cbwinslow

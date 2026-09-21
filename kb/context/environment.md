@@ -165,14 +165,14 @@ Development/Staging:
   RAM: 4 GB
   Storage: 30 GB GP3 EBS
   Network: Enhanced networking enabled
-  
+
 Production:
   Instance: t3.xlarge or c6i.xlarge
   vCPUs: 4
   RAM: 16 GB
   Storage: 100 GB GP3 EBS (3000 IOPS)
   Network: Enhanced networking enabled
-  
+
 High-Scale Production:
   Instance: c6i.2xlarge or c6i.4xlarge
   vCPUs: 8-16
@@ -189,13 +189,13 @@ Development/Staging:
   vCPUs: 2
   RAM: 8 GB
   Storage: 30 GB SSD persistent disk
-  
+
 Production:
   Machine Type: n2-standard-4
   vCPUs: 4
   RAM: 16 GB
   Storage: 100 GB SSD persistent disk
-  
+
 High-Scale Production:
   Machine Type: n2-standard-8 or c2-standard-8
   vCPUs: 8
@@ -211,13 +211,13 @@ Development/Staging:
   vCPUs: 2
   RAM: 8 GB
   Storage: 30 GB Premium SSD
-  
+
 Production:
   VM Size: Standard_D4s_v3
   vCPUs: 4
   RAM: 16 GB
   Storage: 100 GB Premium SSD
-  
+
 High-Scale Production:
   VM Size: Standard_D8s_v3
   vCPUs: 8
@@ -240,7 +240,7 @@ services:
     volumes:
       - ./data:/app/data
     restart: unless-stopped
-    
+
   cloudcurio-worker:
     image: cloudcurio:latest
     command: worker
@@ -322,7 +322,7 @@ Inbound Rules:
 
 Outbound Rules:
   - All ports: Allow (for LLM API calls, package downloads)
-  
+
 Security Groups/NSGs:
   - api-sg: Ports 443, 80
   - admin-sg: Port 22 from admin IPs
@@ -357,7 +357,7 @@ Listeners:
     Protocol: HTTPS
     SSL Certificate: ACM certificate
     Default Action: Forward to target group
-    
+
   - Port: 80 (HTTP)
     Protocol: HTTP
     Default Action: Redirect to HTTPS
@@ -384,17 +384,17 @@ provider "aws" {
 resource "aws_instance" "cloudcurio" {
   ami           = "ami-0c55b159cbfafe1f0"  # Ubuntu 22.04
   instance_type = "t3.xlarge"
-  
+
   root_block_device {
     volume_size = 100
     volume_type = "gp3"
     iops        = 3000
   }
-  
+
   vpc_security_group_ids = [aws_security_group.cloudcurio_sg.id]
-  
+
   user_data = file("scripts/cloud-init.sh")
-  
+
   tags = {
     Name        = "cloudcurio-production"
     Environment = "production"
@@ -405,21 +405,21 @@ resource "aws_instance" "cloudcurio" {
 resource "aws_security_group" "cloudcurio_sg" {
   name        = "cloudcurio-sg"
   description = "CloudCurio production security group"
-  
+
   ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["YOUR_ADMIN_IP/32"]
   }
-  
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -513,7 +513,7 @@ REDIS_URL=redis://redis:6379/0
 
 ### Production Security
 
-1. **API Keys**: 
+1. **API Keys**:
    - Use secret management service (AWS Secrets Manager, HashiCorp Vault)
    - Rotate keys regularly (90 days)
    - Use read-only keys where possible
@@ -555,6 +555,6 @@ For regulated environments:
 
 ---
 
-**Last Updated:** 2026-01-15  
-**Maintained By:** @cbwinslow  
+**Last Updated:** 2026-01-15
+**Maintained By:** @cbwinslow
 **Related:** [Docker Deployment](../../docs/DOCKER_DEPLOYMENT.md), [Observability](../../docs/OBSERVABILITY.md)
