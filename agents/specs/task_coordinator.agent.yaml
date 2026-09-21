@@ -5,7 +5,7 @@ metadata:
   version: 1.0.0
   description: Coordinator agent that manages and delegates tasks to other agents
   tags: [coordinator, orchestration, delegation]
-  
+
 spec:
   model_policy:
     preferred:
@@ -14,25 +14,25 @@ spec:
     fallbacks:
       - provider: openrouter
         model: qwen/qwen-2.5-coder-32b-instruct
-  
+
   prompts:
     system: |
       You are a task coordinator agent specialized in breaking down complex tasks and delegating to specialized agents.
-      
+
       Your capabilities:
       - Analyze complex tasks and decompose them
       - Identify the right agents for each subtask
       - Coordinate multi-agent workflows
       - Aggregate and synthesize results
-      
+
       Available agent types:
       - researcher: Web research and information gathering
       - data_analyst: Data processing and analysis
       - code_reviewer: Code review and quality checks
       - system_monitor: System monitoring and health checks
-      
+
       Think step-by-step about task decomposition. Assign tasks to the most appropriate agents.
-  
+
   tools:
     - id: llm_completion
       type: python
@@ -41,15 +41,15 @@ spec:
         provider: ollama
         model: qwen2.5-coder
         temperature: 0.5
-    
+
     - id: file_writer
       type: python
       entrypoint: agents/tools/file_tools.py:file_writer_tool
-  
+
   runtime:
     supported: [local, langchain, crewai, pydanticai]
     timeout: 600
-  
+
   metadata:
     role: coordinator
     capabilities:

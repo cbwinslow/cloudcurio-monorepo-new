@@ -4,10 +4,10 @@ Provides tools for scheduling, analytics, and engagement across social platforms
 Includes content optimization and audience targeting capabilities.
 """
 
-from typing import Dict, List, Any, Optional
 import logging
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,10 @@ class SocialMediaPost:
 
     content: str
     platform: str  # twitter, linkedin, facebook, instagram, etc.
-    scheduled_time: Optional[str] = None
-    media_urls: List[str] = None
-    hashtags: List[str] = None
-    mentions: List[str] = None
+    scheduled_time: str | None = None
+    media_urls: list[str] = None
+    hashtags: list[str] = None
+    mentions: list[str] = None
 
     def __post_init__(self):
         if self.media_urls is None:
@@ -37,11 +37,11 @@ class SocialMediaAgent:
 
     def __init__(self):
         """Initialize social media agent."""
-        self.scheduled_posts: List[SocialMediaPost] = []
-        self.analytics_cache: Dict[str, Any] = {}
+        self.scheduled_posts: list[SocialMediaPost] = []
+        self.analytics_cache: dict[str, Any] = {}
         logger.info("Initialized SocialMediaAgent")
 
-    def get_tools(self) -> List[str]:
+    def get_tools(self) -> list[str]:
         """Get available tools.
 
         Returns:
@@ -55,7 +55,7 @@ class SocialMediaAgent:
             "manage_mentions",
         ]
 
-    def create_content(self, content: str, platform: str, **kwargs) -> Dict[str, Any]:
+    def create_content(self, content: str, platform: str, **kwargs) -> dict[str, Any]:
         """Create and optionally schedule social media content.
 
         Args:
@@ -80,7 +80,7 @@ class SocialMediaAgent:
             logger.error(f"Failed to create content: {e}")
             return {"success": False, "message": str(e)}
 
-    def schedule_post(self, post: SocialMediaPost) -> Dict[str, Any]:
+    def schedule_post(self, post: SocialMediaPost) -> dict[str, Any]:
         """Schedule a post for future publication.
 
         Args:
@@ -97,7 +97,7 @@ class SocialMediaAgent:
             "scheduled_time": post.scheduled_time,
         }
 
-    def get_analytics(self, platform: str, start_date: str, end_date: str) -> Dict[str, Any]:
+    def get_analytics(self, platform: str, start_date: str, end_date: str) -> dict[str, Any]:
         """Get analytics for a platform and date range.
 
         Args:
@@ -126,8 +126,8 @@ class SocialMediaAgent:
         return analytics
 
     def optimize_content(
-        self, content: str, platform: str, target_audience: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, content: str, platform: str, target_audience: str | None = None
+    ) -> dict[str, Any]:
         """Optimize content for platform and audience.
 
         Args:
@@ -156,7 +156,7 @@ class SocialMediaAgent:
 
         return suggestions
 
-    def track_engagement(self, post_id: str, metrics: Optional[List[str]] = None) -> Dict[str, Any]:
+    def track_engagement(self, post_id: str, metrics: list[str] | None = None) -> dict[str, Any]:
         """Track engagement metrics for a post.
 
         Args:
@@ -176,7 +176,7 @@ class SocialMediaAgent:
 
         return engagement
 
-    def manage_mentions(self, platform: str, filter_type: str = "all") -> Dict[str, Any]:
+    def manage_mentions(self, platform: str, filter_type: str = "all") -> dict[str, Any]:
         """Manage and respond to mentions.
 
         Args:

@@ -87,9 +87,7 @@ graph TD
 ```python
 video_tool = VideoAnalysisTool(config)
 result = video_tool.analyze_video(
-    video_path="episode1.mp4",
-    analysis_type="full",
-    output_format="json"
+    video_path="episode1.mp4", analysis_type="full", output_format="json"
 )
 ```
 
@@ -118,10 +116,7 @@ result = video_tool.analyze_video(
 ```python
 audio_tool = AudioProcessingTool(config)
 result = audio_tool.process_audio(
-    audio_path="raw_audio.wav",
-    noise_reduction="medium",
-    target_lufs=-16,
-    output_format="mp3"
+    audio_path="raw_audio.wav", noise_reduction="medium", target_lufs=-16, output_format="mp3"
 )
 ```
 
@@ -153,10 +148,10 @@ result = scheduling_tool.schedule_content(
     content_data={
         "title": "New Episode Alert",
         "description": "Check out our latest episode!",
-        "media": "episode_thumbnail.jpg"
+        "media": "episode_thumbnail.jpg",
     },
     platforms=["twitter", "instagram", "youtube"],
-    schedule_time="2026-01-08T15:00:00Z"
+    schedule_time="2026-01-08T15:00:00Z",
 )
 ```
 
@@ -188,13 +183,10 @@ result = distribution_tool.publish_content(
     content_package={
         "video": "episode_final.mp4",
         "audio": "episode_final.mp3",
-        "metadata": "episode_metadata.json"
+        "metadata": "episode_metadata.json",
     },
     platforms=["youtube", "spotify", "apple_podcasts"],
-    cdn_config={
-        "cache_ttl": 3600,
-        "edge_locations": ["us-east", "eu-west"]
-    }
+    cdn_config={"cache_ttl": 3600, "edge_locations": ["us-east", "eu-west"]},
 )
 ```
 
@@ -225,7 +217,7 @@ monitoring_tool = MonitoringTool(config)
 result = monitoring_tool.get_system_health(
     components=["video_tool", "audio_tool", "scheduling_tool"],
     metrics=["cpu", "memory", "response_time"],
-    time_range="last_24_hours"
+    time_range="last_24_hours",
 )
 ```
 
@@ -235,10 +227,10 @@ result = monitoring_tool.get_system_health(
 
 ```python
 class ErrorSeverity(Enum):
-    INFO = auto()        # Informational messages
-    WARNING = auto()     # Recoverable issues
-    ERROR = auto()       # Non-critical failures
-    CRITICAL = auto()    # System-threatening failures
+    INFO = auto()  # Informational messages
+    WARNING = auto()  # Recoverable issues
+    ERROR = auto()  # Non-critical failures
+    CRITICAL = auto()  # System-threatening failures
 ```
 
 ### Standardized Error Classes
@@ -246,30 +238,37 @@ class ErrorSeverity(Enum):
 ```python
 class ToolError(Exception):
     """Base exception with severity and context"""
+
     def __init__(self, message, severity=ErrorSeverity.ERROR, context=None):
         self.message = message
         self.severity = severity
         self.context = context or {}
         self.timestamp = time.time()
 
+
 class RecoverableError(ToolError):
     """Errors that can be recovered from"""
+
     def __init__(self, message, context=None):
         super().__init__(message, ErrorSeverity.WARNING, context)
 
+
 class ResourceError(ToolError):
     """Resource-related errors"""
+
     def __init__(self, message, resource, context=None):
         full_context = context or {}
-        full_context['resource'] = resource
+        full_context["resource"] = resource
         super().__init__(message, ErrorSeverity.ERROR, full_context)
+
 
 class ValidationError(ToolError):
     """Input validation failures"""
+
     def __init__(self, message, field, value, context=None):
         full_context = context or {}
-        full_context['field'] = field
-        full_context['invalid_value'] = str(value)
+        full_context["field"] = field
+        full_context["invalid_value"] = str(value)
         super().__init__(message, ErrorSeverity.ERROR, full_context)
 ```
 
@@ -328,18 +327,14 @@ def validate_config(config: Dict[str, Any]):
     for section in required_sections:
         if section not in config:
             raise ValidationError(
-                f"Missing required configuration section: {section}",
-                "config",
-                config
+                f"Missing required configuration section: {section}", "config", config
             )
 
     # Validate video configuration
     video_config = config.get("video", {})
     if not isinstance(video_config.get("enabled", True), bool):
         raise ValidationError(
-            "Video enabled must be boolean",
-            "video.enabled",
-            video_config.get("enabled")
+            "Video enabled must be boolean", "video.enabled", video_config.get("enabled")
         )
 
     # Additional validation rules...

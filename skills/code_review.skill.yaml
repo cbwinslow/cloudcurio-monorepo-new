@@ -9,33 +9,33 @@ metadata:
 
 spec:
   command: /review
-  
+
   parameters:
     - name: path
       type: string
       description: File or directory path to review
       required: true
-    
+
     - name: focus
       type: string
       description: Review focus (security, performance, style, all)
       required: false
       default: "all"
-    
+
     - name: severity
       type: string
       description: Minimum severity to report (critical, major, minor, all)
       required: false
       default: "major"
-  
+
   agents:
     - code_reviewer
-  
+
   examples:
     - command: '/review path="src/module.py"'
       description: "Review a Python module"
       expected_output: "Code review with findings and suggestions"
-    
+
     - command: '/review path="src/" focus="security" severity="critical"'
       description: "Security-focused review of entire src directory"
       expected_output: "Security review report"

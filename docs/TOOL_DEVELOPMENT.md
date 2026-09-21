@@ -48,6 +48,7 @@ from dataclasses import dataclass
 @dataclass
 class ToolResult:
     """Standardized tool result format."""
+
     success: bool
     data: Any
     error: Optional[str] = None
@@ -56,51 +57,40 @@ class ToolResult:
 
 class BaseTool:
     """Base class for all tools."""
-    
+
     # Tool metadata
     name: str = "base_tool"
     description: str = "Base tool class"
     version: str = "1.0.0"
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize tool with optional configuration."""
         self.config = config or {}
-    
+
     def execute(self, input_data: Any) -> ToolResult:
         """
         Execute the tool with given input.
-        
+
         Args:
             input_data: Input for the tool
-            
+
         Returns:
             ToolResult with execution status and data
         """
         try:
             result = self._execute_impl(input_data)
-            return ToolResult(
-                success=True,
-                data=result,
-                metadata=self._get_metadata()
-            )
+            return ToolResult(success=True, data=result, metadata=self._get_metadata())
         except Exception as e:
-            return ToolResult(
-                success=False,
-                data=None,
-                error=str(e)
-            )
-    
+            return ToolResult(success=False, data=None, error=str(e))
+
     def _execute_impl(self, input_data: Any) -> Any:
         """Implement tool-specific logic. Override in subclasses."""
         raise NotImplementedError
-    
+
     def _get_metadata(self) -> Dict[str, Any]:
         """Get tool metadata."""
-        return {
-            "tool_name": self.name,
-            "version": self.version
-        }
-    
+        return {"tool_name": self.name, "version": self.version}
+
     def validate_input(self, input_data: Any) -> bool:
         """Validate input data. Override for custom validation."""
         return True
@@ -136,33 +126,33 @@ logger = logging.getLogger(__name__)
 
 class DataProcessorTool(BaseTool):
     """Tool for processing structured data."""
-    
+
     name = "data_processor"
     description = "Process and transform structured data"
     version = "1.0.0"
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize data processor."""
         super().__init__(config)
         self.output_format = self.config.get("output_format", "json")
         self.max_records = self.config.get("max_records", 1000)
-    
+
     def _execute_impl(self, input_data: Any) -> Dict[str, Any]:
         """
         Process data based on configuration.
-        
+
         Args:
             input_data: Dictionary with 'data' and 'operation' keys
-            
+
         Returns:
             Processed data dictionary
         """
         if not self.validate_input(input_data):
             raise ValueError("Invalid input format")
-        
+
         data = input_data.get("data", [])
         operation = input_data.get("operation", "transform")
-        
+
         if operation == "filter":
             result = self._filter_data(data, input_data.get("criteria", {}))
         elif operation == "transform":
@@ -171,69 +161,53 @@ class DataProcessorTool(BaseTool):
             result = self._aggregate_data(data, input_data.get("group_by"))
         else:
             raise ValueError(f"Unknown operation: {operation}")
-        
+
         return {
             "processed_data": result,
             "record_count": len(result) if isinstance(result, list) else 1,
-            "operation": operation
+            "operation": operation,
         }
-    
+
     def validate_input(self, input_data: Any) -> bool:
         """Validate input has required structure."""
         if not isinstance(input_data, dict):
             return False
-        
+
         if "data" not in input_data:
             return False
-        
+
         return True
-    
-    def _filter_data(
-        self, 
-        data: List[Dict], 
-        criteria: Dict[str, Any]
-    ) -> List[Dict]:
+
+    def _filter_data(self, data: List[Dict], criteria: Dict[str, Any]) -> List[Dict]:
         """Filter data based on criteria."""
         filtered = []
-        for record in data[:self.max_records]:
+        for record in data[: self.max_records]:
             if self._matches_criteria(record, criteria):
                 filtered.append(record)
         return filtered
-    
-    def _transform_data(
-        self,
-        data: List[Dict],
-        mapping: Dict[str, str]
-    ) -> List[Dict]:
+
+    def _transform_data(self, data: List[Dict], mapping: Dict[str, str]) -> List[Dict]:
         """Transform data using field mapping."""
         transformed = []
-        for record in data[:self.max_records]:
+        for record in data[: self.max_records]:
             new_record = {}
             for old_key, new_key in mapping.items():
                 if old_key in record:
                     new_record[new_key] = record[old_key]
             transformed.append(new_record)
         return transformed
-    
-    def _aggregate_data(
-        self,
-        data: List[Dict],
-        group_by: str
-    ) -> Dict[str, List[Dict]]:
+
+    def _aggregate_data(self, data: List[Dict], group_by: str) -> Dict[str, List[Dict]]:
         """Aggregate data by field."""
         aggregated = {}
-        for record in data[:self.max_records]:
+        for record in data[: self.max_records]:
             key = record.get(group_by, "unknown")
             if key not in aggregated:
                 aggregated[key] = []
             aggregated[key].append(record)
         return aggregated
-    
-    def _matches_criteria(
-        self,
-        record: Dict[str, Any],
-        criteria: Dict[str, Any]
-    ) -> bool:
+
+    def _matches_criteria(self, record: Dict[str, Any], criteria: Dict[str, Any]) -> bool:
         """Check if record matches filter criteria."""
         for key, value in criteria.items():
             if key not in record or record[key] != value:
@@ -245,10 +219,10 @@ class DataProcessorTool(BaseTool):
 def process_data(input_data: str) -> Dict[str, Any]:
     """
     Tool entrypoint function.
-    
+
     Args:
         input_data: JSON string with data and operation
-        
+
     Returns:
         Dictionary with processing results
     """
@@ -256,7 +230,7 @@ def process_data(input_data: str) -> Dict[str, Any]:
         parsed_input = json.loads(input_data) if isinstance(input_data, str) else input_data
         tool = DataProcessorTool()
         result = tool.execute(parsed_input)
-        
+
         if result.success:
             return result.data
         else:
@@ -306,19 +280,19 @@ from agents.tools.python.data_processor import DataProcessorTool
 def test_filter_operation():
     """Test data filtering."""
     tool = DataProcessorTool()
-    
+
     input_data = {
         "data": [
             {"name": "Alice", "age": 30},
             {"name": "Bob", "age": 25},
-            {"name": "Charlie", "age": 30}
+            {"name": "Charlie", "age": 30},
         ],
         "operation": "filter",
-        "criteria": {"age": 30}
+        "criteria": {"age": 30},
     }
-    
+
     result = tool.execute(input_data)
-    
+
     assert result.success
     assert len(result.data["processed_data"]) == 2
     assert all(r["age"] == 30 for r in result.data["processed_data"])
@@ -327,20 +301,15 @@ def test_filter_operation():
 def test_transform_operation():
     """Test data transformation."""
     tool = DataProcessorTool()
-    
+
     input_data = {
-        "data": [
-            {"first_name": "Alice", "last_name": "Smith"}
-        ],
+        "data": [{"first_name": "Alice", "last_name": "Smith"}],
         "operation": "transform",
-        "mapping": {
-            "first_name": "given_name",
-            "last_name": "family_name"
-        }
+        "mapping": {"first_name": "given_name", "last_name": "family_name"},
     }
-    
+
     result = tool.execute(input_data)
-    
+
     assert result.success
     assert "given_name" in result.data["processed_data"][0]
     assert "family_name" in result.data["processed_data"][0]
@@ -349,9 +318,9 @@ def test_transform_operation():
 def test_invalid_input():
     """Test error handling for invalid input."""
     tool = DataProcessorTool()
-    
+
     result = tool.execute("invalid")
-    
+
     assert not result.success
     assert result.error is not None
 ```
@@ -365,28 +334,22 @@ Native Python functions provide maximum flexibility:
 ```python
 """Simple calculator tool."""
 
+
 def calculate(expression: str) -> dict:
     """
     Evaluate mathematical expression.
-    
+
     Args:
         expression: Math expression string
-        
+
     Returns:
         Result dictionary
     """
     try:
         result = eval(expression, {"__builtins__": {}})
-        return {
-            "success": True,
-            "result": result,
-            "expression": expression
-        }
+        return {"success": True, "result": result, "expression": expression}
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 ```
 
 **Usage in agent spec:**
@@ -437,7 +400,7 @@ tools:
     entrypoint: automation:search_web
     config:
       max_results: 10
-      
+
   - id: media_processor
     type: mcp
     entrypoint: media:process_video
@@ -471,34 +434,34 @@ from typing import Dict, Any, Optional
 
 class HTTPTool(BaseTool):
     """Tool for HTTP API calls."""
-    
+
     def __init__(self, endpoint: str, config: Optional[Dict] = None):
         super().__init__(config)
         self.endpoint = endpoint
         self.method = self.config.get("method", "GET")
         self.headers = self.config.get("headers", {})
         self.timeout = self.config.get("timeout", 30)
-    
+
     def _execute_impl(self, input_data: Any) -> Dict[str, Any]:
         """Make HTTP request."""
         params = input_data.get("params", {})
         data = input_data.get("data")
-        
+
         response = requests.request(
             method=self.method,
             url=self.endpoint,
             headers=self.headers,
             params=params,
             json=data,
-            timeout=self.timeout
+            timeout=self.timeout,
         )
-        
+
         response.raise_for_status()
-        
+
         return {
             "status_code": response.status_code,
             "data": response.json() if response.content else None,
-            "headers": dict(response.headers)
+            "headers": dict(response.headers),
         }
 ```
 
@@ -513,15 +476,15 @@ def validate_input(self, input_data: Any) -> bool:
     """Validate input structure and types."""
     if not isinstance(input_data, dict):
         return False
-    
+
     required_fields = ["operation", "data"]
     if not all(field in input_data for field in required_fields):
         return False
-    
+
     # Type checking
     if not isinstance(input_data["data"], (list, dict)):
         return False
-    
+
     return True
 ```
 
@@ -536,38 +499,23 @@ def execute(self, input_data: Any) -> ToolResult:
         # Validate first
         if not self.validate_input(input_data):
             raise ValueError("Invalid input format")
-        
+
         # Execute
         result = self._execute_impl(input_data)
-        
-        return ToolResult(
-            success=True,
-            data=result
-        )
+
+        return ToolResult(success=True, data=result)
     except ValueError as e:
         # User error - invalid input
         logger.warning(f"Invalid input: {e}")
-        return ToolResult(
-            success=False,
-            data=None,
-            error=f"Invalid input: {str(e)}"
-        )
+        return ToolResult(success=False, data=None, error=f"Invalid input: {str(e)}")
     except TimeoutError as e:
         # Timeout error
         logger.error(f"Operation timed out: {e}")
-        return ToolResult(
-            success=False,
-            data=None,
-            error="Operation timed out"
-        )
+        return ToolResult(success=False, data=None, error="Operation timed out")
     except Exception as e:
         # Unexpected error
         logger.exception(f"Unexpected error: {e}")
-        return ToolResult(
-            success=False,
-            data=None,
-            error="Internal tool error"
-        )
+        return ToolResult(success=False, data=None, error="Internal tool error")
 ```
 
 ### 3. Resource Management
@@ -577,11 +525,11 @@ Properly manage resources:
 ```python
 class DatabaseTool(BaseTool):
     """Tool with resource management."""
-    
+
     def __init__(self, config: Optional[Dict] = None):
         super().__init__(config)
         self.connection = None
-    
+
     def _execute_impl(self, input_data: Any) -> Any:
         """Execute with connection management."""
         try:
@@ -590,17 +538,17 @@ class DatabaseTool(BaseTool):
             return result
         finally:
             self._cleanup()
-    
+
     def _connect(self):
         """Establish database connection."""
         # Connection logic
         pass
-    
+
     def _query(self, input_data: Any):
         """Execute query."""
         # Query logic
         pass
-    
+
     def _cleanup(self):
         """Clean up resources."""
         if self.connection:
@@ -619,34 +567,34 @@ import time
 
 class CachedTool(BaseTool):
     """Tool with caching support."""
-    
+
     def __init__(self, config: Optional[Dict] = None):
         super().__init__(config)
         self.cache_ttl = self.config.get("cache_ttl", 300)  # 5 minutes
         self._cache = {}
-    
+
     @lru_cache(maxsize=100)
     def _cached_operation(self, key: str) -> Any:
         """Cached expensive operation."""
         # Expensive computation
         return self._compute(key)
-    
+
     def _execute_impl(self, input_data: Any) -> Any:
         """Execute with caching."""
         cache_key = self._get_cache_key(input_data)
-        
+
         # Check cache
         if cache_key in self._cache:
             cached_value, timestamp = self._cache[cache_key]
             if time.time() - timestamp < self.cache_ttl:
                 return cached_value
-        
+
         # Compute
         result = self._cached_operation(cache_key)
-        
+
         # Store in cache
         self._cache[cache_key] = (result, time.time())
-        
+
         return result
 ```
 
@@ -662,42 +610,30 @@ logger = logging.getLogger(__name__)
 
 class LoggingTool(BaseTool):
     """Tool with comprehensive logging."""
-    
+
     def execute(self, input_data: Any) -> ToolResult:
         """Execute with logging."""
         logger.info(f"Executing {self.name} v{self.version}")
         logger.debug(f"Input: {input_data}")
-        
+
         start_time = time.time()
-        
+
         try:
             result = self._execute_impl(input_data)
             execution_time = time.time() - start_time
-            
-            logger.info(
-                f"Tool executed successfully in {execution_time:.2f}s"
-            )
+
+            logger.info(f"Tool executed successfully in {execution_time:.2f}s")
             logger.debug(f"Result: {result}")
-            
+
             return ToolResult(
                 success=True,
                 data=result,
-                metadata={
-                    "execution_time": execution_time,
-                    "tool": self.name
-                }
+                metadata={"execution_time": execution_time, "tool": self.name},
             )
         except Exception as e:
             execution_time = time.time() - start_time
-            logger.error(
-                f"Tool failed after {execution_time:.2f}s: {e}",
-                exc_info=True
-            )
-            return ToolResult(
-                success=False,
-                data=None,
-                error=str(e)
-            )
+            logger.error(f"Tool failed after {execution_time:.2f}s: {e}", exc_info=True)
+            return ToolResult(success=False, data=None, error=str(e))
 ```
 
 ### 6. Configuration
@@ -707,30 +643,25 @@ Support flexible configuration:
 ```python
 class ConfigurableTool(BaseTool):
     """Tool with extensive configuration."""
-    
-    DEFAULT_CONFIG = {
-        "timeout": 30,
-        "retries": 3,
-        "batch_size": 100,
-        "enable_cache": True
-    }
-    
+
+    DEFAULT_CONFIG = {"timeout": 30, "retries": 3, "batch_size": 100, "enable_cache": True}
+
     def __init__(self, config: Optional[Dict] = None):
         # Merge with defaults
         merged_config = {**self.DEFAULT_CONFIG, **(config or {})}
         super().__init__(merged_config)
-        
+
         # Validate configuration
         self._validate_config()
-    
+
     def _validate_config(self):
         """Validate configuration values."""
         if self.config["timeout"] <= 0:
             raise ValueError("timeout must be positive")
-        
+
         if self.config["retries"] < 0:
             raise ValueError("retries must be non-negative")
-        
+
         if self.config["batch_size"] <= 0:
             raise ValueError("batch_size must be positive")
 ```
@@ -749,51 +680,50 @@ from agents.tools.python.my_tool import MyTool
 
 class TestMyTool:
     """Test suite for MyTool."""
-    
+
     def setup_method(self):
         """Setup test fixtures."""
         self.tool = MyTool(config={"timeout": 10})
-    
+
     def test_successful_execution(self):
         """Test successful tool execution."""
         input_data = {"operation": "test", "data": [1, 2, 3]}
         result = self.tool.execute(input_data)
-        
+
         assert result.success
         assert result.data is not None
         assert result.error is None
-    
+
     def test_invalid_input(self):
         """Test error handling for invalid input."""
         result = self.tool.execute("invalid")
-        
+
         assert not result.success
         assert result.error is not None
-    
+
     def test_timeout_handling(self):
         """Test timeout error handling."""
-        with patch.object(self.tool, '_execute_impl', 
-                         side_effect=TimeoutError()):
+        with patch.object(self.tool, "_execute_impl", side_effect=TimeoutError()):
             result = self.tool.execute({"test": "data"})
-            
+
             assert not result.success
             assert "timeout" in result.error.lower()
-    
+
     def test_configuration(self):
         """Test configuration handling."""
         tool = MyTool(config={"custom_param": "value"})
         assert tool.config["custom_param"] == "value"
-    
+
     def test_caching(self):
         """Test caching behavior."""
         input_data = {"key": "test"}
-        
+
         # First call
         result1 = self.tool.execute(input_data)
-        
+
         # Second call (should be cached)
         result2 = self.tool.execute(input_data)
-        
+
         assert result1.data == result2.data
 ```
 
@@ -809,28 +739,23 @@ from agents.tools.python.api_client import APIClientTool
 @pytest.mark.integration
 class TestAPIClientIntegration:
     """Integration tests for API client tool."""
-    
+
     def test_real_api_call(self):
         """Test with real API."""
-        tool = APIClientTool(config={
-            "endpoint": "https://api.github.com/users/github"
-        })
-        
+        tool = APIClientTool(config={"endpoint": "https://api.github.com/users/github"})
+
         result = tool.execute({"method": "GET"})
-        
+
         assert result.success
         assert "login" in result.data
-    
+
     @pytest.mark.slow
     def test_timeout_handling(self):
         """Test timeout with slow endpoint."""
-        tool = APIClientTool(config={
-            "endpoint": "https://httpbin.org/delay/10",
-            "timeout": 1
-        })
-        
+        tool = APIClientTool(config={"endpoint": "https://httpbin.org/delay/10", "timeout": 1})
+
         result = tool.execute({"method": "GET"})
-        
+
         assert not result.success
 ```
 
@@ -854,25 +779,25 @@ from .file_handler import FileHandlerTool
 
 class ToolRegistry:
     """Central registry for all tools."""
-    
+
     _registry: Dict[str, Type[BaseTool]] = {}
-    
+
     @classmethod
     def register(cls, tool_class: Type[BaseTool]) -> None:
         """Register a tool class."""
         tool_name = tool_class.name
         cls._registry[tool_name] = tool_class
-    
+
     @classmethod
     def get(cls, tool_name: str) -> Optional[Type[BaseTool]]:
         """Get tool class by name."""
         return cls._registry.get(tool_name)
-    
+
     @classmethod
     def list_tools(cls) -> list[str]:
         """List all registered tool names."""
         return list(cls._registry.keys())
-    
+
     @classmethod
     def get_tool_info(cls, tool_name: str) -> Optional[Dict]:
         """Get tool metadata."""
@@ -881,7 +806,7 @@ class ToolRegistry:
             return {
                 "name": tool_class.name,
                 "description": tool_class.description,
-                "version": tool_class.version
+                "version": tool_class.version,
             }
         return None
 
@@ -934,7 +859,7 @@ from typing import Any
 
 class AsyncTool(BaseTool):
     """Tool with async support."""
-    
+
     async def execute_async(self, input_data: Any) -> ToolResult:
         """Execute tool asynchronously."""
         try:
@@ -942,13 +867,13 @@ class AsyncTool(BaseTool):
             return ToolResult(success=True, data=result)
         except Exception as e:
             return ToolResult(success=False, data=None, error=str(e))
-    
+
     async def _execute_async_impl(self, input_data: Any) -> Any:
         """Async implementation."""
         # Async operations
         await asyncio.sleep(1)
         return {"status": "completed"}
-    
+
     def execute(self, input_data: Any) -> ToolResult:
         """Sync wrapper for async execution."""
         return asyncio.run(self.execute_async(input_data))
@@ -961,21 +886,21 @@ Create tools that compose other tools:
 ```python
 class CompositeTool(BaseTool):
     """Tool that composes multiple tools."""
-    
+
     def __init__(self, tools: list[BaseTool], config: Optional[Dict] = None):
         super().__init__(config)
         self.tools = tools
-    
+
     def _execute_impl(self, input_data: Any) -> Any:
         """Execute tools in sequence."""
         result = input_data
-        
+
         for tool in self.tools:
             tool_result = tool.execute(result)
             if not tool_result.success:
                 raise RuntimeError(f"Tool {tool.name} failed: {tool_result.error}")
             result = tool_result.data
-        
+
         return result
 ```
 
@@ -990,28 +915,31 @@ from functools import wraps
 
 def retry_on_failure(max_retries=3, backoff_factor=2):
     """Decorator for retry logic."""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             last_exception = None
-            
+
             for attempt in range(max_retries):
                 try:
                     return func(*args, **kwargs)
                 except Exception as e:
                     last_exception = e
                     if attempt < max_retries - 1:
-                        sleep_time = backoff_factor ** attempt
+                        sleep_time = backoff_factor**attempt
                         time.sleep(sleep_time)
-            
+
             raise last_exception
+
         return wrapper
+
     return decorator
 
 
 class RetryableTool(BaseTool):
     """Tool with automatic retry."""
-    
+
     @retry_on_failure(max_retries=3, backoff_factor=2)
     def _execute_impl(self, input_data: Any) -> Any:
         """Execute with retry logic."""
@@ -1027,6 +955,6 @@ class RetryableTool(BaseTool):
 
 ---
 
-**Last Updated:** 2026-01-24  
-**Version:** 1.0.0  
+**Last Updated:** 2026-01-24
+**Version:** 1.0.0
 **Maintained By:** @cbwinslow

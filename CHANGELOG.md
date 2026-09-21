@@ -284,6 +284,6 @@ See [Code Quality Rules](kb/rules/code_quality_rules.md) for contribution guidel
 
 ---
 
-**Format:** Based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)  
-**Versioning:** [Semantic Versioning](https://semver.org/spec/v2.0.0.html)  
+**Format:** Based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+**Versioning:** [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 **Maintained By:** @cbwinslow

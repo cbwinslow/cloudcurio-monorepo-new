@@ -35,11 +35,7 @@ from cbw_foundry.swarm import Swarm, SwarmConfig
 swarm = Swarm(
     name="content_pipeline",
     agents=[generator, reviewer, publisher],
-    config=SwarmConfig(
-        coordination_mode="democratic",
-        max_iterations=10,
-        quality_threshold=0.8
-    )
+    config=SwarmConfig(coordination_mode="democratic", max_iterations=10, quality_threshold=0.8),
 )
 
 result = swarm.execute(task="Create blog post about AI")
@@ -65,10 +61,7 @@ message = Message(
     type=MessageType.TASK_REQUEST,
     sender="coordinator_agent",
     recipient="worker_agent",
-    content={
-        "task": "Generate content",
-        "deadline": "2026-01-24T12:00:00Z"
-    }
+    content={"task": "Generate content", "deadline": "2026-01-24T12:00:00Z"},
 )
 ```
 
@@ -133,21 +126,18 @@ content_generator = SwarmAgent(
     name="content_generator",
     role="worker",
     capabilities=["content_generation", "writing"],
-    confidence=0.9
+    confidence=0.9,
 )
 
 content_reviewer = SwarmAgent(
     name="content_reviewer",
     role="reviewer",
     capabilities=["review", "quality_check"],
-    confidence=0.85
+    confidence=0.85,
 )
 
 publisher = SwarmAgent(
-    name="publisher",
-    role="worker",
-    capabilities=["publishing", "distribution"],
-    confidence=0.8
+    name="publisher", role="worker", capabilities=["publishing", "distribution"], confidence=0.8
 )
 
 # Create swarm
@@ -155,15 +145,17 @@ swarm = Swarm(
     name="content_pipeline",
     agents=[content_generator, content_reviewer, publisher],
     orchestrator=Orchestrator(strategy="sequential"),
-    governance=DemocraticGovernance(voting_threshold=0.7)
+    governance=DemocraticGovernance(voting_threshold=0.7),
 )
 
 # Execute task
-result = swarm.execute({
-    "task": "Create and publish blog post",
-    "topic": "AI agent coordination",
-    "deadline": "2026-01-24"
-})
+result = swarm.execute(
+    {
+        "task": "Create and publish blog post",
+        "topic": "AI agent coordination",
+        "deadline": "2026-01-24",
+    }
+)
 ```
 
 ### Coordination Strategies
@@ -185,10 +177,7 @@ orchestrator = Orchestrator(strategy="parallel")
 **Democratic**: Agents vote on decisions
 
 ```python
-orchestrator = Orchestrator(
-    strategy="democratic",
-    governance=DemocraticGovernance()
-)
+orchestrator = Orchestrator(strategy="democratic", governance=DemocraticGovernance())
 # Agents collaborate through voting
 ```
 
@@ -204,11 +193,9 @@ bus = MessageBus()
 bus.subscribe(agent_id="reviewer", topic="content_ready")
 
 # Publish message
-bus.publish(Message(
-    type="content_ready",
-    sender="generator",
-    data={"content": "...", "metadata": {}}
-))
+bus.publish(
+    Message(type="content_ready", sender="generator", data={"content": "...", "metadata": {}})
+)
 
 # Agent receives message
 messages = bus.receive(agent_id="reviewer")
@@ -225,18 +212,14 @@ kb = KnowledgeBase()
 kb.store(
     key="project_requirements",
     value={"tone": "professional", "length": 1000},
-    agent_id="coordinator"
+    agent_id="coordinator",
 )
 
 # Retrieve knowledge
 requirements = kb.retrieve(key="project_requirements")
 
 # Update knowledge
-kb.update(
-    key="project_requirements",
-    value={"tone": "casual", "length": 800},
-    agent_id="reviewer"
-)
+kb.update(key="project_requirements", value={"tone": "casual", "length": 800}, agent_id="reviewer")
 ```
 
 ## Communication
@@ -278,16 +261,13 @@ request = Message(
     type=MessageType.TASK_REQUEST,
     sender="agent_a",
     recipient="agent_b",
-    content={"task": "analyze_data"}
+    content={"task": "analyze_data"},
 )
 bus.publish(request)
 
 # Agent B responds
 response = Message(
-    type=MessageType.TASK_RESPONSE,
-    sender="agent_b",
-    recipient="agent_a",
-    content={"result": {...}}
+    type=MessageType.TASK_RESPONSE, sender="agent_b", recipient="agent_a", content={"result": {...}}
 )
 bus.publish(response)
 ```
@@ -300,7 +280,7 @@ broadcast = Message(
     type=MessageType.STATUS_UPDATE,
     sender="coordinator",
     recipient=None,  # Broadcast
-    content={"status": "task_complete"}
+    content={"status": "task_complete"},
 )
 bus.broadcast(broadcast)
 ```
@@ -316,16 +296,10 @@ pipeline = [
     ("data_collector", "collect_data"),
     ("data_processor", "process_data"),
     ("data_analyzer", "analyze_data"),
-    ("report_generator", "generate_report")
+    ("report_generator", "generate_report"),
 ]
 
-swarm = Swarm(
-    agents=agents,
-    orchestrator=Orchestrator(
-        strategy="pipeline",
-        pipeline=pipeline
-    )
-)
+swarm = Swarm(agents=agents, orchestrator=Orchestrator(strategy="pipeline", pipeline=pipeline))
 ```
 
 ### Map-Reduce Pattern
@@ -337,14 +311,11 @@ Distribute work across agents, aggregate results:
 tasks = [
     {"agent": "worker_1", "data": chunk_1},
     {"agent": "worker_2", "data": chunk_2},
-    {"agent": "worker_3", "data": chunk_3}
+    {"agent": "worker_3", "data": chunk_3},
 ]
 
 # Reduce phase: aggregate results
-results = swarm.map_reduce(
-    tasks=tasks,
-    reducer=aggregator_agent
-)
+results = swarm.map_reduce(tasks=tasks, reducer=aggregator_agent)
 ```
 
 ### Consensus Pattern
@@ -356,7 +327,7 @@ Agents vote on decisions:
 vote_request = {
     "question": "Approve content for publication?",
     "options": ["approve", "reject", "revise"],
-    "voters": ["reviewer_1", "reviewer_2", "reviewer_3"]
+    "voters": ["reviewer_1", "reviewer_2", "reviewer_3"],
 }
 
 decision = swarm.consensus(vote_request)
@@ -372,12 +343,11 @@ coordinator = SwarmAgent(name="coordinator", role="coordinator")
 specialists = [
     SwarmAgent(name="text_specialist", role="worker"),
     SwarmAgent(name="image_specialist", role="worker"),
-    SwarmAgent(name="video_specialist", role="worker")
+    SwarmAgent(name="video_specialist", role="worker"),
 ]
 
 swarm = Swarm(
-    agents=[coordinator] + specialists,
-    orchestrator=Orchestrator(strategy="hierarchical")
+    agents=[coordinator] + specialists, orchestrator=Orchestrator(strategy="hierarchical")
 )
 ```
 
@@ -395,7 +365,7 @@ voting = ConfidenceVoting()
 votes = [
     {"agent": "reviewer_1", "vote": "approve", "confidence": 0.9},
     {"agent": "reviewer_2", "vote": "approve", "confidence": 0.7},
-    {"agent": "reviewer_3", "vote": "reject", "confidence": 0.6}
+    {"agent": "reviewer_3", "vote": "reject", "confidence": 0.6},
 ]
 
 result = voting.tally(votes)
@@ -409,11 +379,7 @@ Enforce quality standards:
 ```python
 from cbw_foundry.swarm.governance import QualityGate
 
-gate = QualityGate(
-    min_confidence=0.75,
-    min_votes=3,
-    consensus_threshold=0.8
-)
+gate = QualityGate(min_confidence=0.75, min_votes=3, consensus_threshold=0.8)
 
 if gate.passes(result):
     # Proceed with task
@@ -454,6 +420,7 @@ performance = monitor.get_agent_performance("content_generator")
 
 ```python
 from cbw_foundry.observability.otel import trace_swarm_execution
+
 
 @trace_swarm_execution
 def execute_content_pipeline(swarm, task):
@@ -506,6 +473,6 @@ def execute_content_pipeline(swarm, task):
 
 ---
 
-**Last Updated:** 2026-01-24  
-**Version:** 1.0.0  
+**Last Updated:** 2026-01-24
+**Version:** 1.0.0
 **Maintained By:** @cbwinslow

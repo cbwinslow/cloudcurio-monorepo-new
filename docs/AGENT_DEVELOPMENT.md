@@ -286,23 +286,20 @@ from typing import Any, Dict
 def execute(input_data: str) -> Dict[str, Any]:
     """
     Execute the custom tool logic.
-    
+
     Args:
         input_data: Input string from agent
-        
+
     Returns:
         Dictionary with execution results
     """
     # Implement tool logic
     result = process_input(input_data)
-    
+
     return {
         "status": "success",
         "data": result,
-        "metadata": {
-            "timestamp": get_timestamp(),
-            "version": "1.0.0"
-        }
+        "metadata": {"timestamp": get_timestamp(), "version": "1.0.0"},
     }
 
 
@@ -315,6 +312,7 @@ def process_input(data: str) -> Any:
 def get_timestamp() -> str:
     """Get current timestamp."""
     from datetime import datetime
+
     return datetime.utcnow().isoformat()
 ```
 
@@ -326,7 +324,7 @@ Edit `agents/evals/golden/my_new_agent_cases.yaml`:
 test_suite:
   name: my_new_agent_golden_tests
   version: 1.0.0
-  
+
 test_cases:
   - id: test_basic_functionality
     input: "Automate file backup"
@@ -334,13 +332,13 @@ test_cases:
       - "backup"
       - "automation"
       - "schedule"
-    
+
   - id: test_error_handling
     input: "Invalid request ####"
     expected_output_contains:
       - "clarification"
       - "requirement"
-    
+
   - id: test_output_format
     input: "Create database backup automation"
     expected_output_schema:
@@ -431,16 +429,12 @@ Agents can maintain state across interactions:
 ```python
 class StatefulAgent:
     def __init__(self):
-        self.state = {
-            "conversation_history": [],
-            "context": {},
-            "metrics": {}
-        }
-    
+        self.state = {"conversation_history": [], "context": {}, "metrics": {}}
+
     def update_state(self, key: str, value: Any) -> None:
         """Update agent state."""
         self.state[key] = value
-    
+
     def get_state(self, key: str) -> Any:
         """Retrieve state value."""
         return self.state.get(key)
@@ -456,27 +450,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def execute_agent_task(task: str) -> Dict[str, Any]:
     """Execute agent task with error handling."""
     try:
         result = process_task(task)
-        return {
-            "status": "success",
-            "result": result
-        }
+        return {"status": "success", "result": result}
     except ValueError as e:
         logger.error(f"Invalid input: {e}")
-        return {
-            "status": "error",
-            "error_type": "invalid_input",
-            "message": str(e)
-        }
+        return {"status": "error", "error_type": "invalid_input", "message": str(e)}
     except Exception as e:
         logger.exception(f"Unexpected error: {e}")
         return {
             "status": "error",
             "error_type": "internal_error",
-            "message": "An unexpected error occurred"
+            "message": "An unexpected error occurred",
         }
 ```
 
@@ -499,6 +487,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ToolResult:
     """Standard tool result format."""
+
     success: bool
     data: Any
     error: Optional[str] = None
@@ -507,38 +496,30 @@ class ToolResult:
 
 class BaseTool:
     """Base class for all tools."""
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize tool with configuration."""
         self.config = config or {}
         self.name = self.__class__.__name__
         logger.info(f"Initialized {self.name}")
-    
+
     def execute(self, input_data: Any) -> ToolResult:
         """
         Execute tool logic.
-        
+
         Args:
             input_data: Input for the tool
-            
+
         Returns:
             ToolResult with success status and data
         """
         try:
             result = self._execute_impl(input_data)
-            return ToolResult(
-                success=True,
-                data=result,
-                metadata={"tool": self.name}
-            )
+            return ToolResult(success=True, data=result, metadata={"tool": self.name})
         except Exception as e:
             logger.error(f"Tool execution failed: {e}")
-            return ToolResult(
-                success=False,
-                data=None,
-                error=str(e)
-            )
-    
+            return ToolResult(success=False, data=None, error=str(e))
+
     def _execute_impl(self, input_data: Any) -> Any:
         """Implement tool-specific logic here."""
         raise NotImplementedError
@@ -546,28 +527,28 @@ class BaseTool:
 
 class FileProcessorTool(BaseTool):
     """Example tool implementation."""
-    
+
     def _execute_impl(self, input_data: Any) -> Dict[str, Any]:
         """Process files based on input."""
         file_path = input_data.get("file_path")
         operation = input_data.get("operation", "read")
-        
+
         if operation == "read":
             return self._read_file(file_path)
         elif operation == "write":
             return self._write_file(file_path, input_data.get("content"))
         else:
             raise ValueError(f"Unknown operation: {operation}")
-    
+
     def _read_file(self, path: str) -> Dict[str, Any]:
         """Read file contents."""
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             content = f.read()
         return {"content": content, "size": len(content)}
-    
+
     def _write_file(self, path: str, content: str) -> Dict[str, Any]:
         """Write content to file."""
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write(content)
         return {"bytes_written": len(content)}
 ```
@@ -666,7 +647,7 @@ test_suite:
   name: code_reviewer_golden_tests
   version: 1.0.0
   description: "Golden tests for code review agent"
-  
+
 test_cases:
   # Functional tests
   - id: detect_security_issue
@@ -680,7 +661,7 @@ test_cases:
       - "parameterized query"
       - "security"
     expected_severity: "critical"
-  
+
   # Edge cases
   - id: handle_empty_input
     description: "Agent should handle empty code gracefully"
@@ -688,7 +669,7 @@ test_cases:
     expected_output_contains:
       - "no code"
       - "provide"
-  
+
   # Output format validation
   - id: json_output_format
     description: "Agent should return valid JSON"
@@ -751,22 +732,11 @@ make eval
 def safe_execute(func, *args, **kwargs):
     """Execute function with error handling."""
     try:
-        return {
-            "success": True,
-            "result": func(*args, **kwargs)
-        }
+        return {"success": True, "result": func(*args, **kwargs)}
     except ValueError as e:
-        return {
-            "success": False,
-            "error": "invalid_input",
-            "message": str(e)
-        }
+        return {"success": False, "error": "invalid_input", "message": str(e)}
     except Exception as e:
-        return {
-            "success": False,
-            "error": "internal_error",
-            "message": "An error occurred"
-        }
+        return {"success": False, "error": "internal_error", "message": "An error occurred"}
 ```
 
 ### 4. Resource Management
@@ -840,6 +810,7 @@ Support streaming for long-running tasks:
 ```python
 from typing import Iterator
 
+
 def stream_agent_response(agent, input_data: str) -> Iterator[str]:
     """Stream agent responses as they're generated."""
     for chunk in agent.run_streaming(input_data):
@@ -858,11 +829,11 @@ workflow:
     - agent: content_generator
       input: "${user_request}"
       output_var: raw_content
-    
+
     - agent: content_reviewer
       input: "${raw_content}"
       output_var: reviewed_content
-    
+
     - agent: content_publisher
       input: "${reviewed_content}"
       output_var: published_url
@@ -874,6 +845,7 @@ Add tracing and monitoring:
 
 ```python
 from cbw_foundry.observability.otel import trace_execution
+
 
 @trace_execution
 def execute_agent_task(agent, input_data):
@@ -890,6 +862,6 @@ def execute_agent_task(agent, input_data):
 
 ---
 
-**Last Updated:** 2026-01-24  
-**Version:** 1.0.0  
+**Last Updated:** 2026-01-24
+**Version:** 1.0.0
 **Maintained By:** @cbwinslow

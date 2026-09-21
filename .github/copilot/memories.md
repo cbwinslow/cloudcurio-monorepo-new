@@ -28,10 +28,13 @@ Capabilities:
 from typing import Any, Optional
 from pydantic import BaseModel, Field
 
+
 class AgentConfig(BaseModel):
     """Configuration for Agent."""
+
     model: str = Field(default="qwen2.5-coder")
     timeout: int = Field(default=300, gt=0)
+
 
 class AgentNameAgent:
     def __init__(self, config: Optional[AgentConfig] = None) -> None:
@@ -70,7 +73,7 @@ def execute(self, agent_spec: AgentSpec, input_data: dict) -> dict:
     return {
         "status": "success",
         "result": "adapter stub - not yet implemented",
-        "framework": "crewai"
+        "framework": "crewai",
     }
 ```
 
@@ -111,7 +114,7 @@ tools:
 class GitHubAPITool:
     name = "github_api"
     description = "GitHub API integration"
-    
+
     def execute(self, **kwargs) -> dict:
         # Implementation
         pass
@@ -130,7 +133,7 @@ class GitHubAPITool:
 - `test_toolset.py` - Toolset functionality
 - `test_agent_spec.py` - Agent spec validation
 
-**Convention**: 
+**Convention**:
 - Test classes use `TestClassName` pattern
 - Test methods use `test_specific_behavior` pattern
 - Integration tests marked with `@pytest.mark.integration`
@@ -195,17 +198,17 @@ cases:
 ```python
 def process(items: list[str], threshold: int = 10) -> list[str]:
     """Process items above threshold.
-    
+
     Args:
         items: List of items to process
         threshold: Minimum threshold value
-    
+
     Returns:
         Filtered list of items above threshold
-    
+
     Raises:
         ValueError: If threshold is negative
-    
+
     Example:
         >>> process(["a", "bb", "ccc"], 2)
         ["bb", "ccc"]
@@ -247,13 +250,17 @@ spec:
 ```python
 try:
     import optional_package
+
     HAS_OPTIONAL = True
 except ImportError:
     HAS_OPTIONAL = False
 
+
 def feature():
     if not HAS_OPTIONAL:
-        raise RuntimeError("Feature requires optional_package. Install with: pip install optional_package")
+        raise RuntimeError(
+            "Feature requires optional_package. Install with: pip install optional_package"
+        )
 ```
 
 **Why**: Allows core functionality to work without all optional dependencies installed.
@@ -267,10 +274,11 @@ def feature():
 ```python
 from pydantic import BaseModel, Field, validator
 
+
 class Config(BaseModel):
     timeout: int = Field(gt=0, le=3600, description="Timeout in seconds")
-    
-    @validator('timeout')
+
+    @validator("timeout")
     def validate_timeout(cls, v):
         if v < 10:
             raise ValueError("Timeout must be at least 10 seconds")
@@ -297,7 +305,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Tool description")
     parser.add_argument("--input", required=True)
     args = parser.parse_args()
-    
+
     try:
         # Logic
         return 0
@@ -343,9 +351,11 @@ API_ENDPOINT=https://api.example.com
 import shlex
 from pathlib import Path
 
+
 def safe_command(user_input: str) -> list[str]:
     """Safely parse command from user input."""
     return shlex.split(user_input)
+
 
 def safe_path(user_path: str, base_dir: Path) -> Path:
     """Resolve path safely within base directory."""
@@ -369,7 +379,7 @@ def safe_path(user_path: str, base_dir: Path) -> Path:
 class Agent:
     def __init__(self):
         self._model = None
-    
+
     @property
     def model(self):
         if self._model is None:
@@ -388,7 +398,7 @@ class Agent:
 ```python
 async def process_file(path: str) -> dict:
     """Process file asynchronously."""
-    async with aiofiles.open(path, 'r') as f:
+    async with aiofiles.open(path, "r") as f:
         content = await f.read()
     result = await async_process(content)
     return result
@@ -436,6 +446,7 @@ def append_item(item, items=[]):
     items.append(item)
     return items
 
+
 # Good
 def append_item(item, items=None):
     if items is None:
@@ -452,10 +463,12 @@ def append_item(item, items=None):
 # Bad
 import optional_package  # Fails if not installed
 
+
 # Good
 def feature():
     try:
         import optional_package
+
         return optional_package.do_thing()
     except ImportError:
         raise RuntimeError("Feature requires optional_package")
@@ -472,6 +485,7 @@ with open("/absolute/path/file.txt") as f:
 
 # Good
 from pathlib import Path
+
 base_dir = Path(__file__).parent
 with open(base_dir / "file.txt") as f:
     pass
