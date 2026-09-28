@@ -80,19 +80,22 @@ spec:
 from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 
+
 class ToolConfig(BaseModel):
     param: str = Field(description="...")
+
 
 class ToolName:
     name: str = "tool_name"
     description: str = "..."
-    
+
     def execute(self, **kwargs) -> Dict[str, Any]:
         try:
             # Implementation
             return {"status": "success", "output": result}
         except Exception as e:
             return {"status": "error", "error": str(e)}
+
 
 def tool_name_tool(config: Optional[Dict] = None) -> ToolName:
     cfg = ToolConfig(**config) if config else ToolConfig()

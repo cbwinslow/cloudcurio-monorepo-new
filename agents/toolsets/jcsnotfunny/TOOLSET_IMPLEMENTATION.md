@@ -38,15 +38,12 @@ class BaseTool:
             "timeout": 300,
             "max_retries": 3,
             "retry_delay": 5,
-            "resource_limits": {
-                "memory": "2GB",
-                "cpu": "1 core"
-            },
+            "resource_limits": {"memory": "2GB", "cpu": "1 core"},
             "quality_thresholds": {
                 "min_completeness": 0.8,
                 "min_accuracy": 0.85,
-                "min_quality": 0.7
-            }
+                "min_quality": 0.7,
+            },
         }
 
     def _setup_logger(self) -> Logger:
@@ -87,7 +84,9 @@ class BaseTool:
             # Validate parameter types
             for param, param_type in self.param_types.items():
                 if param in input_data and not isinstance(input_data[param], param_type):
-                    raise ValidationError(f"Invalid type for {param}: expected {param_type}, got {type(input_data[param])}")
+                    raise ValidationError(
+                        f"Invalid type for {param}: expected {param_type}, got {type(input_data[param])}"
+                    )
 
             # Validate parameter values
             for param, validator in self.param_validators.items():
@@ -134,7 +133,9 @@ class BaseTool:
                 # Post-execution validation
                 post_check_result = self.post_execution_validation(result)
                 if not post_check_result.success:
-                    return self._create_error_response("POST_CHECK_ERROR", post_check_result.message)
+                    return self._create_error_response(
+                        "POST_CHECK_ERROR", post_check_result.message
+                    )
 
                 self.metrics.increment("successes")
                 return self._create_success_response(result)
@@ -148,7 +149,7 @@ class BaseTool:
                 "tool_type": self._get_tool_type(),
                 "input_data": input_data,
                 "error": str(e),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             fallback_result = self.fallback_manager.execute_fallback(e, error_context)
@@ -243,10 +244,12 @@ class BaseTool:
             "timestamp": datetime.now().isoformat(),
             "result": result,
             "metrics": self.metrics.get_current(),
-            "quality": self.quality_assessor.assess_quality(result, self._get_tool_type())
+            "quality": self.quality_assessor.assess_quality(result, self._get_tool_type()),
         }
 
-    def _create_error_response(self, error_type: str, message: str, fallback_result: dict = None) -> dict:
+    def _create_error_response(
+        self, error_type: str, message: str, fallback_result: dict = None
+    ) -> dict:
         """
         Create standardized error response
 
@@ -266,7 +269,7 @@ class BaseTool:
             "error_type": error_type,
             "message": message,
             "suggestions": self._get_error_suggestions(error_type),
-            "metrics": self.metrics.get_current()
+            "metrics": self.metrics.get_current(),
         }
 
         if fallback_result:
@@ -292,28 +295,28 @@ class BaseTool:
                 "Check all required parameters are provided",
                 "Verify parameter types match expected types",
                 "Review parameter value constraints",
-                "Consult tool documentation for parameter specifications"
+                "Consult tool documentation for parameter specifications",
             ]
         elif error_type == "PRE_CHECK_ERROR":
             suggestions = [
                 "Check system resource availability",
                 "Verify input file paths and permissions",
                 "Ensure output directory is writable",
-                "Review tool resource requirements"
+                "Review tool resource requirements",
             ]
         elif error_type == "EXECUTION_ERROR":
             suggestions = [
                 "Check tool logs for detailed error information",
                 "Verify input data format and content",
                 "Review system resource usage",
-                "Try reducing input complexity or size"
+                "Try reducing input complexity or size",
             ]
         elif error_type == "POST_CHECK_ERROR":
             suggestions = [
                 "Review result quality requirements",
                 "Check input data quality",
                 "Consider adjusting quality thresholds",
-                "Consult tool documentation for quality assessment"
+                "Consult tool documentation for quality assessment",
             ]
 
         return suggestions
@@ -340,7 +343,7 @@ class VideoAnalysisTool(BaseTool):
         super().__init__(
             name="video_analysis",
             description="Analyze video footage for speaker detection, engagement, and cut points",
-            config=config
+            config=config,
         )
 
         # Define required parameters
@@ -353,15 +356,17 @@ class VideoAnalysisTool(BaseTool):
             "output_format": str,
             "quality": str,
             "max_duration": int,
-            "min_confidence": float
+            "min_confidence": float,
         }
 
         # Define parameter validators
         self.param_validators = {
-            "analysis_type": EnumValidator(["speaker_detection", "engagement", "cut_points", "full"]),
+            "analysis_type": EnumValidator(
+                ["speaker_detection", "engagement", "cut_points", "full"]
+            ),
             "output_format": EnumValidator(["json", "xml", "csv"]),
             "quality": EnumValidator(["low", "medium", "high"]),
-            "min_confidence": RangeValidator(0.0, 1.0)
+            "min_confidence": RangeValidator(0.0, 1.0),
         }
 
         # Set default values
@@ -369,7 +374,7 @@ class VideoAnalysisTool(BaseTool):
             "output_format": "json",
             "quality": "medium",
             "max_duration": None,
-            "min_confidence": 0.8
+            "min_confidence": 0.8,
         }
 
     def _execute_main_logic(self, input_data: dict) -> dict:
@@ -410,7 +415,7 @@ class VideoAnalysisTool(BaseTool):
                 "results": formatted_result,
                 "quality": input_data["quality"],
                 "confidence": result.get("confidence", 0.9),
-                "processing_time": result.get("processing_time", 0)
+                "processing_time": result.get("processing_time", 0),
             }
 
         except Exception as e:
@@ -432,8 +437,7 @@ class VideoAnalysisTool(BaseTool):
 
             # Use speaker detection algorithm
             speakers = video.detect_speakers(
-                min_confidence=input_data["min_confidence"],
-                quality=input_data["quality"]
+                min_confidence=input_data["min_confidence"], quality=input_data["quality"]
             )
 
             processing_time = time.time() - start_time
@@ -442,7 +446,7 @@ class VideoAnalysisTool(BaseTool):
                 "speakers": speakers,
                 "confidence": speakers.get("confidence", 0.9),
                 "processing_time": processing_time,
-                "analysis_type": "speaker_detection"
+                "analysis_type": "speaker_detection",
             }
 
         except Exception as e:
@@ -456,8 +460,7 @@ class VideoAnalysisTool(BaseTool):
 
             # Calculate engagement metrics
             engagement = video.calculate_engagement(
-                quality=input_data["quality"],
-                max_duration=input_data["max_duration"]
+                quality=input_data["quality"], max_duration=input_data["max_duration"]
             )
 
             processing_time = time.time() - start_time
@@ -467,7 +470,7 @@ class VideoAnalysisTool(BaseTool):
                 "engagement_metrics": engagement.get("metrics", {}),
                 "confidence": engagement.get("confidence", 0.85),
                 "processing_time": processing_time,
-                "analysis_type": "engagement"
+                "analysis_type": "engagement",
             }
 
         except Exception as e:
@@ -481,8 +484,7 @@ class VideoAnalysisTool(BaseTool):
 
             # Identify cut points
             cut_points = video.identify_cut_points(
-                quality=input_data["quality"],
-                min_confidence=input_data["min_confidence"]
+                quality=input_data["quality"], min_confidence=input_data["min_confidence"]
             )
 
             processing_time = time.time() - start_time
@@ -491,7 +493,7 @@ class VideoAnalysisTool(BaseTool):
                 "cut_points": cut_points.get("points", []),
                 "confidence": cut_points.get("confidence", 0.8),
                 "processing_time": processing_time,
-                "analysis_type": "cut_points"
+                "analysis_type": "cut_points",
             }
 
         except Exception as e:
@@ -505,18 +507,15 @@ class VideoAnalysisTool(BaseTool):
 
             # Perform all analysis types
             speakers = video.detect_speakers(
-                min_confidence=input_data["min_confidence"],
-                quality=input_data["quality"]
+                min_confidence=input_data["min_confidence"], quality=input_data["quality"]
             )
 
             engagement = video.calculate_engagement(
-                quality=input_data["quality"],
-                max_duration=input_data["max_duration"]
+                quality=input_data["quality"], max_duration=input_data["max_duration"]
             )
 
             cut_points = video.identify_cut_points(
-                quality=input_data["quality"],
-                min_confidence=input_data["min_confidence"]
+                quality=input_data["quality"], min_confidence=input_data["min_confidence"]
             )
 
             processing_time = time.time() - start_time
@@ -529,10 +528,10 @@ class VideoAnalysisTool(BaseTool):
                 "confidence": min(
                     speakers.get("confidence", 0.9),
                     engagement.get("confidence", 0.85),
-                    cut_points.get("confidence", 0.8)
+                    cut_points.get("confidence", 0.8),
                 ),
                 "processing_time": processing_time,
-                "analysis_type": "full"
+                "analysis_type": "full",
             }
 
         except Exception as e:
@@ -690,7 +689,7 @@ class AudioCleanupTool(BaseTool):
         super().__init__(
             name="audio_cleanup",
             description="Clean up audio tracks with noise reduction, de-essing, and equalization",
-            config=config
+            config=config,
         )
 
         # Define required parameters
@@ -704,7 +703,7 @@ class AudioCleanupTool(BaseTool):
             "de_essing": float,
             "equalization": str,
             "quality": str,
-            "max_duration": int
+            "max_duration": int,
         }
 
         # Define parameter validators
@@ -712,7 +711,7 @@ class AudioCleanupTool(BaseTool):
             "noise_reduction": RangeValidator(0.0, 1.0),
             "de_essing": RangeValidator(0.0, 1.0),
             "equalization": EnumValidator(["flat", "podcast", "music", "voice"]),
-            "quality": EnumValidator(["low", "medium", "high"])
+            "quality": EnumValidator(["low", "medium", "high"]),
         }
 
         # Set default values
@@ -722,7 +721,7 @@ class AudioCleanupTool(BaseTool):
             "de_essing": 0.6,
             "equalization": "podcast",
             "quality": "medium",
-            "max_duration": None
+            "max_duration": None,
         }
 
     def _execute_main_logic(self, input_data: dict) -> dict:
@@ -763,7 +762,7 @@ class AudioCleanupTool(BaseTool):
                 "quality": input_data["quality"],
                 "processing_time": cleanup_result["processing_time"],
                 "original_duration": cleanup_result["original_duration"],
-                "cleaned_duration": cleanup_result["cleaned_duration"]
+                "cleaned_duration": cleanup_result["cleaned_duration"],
             }
 
         except Exception as e:
@@ -785,20 +784,17 @@ class AudioCleanupTool(BaseTool):
 
             # Apply noise reduction
             noise_reduced = audio.reduce_noise(
-                level=input_data["noise_reduction"],
-                quality=input_data["quality"]
+                level=input_data["noise_reduction"], quality=input_data["quality"]
             )
 
             # Apply de-essing
             de_essed = noise_reduced.de_ess(
-                level=input_data["de_essing"],
-                quality=input_data["quality"]
+                level=input_data["de_essing"], quality=input_data["quality"]
             )
 
             # Apply equalization
             equalized = de_essed.equalize(
-                preset=input_data["equalization"],
-                quality=input_data["quality"]
+                preset=input_data["equalization"], quality=input_data["quality"]
             )
 
             # Calculate scores
@@ -813,7 +809,7 @@ class AudioCleanupTool(BaseTool):
                 "de_essing_score": de_essing_score,
                 "processing_time": processing_time,
                 "original_duration": audio.duration,
-                "cleaned_duration": equalized.duration
+                "cleaned_duration": equalized.duration,
             }
 
         except Exception as e:
@@ -917,7 +913,12 @@ class AudioCleanupTool(BaseTool):
     def _validate_result_completeness(self, result: dict) -> bool:
         """Validate result completeness"""
         try:
-            required_fields = ["audio_path", "output_path", "noise_reduction_score", "de_essing_score"]
+            required_fields = [
+                "audio_path",
+                "output_path",
+                "noise_reduction_score",
+                "de_essing_score",
+            ]
 
             for field in required_fields:
                 if field not in result:
@@ -956,7 +957,7 @@ class ContentSchedulingTool(BaseTool):
         super().__init__(
             name="content_scheduling",
             description="Schedule content across social media platforms",
-            config=config
+            config=config,
         )
 
         # Define required parameters
@@ -969,14 +970,14 @@ class ContentSchedulingTool(BaseTool):
             "schedule_time": str,
             "media_path": str,
             "tags": list,
-            "dry_run": bool
+            "dry_run": bool,
         }
 
         # Define parameter validators
         self.param_validators = {
             "platforms": ListValidator(["twitter", "instagram", "tiktok", "youtube", "linkedin"]),
             "schedule_time": DateTimeValidator(),
-            "tags": ListValidator(str, max_length=10)
+            "tags": ListValidator(str, max_length=10),
         }
 
         # Set default values
@@ -984,7 +985,7 @@ class ContentSchedulingTool(BaseTool):
             "schedule_time": None,
             "media_path": None,
             "tags": [],
-            "dry_run": False
+            "dry_run": False,
         }
 
         # Initialize platform clients
@@ -997,7 +998,7 @@ class ContentSchedulingTool(BaseTool):
             "instagram": InstagramClient(self.config.get("instagram_api_key")),
             "tiktok": TikTokClient(self.config.get("tiktok_api_key")),
             "youtube": YouTubeClient(self.config.get("youtube_api_key")),
-            "linkedin": LinkedInClient(self.config.get("linkedin_api_key"))
+            "linkedin": LinkedInClient(self.config.get("linkedin_api_key")),
         }
 
     def _execute_main_logic(self, input_data: dict) -> dict:
@@ -1027,9 +1028,7 @@ class ContentSchedulingTool(BaseTool):
                 try:
                     # Prepare platform-specific content
                     platform_content = self._prepare_platform_content(
-                        input_data["content"],
-                        platform,
-                        input_data
+                        input_data["content"], platform, input_data
                     )
 
                     # Schedule content
@@ -1038,14 +1037,10 @@ class ContentSchedulingTool(BaseTool):
                             "status": "DRY_RUN",
                             "platform": platform,
                             "content": platform_content,
-                            "schedule_time": input_data["schedule_time"]
+                            "schedule_time": input_data["schedule_time"],
                         }
                     else:
-                        result = self._schedule_content(
-                            platform,
-                            platform_content,
-                            input_data
-                        )
+                        result = self._schedule_content(platform, platform_content, input_data)
 
                     platform_results[platform] = result
 
@@ -1055,7 +1050,7 @@ class ContentSchedulingTool(BaseTool):
                         "status": "ERROR",
                         "platform": platform,
                         "error": str(e),
-                        "content": input_data["content"]
+                        "content": input_data["content"],
                     }
 
             return {
@@ -1064,7 +1059,7 @@ class ContentSchedulingTool(BaseTool):
                 "schedule_time": input_data["schedule_time"],
                 "results": platform_results,
                 "dry_run": input_data["dry_run"],
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -1101,7 +1096,7 @@ class ContentSchedulingTool(BaseTool):
             "content": formatted_content,
             "media": input_data.get("media_path"),
             "tags": input_data.get("tags", []),
-            "platform": "twitter"
+            "platform": "twitter",
         }
 
     def _format_for_instagram(self, content: str, input_data: dict) -> dict:
@@ -1113,7 +1108,7 @@ class ContentSchedulingTool(BaseTool):
             "content": formatted_content,
             "media": input_data.get("media_path"),
             "tags": input_data.get("tags", []),
-            "platform": "instagram"
+            "platform": "instagram",
         }
 
     def _format_for_tiktok(self, content: str, input_data: dict) -> dict:
@@ -1125,7 +1120,7 @@ class ContentSchedulingTool(BaseTool):
             "content": formatted_content,
             "media": input_data.get("media_path"),
             "tags": input_data.get("tags", []),
-            "platform": "tiktok"
+            "platform": "tiktok",
         }
 
     def _format_for_youtube(self, content: str, input_data: dict) -> dict:
@@ -1137,7 +1132,7 @@ class ContentSchedulingTool(BaseTool):
             "content": formatted_content,
             "media": input_data.get("media_path"),
             "tags": input_data.get("tags", []),
-            "platform": "youtube"
+            "platform": "youtube",
         }
 
     def _format_for_linkedin(self, content: str, input_data: dict) -> dict:
@@ -1149,7 +1144,7 @@ class ContentSchedulingTool(BaseTool):
             "content": formatted_content,
             "media": input_data.get("media_path"),
             "tags": input_data.get("tags", []),
-            "platform": "linkedin"
+            "platform": "linkedin",
         }
 
     def _schedule_content(self, platform: str, content: dict, input_data: dict) -> dict:
@@ -1162,7 +1157,7 @@ class ContentSchedulingTool(BaseTool):
                 content["content"],
                 content.get("media"),
                 input_data["schedule_time"],
-                content.get("tags", [])
+                content.get("tags", []),
             )
 
             return {
@@ -1170,7 +1165,7 @@ class ContentSchedulingTool(BaseTool):
                 "platform": platform,
                 "content_id": schedule_result.get("id"),
                 "schedule_time": schedule_result.get("schedule_time"),
-                "url": schedule_result.get("url")
+                "url": schedule_result.get("url"),
             }
 
         except Exception as e:
@@ -1345,22 +1340,22 @@ class VideoEditorAgent:
         """
         try:
             # Step 1: Analyze video
-            video_analysis = self.video_analysis_tool.execute({
-                "video_path": video_path,
-                "analysis_type": "full",
-                "quality": "high"
-            })
+            video_analysis = self.video_analysis_tool.execute(
+                {"video_path": video_path, "analysis_type": "full", "quality": "high"}
+            )
 
             if video_analysis["status"] != "SUCCESS":
                 raise ProcessingError(f"Video analysis failed: {video_analysis['message']}")
 
             # Step 2: Clean audio
-            audio_cleanup = self.audio_cleanup_tool.execute({
-                "audio_path": audio_path,
-                "quality": "high",
-                "noise_reduction": 0.9,
-                "de_essing": 0.7
-            })
+            audio_cleanup = self.audio_cleanup_tool.execute(
+                {
+                    "audio_path": audio_path,
+                    "quality": "high",
+                    "noise_reduction": 0.9,
+                    "de_essing": 0.7,
+                }
+            )
 
             if audio_cleanup["status"] != "SUCCESS":
                 raise ProcessingError(f"Audio cleanup failed: {audio_cleanup['message']}")
@@ -1369,13 +1364,15 @@ class VideoEditorAgent:
             content = self._create_content_from_analysis(video_analysis, audio_cleanup)
 
             # Step 4: Schedule content
-            scheduling_result = self.content_scheduling_tool.execute({
-                "content": content,
-                "platforms": ["twitter", "instagram", "youtube"],
-                "schedule_time": self._calculate_schedule_time(),
-                "media_path": video_path,
-                "tags": ["podcast", "new_episode", "video"]
-            })
+            scheduling_result = self.content_scheduling_tool.execute(
+                {
+                    "content": content,
+                    "platforms": ["twitter", "instagram", "youtube"],
+                    "schedule_time": self._calculate_schedule_time(),
+                    "media_path": video_path,
+                    "tags": ["podcast", "new_episode", "video"],
+                }
+            )
 
             if scheduling_result["status"] != "SUCCESS":
                 raise ProcessingError(f"Content scheduling failed: {scheduling_result['message']}")
@@ -1385,15 +1382,11 @@ class VideoEditorAgent:
                 "video_analysis": video_analysis,
                 "audio_cleanup": audio_cleanup,
                 "content_scheduling": scheduling_result,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
-            return {
-                "status": "ERROR",
-                "message": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
+            return {"status": "ERROR", "message": str(e), "timestamp": datetime.now().isoformat()}
 
     def _create_content_from_analysis(self, video_analysis: dict, audio_cleanup: dict) -> str:
         """Create social media content from analysis results"""
@@ -1420,13 +1413,13 @@ class PodcastProductionWorkflow:
             "video_editor": VideoEditorAgent(),
             "audio_engineer": AudioEngineerAgent(),
             "social_media_manager": SocialMediaManagerAgent(),
-            "content_distributor": ContentDistributorAgent()
+            "content_distributor": ContentDistributorAgent(),
         }
 
         self.tools = {
             "video_analysis": VideoAnalysisTool(),
             "audio_cleanup": AudioCleanupTool(),
-            "content_scheduling": ContentSchedulingTool()
+            "content_scheduling": ContentSchedulingTool(),
         }
 
     def execute_workflow(self, episode_data: dict) -> dict:
@@ -1458,23 +1451,18 @@ class PodcastProductionWorkflow:
                 "audio_processing": audio_results,
                 "content_creation": content_results,
                 "distribution": distribution_results,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
-            return {
-                "status": "ERROR",
-                "message": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
+            return {"status": "ERROR", "message": str(e), "timestamp": datetime.now().isoformat()}
 
     def _process_video(self, episode_data: dict) -> dict:
         """Process video content"""
         try:
             # Use video editor agent
             return self.agents["video_editor"].process_episode(
-                episode_data["video_path"],
-                episode_data["audio_path"]
+                episode_data["video_path"], episode_data["audio_path"]
             )
         except Exception as e:
             raise ProcessingError(f"Video processing failed: {str(e)}")
@@ -1484,8 +1472,7 @@ class PodcastProductionWorkflow:
         try:
             # Use audio engineer agent
             return self.agents["audio_engineer"].process_audio(
-                episode_data["audio_path"],
-                episode_data.get("sponsor_reads", [])
+                episode_data["audio_path"], episode_data.get("sponsor_reads", [])
             )
         except Exception as e:
             raise ProcessingError(f"Audio processing failed: {str(e)}")
@@ -1495,9 +1482,7 @@ class PodcastProductionWorkflow:
         try:
             # Use social media manager agent
             return self.agents["social_media_manager"].create_content(
-                video_results,
-                audio_results,
-                episode_data.get("metadata", {})
+                video_results, audio_results, episode_data.get("metadata", {})
             )
         except Exception as e:
             raise ProcessingError(f"Content creation failed: {str(e)}")
@@ -1508,7 +1493,7 @@ class PodcastProductionWorkflow:
             # Use content distributor agent
             return self.agents["content_distributor"].distribute_content(
                 content_results["content"],
-                content_results.get("platforms", ["twitter", "instagram", "youtube"])
+                content_results.get("platforms", ["twitter", "instagram", "youtube"]),
             )
         except Exception as e:
             raise ProcessingError(f"Content distribution failed: {str(e)}")
@@ -1528,7 +1513,7 @@ class ToolIntegrationErrorHandler:
             "video_analysis": self._handle_video_analysis_error,
             "audio_cleanup": self._handle_audio_cleanup_error,
             "content_scheduling": self._handle_content_scheduling_error,
-            "general": self._handle_general_error
+            "general": self._handle_general_error,
         }
 
     def handle_error(self, error: Exception, context: dict) -> dict:
@@ -1556,7 +1541,7 @@ class ToolIntegrationErrorHandler:
                 "original_error": str(error),
                 "handling_error": str(e),
                 "context": context,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
     def _handle_video_analysis_error(self, error: Exception, context: dict) -> dict:
@@ -1613,7 +1598,7 @@ class ToolIntegrationErrorHandler:
         strategies = [
             self._fallback_reduce_quality,
             self._fallback_partial_analysis,
-            self._fallback_alternative_format
+            self._fallback_alternative_format,
         ]
 
         for strategy in strategies:
@@ -1631,7 +1616,7 @@ class ToolIntegrationErrorHandler:
         strategies = [
             self._fallback_alternative_algorithm,
             self._fallback_reduce_complexity,
-            self._fallback_partial_cleanup
+            self._fallback_partial_cleanup,
         ]
 
         for strategy in strategies:
@@ -1649,7 +1634,7 @@ class ToolIntegrationErrorHandler:
         strategies = [
             self._fallback_retry_with_delay,
             self._fallback_use_alternative_api,
-            self._fallback_queue_for_review
+            self._fallback_queue_for_review,
         ]
 
         for strategy in strategies:
@@ -1675,7 +1660,7 @@ class ToolIntegrationErrorHandler:
             "timestamp": datetime.now().isoformat(),
             "suggestions": self._get_error_suggestions(error_type, tool_type),
             "documentation": self._get_relevant_documentation(error_type, tool_type),
-            "support": self._get_support_information()
+            "support": self._get_support_information(),
         }
 
     def _get_error_suggestions(self, error_type: str, tool_type: str) -> list:
@@ -1685,30 +1670,36 @@ class ToolIntegrationErrorHandler:
             "Review input parameters and data",
             "Verify system resource availability",
             "Consult tool documentation",
-            "Contact support if issue persists"
+            "Contact support if issue persists",
         ]
 
         if tool_type == "video_analysis":
-            suggestions.extend([
-                "Check video file integrity",
-                "Verify video format compatibility",
-                "Reduce video quality if memory issues",
-                "Process in smaller segments if timeout occurs"
-            ])
+            suggestions.extend(
+                [
+                    "Check video file integrity",
+                    "Verify video format compatibility",
+                    "Reduce video quality if memory issues",
+                    "Process in smaller segments if timeout occurs",
+                ]
+            )
         elif tool_type == "audio_cleanup":
-            suggestions.extend([
-                "Check audio file integrity",
-                "Verify audio format compatibility",
-                "Reduce processing complexity",
-                "Try alternative cleanup algorithms"
-            ])
+            suggestions.extend(
+                [
+                    "Check audio file integrity",
+                    "Verify audio format compatibility",
+                    "Reduce processing complexity",
+                    "Try alternative cleanup algorithms",
+                ]
+            )
         elif tool_type == "content_scheduling":
-            suggestions.extend([
-                "Check API connectivity",
-                "Review rate limits",
-                "Retry with delay",
-                "Use alternative API endpoints"
-            ])
+            suggestions.extend(
+                [
+                    "Check API connectivity",
+                    "Review rate limits",
+                    "Retry with delay",
+                    "Use alternative API endpoints",
+                ]
+            )
 
         return suggestions
 
@@ -1717,20 +1708,26 @@ class ToolIntegrationErrorHandler:
         docs = []
 
         if tool_type == "video_analysis":
-            docs.extend([
-                "docs/troubleshooting/VIDEO_ANALYSIS.md",
-                "docs/tools/VIDEO_ANALYSIS.md#error-handling"
-            ])
+            docs.extend(
+                [
+                    "docs/troubleshooting/VIDEO_ANALYSIS.md",
+                    "docs/tools/VIDEO_ANALYSIS.md#error-handling",
+                ]
+            )
         elif tool_type == "audio_cleanup":
-            docs.extend([
-                "docs/troubleshooting/AUDIO_CLEANUP.md",
-                "docs/tools/AUDIO_CLEANUP.md#error-handling"
-            ])
+            docs.extend(
+                [
+                    "docs/troubleshooting/AUDIO_CLEANUP.md",
+                    "docs/tools/AUDIO_CLEANUP.md#error-handling",
+                ]
+            )
         elif tool_type == "content_scheduling":
-            docs.extend([
-                "docs/troubleshooting/CONTENT_SCHEDULING.md",
-                "docs/tools/CONTENT_SCHEDULING.md#error-handling"
-            ])
+            docs.extend(
+                [
+                    "docs/troubleshooting/CONTENT_SCHEDULING.md",
+                    "docs/tools/CONTENT_SCHEDULING.md#error-handling",
+                ]
+            )
 
         return docs
 
@@ -1740,7 +1737,7 @@ class ToolIntegrationErrorHandler:
             "email": "support@podcastproduction.com",
             "phone": "+1-800-PODCAST",
             "website": "https://support.podcastproduction.com",
-            "documentation": "https://docs.podcastproduction.com"
+            "documentation": "https://docs.podcastproduction.com",
         }
 ```
 

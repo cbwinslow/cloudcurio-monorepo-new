@@ -30,6 +30,7 @@ console = Console()
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _find_root() -> Path:
     """Walk up from cwd to find the repo root (contains Makefile + agents/)."""
     cwd = Path.cwd()
@@ -78,13 +79,16 @@ def _output_plain(items: list[dict]) -> None:
 # Commands
 # ---------------------------------------------------------------------------
 
+
 def cmd_index(root: Path, args: argparse.Namespace) -> int:
     """Rebuild the inventory index."""
     inv = Inventory(root=root)
     items = inv.scan()
     inv.save()
     summary = inv.summary()
-    console.print(f"[green]✓[/green] Indexed [bold]{len(items)}[/bold] items → [dim]{inv.index_path}[/dim]")
+    console.print(
+        f"[green]✓[/green] Indexed [bold]{len(items)}[/bold] items → [dim]{inv.index_path}[/dim]"
+    )
     for item_type, count in sorted(summary.items()):
         icon = ITEM_TYPES.get(item_type, "•")
         console.print(f"  {icon}  [cyan]{item_type:<12}[/cyan] {count}")
@@ -176,6 +180,7 @@ def cmd_summary(root: Path, args: argparse.Namespace) -> int:
 # Entry point
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     root = _find_root()
 
@@ -190,7 +195,9 @@ def main() -> None:
 
     # list
     pl = sub.add_parser("list", help="List inventory items")
-    pl.add_argument("--type", metavar="TYPE", help="Filter by type (agent|tool|skill|workflow|mcp|script)")
+    pl.add_argument(
+        "--type", metavar="TYPE", help="Filter by type (agent|tool|skill|workflow|mcp|script)"
+    )
     pl.add_argument("--format", choices=["table", "json", "plain"], default="table")
 
     # query

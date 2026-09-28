@@ -1,8 +1,8 @@
 # CloudCurio Monorepo - AI Agent Rules
 
-**Version:** 1.0.0  
-**Last Updated:** 2026-02-13  
-**Rulebook Framework**: Inspired by rulebook-ai  
+**Version:** 1.0.0
+**Last Updated:** 2026-02-13
+**Rulebook Framework**: Inspired by rulebook-ai
 **Repository:** cloudcurio-monorepo-new
 
 ---
@@ -36,7 +36,8 @@ This rulebook defines the operational rules, best practices, and guidelines for 
   # Good
   def process_data(items: list[dict[str, Any]], threshold: float = 0.8) -> list[dict[str, Any]]:
       pass
-  
+
+
   # Bad
   def process_data(items, threshold=0.8):
       pass
@@ -49,7 +50,8 @@ This rulebook defines the operational rules, best practices, and guidelines for 
 - **Example**:
   ```python
   from pydantic import BaseModel, Field
-  
+
+
   class AgentConfig(BaseModel):
       model: str = Field(default="qwen2.5-coder")
       timeout: int = Field(gt=0, le=3600)
@@ -64,16 +66,16 @@ This rulebook defines the operational rules, best practices, and guidelines for 
   ```python
   def function_name(param: type) -> return_type:
       """Brief description.
-      
+
       Args:
           param: Parameter description
-      
+
       Returns:
           Return value description
-      
+
       Raises:
           ErrorType: When error occurs
-      
+
       Example:
           >>> function_name(value)
           result
@@ -105,10 +107,10 @@ This rulebook defines the operational rules, best practices, and guidelines for 
   import os
   import sys
   from typing import Any
-  
+
   from pydantic import BaseModel
   import yaml
-  
+
   from cbw_foundry.runtime import LocalRuntime
   from cbw_foundry.spec import AgentSpec
   ```
@@ -162,7 +164,7 @@ This rulebook defines the operational rules, best practices, and guidelines for 
 
 **RULE: TEST-001 - Coverage Requirements**
 - **Priority**: High
-- **Description**: 
+- **Description**:
   - Minimum 80% code coverage for all new code
   - 100% coverage for security-sensitive code
   - All public APIs must have tests
@@ -184,10 +186,10 @@ This rulebook defines the operational rules, best practices, and guidelines for 
       # Arrange
       data = [{"score": 0.9}, {"score": 0.5}]
       threshold = 0.7
-      
+
       # Act
       result = process_data(data, threshold)
-      
+
       # Assert
       assert len(result) == 1
       assert result[0]["score"] == 0.9
@@ -221,12 +223,13 @@ This rulebook defines the operational rules, best practices, and guidelines for 
 - **Example**:
   ```python
   from pydantic import BaseModel, validator
-  
+
+
   class UserInput(BaseModel):
       path: str
       timeout: int
-      
-      @validator('timeout')
+
+      @validator("timeout")
       def validate_timeout(cls, v):
           if v < 1 or v > 3600:
               raise ValueError("Timeout must be 1-3600 seconds")
@@ -239,7 +242,8 @@ This rulebook defines the operational rules, best practices, and guidelines for 
 - **Example**:
   ```python
   from pathlib import Path
-  
+
+
   def safe_path(user_path: str, base_dir: Path) -> Path:
       path = (base_dir / user_path).resolve()
       if not path.is_relative_to(base_dir):
@@ -254,7 +258,7 @@ This rulebook defines the operational rules, best practices, and guidelines for 
   ```python
   import shlex
   import subprocess
-  
+
   user_input = "file.txt"
   cmd = shlex.split(f"cat {user_input}")
   subprocess.run(cmd, check=True)
@@ -284,33 +288,36 @@ This rulebook defines the operational rules, best practices, and guidelines for 
   ```python
   #!/usr/bin/env python3
   """Agent Name Agent.
-  
+
   Description of agent purpose and capabilities.
-  
+
   Capabilities:
       - Capability 1
       - Capability 2
-  
+
   Example:
       from agents.library.agent_name_agent import AgentNameAgent
       agent = AgentNameAgent()
       result = agent.execute(task="process this")
   """
-  
+
   from typing import Any, Optional
   from pydantic import BaseModel, Field
-  
+
+
   class AgentConfig(BaseModel):
       """Configuration for AgentName."""
+
       model: str = Field(default="qwen2.5-coder")
       timeout: int = Field(default=300, gt=0)
-  
+
+
   class AgentNameAgent:
       """Agent for specific purpose."""
-      
+
       def __init__(self, config: Optional[AgentConfig] = None) -> None:
           self.config = config or AgentConfig()
-      
+
       def execute(self, task: str, **kwargs: Any) -> dict[str, Any]:
           """Execute agent task."""
           if not task:
@@ -384,7 +391,7 @@ This rulebook defines the operational rules, best practices, and guidelines for 
   ```python
   from .github_api import GitHubAPITool
   from .file_processor import FileProcessorTool
-  
+
   __all__ = ["GitHubAPITool", "FileProcessorTool"]
   ```
 
@@ -406,16 +413,16 @@ This rulebook defines the operational rules, best practices, and guidelines for 
 - **Template**:
   ```markdown
   # ADR-XXX: Title
-  
+
   ## Status
   Accepted / Proposed / Deprecated
-  
+
   ## Context
   What is the issue we're seeing?
-  
+
   ## Decision
   What is the change we're proposing?
-  
+
   ## Consequences
   What becomes easier/harder?
   ```
@@ -496,7 +503,7 @@ This rulebook defines the operational rules, best practices, and guidelines for 
   class Agent:
       def __init__(self):
           self._model = None
-      
+
       @property
       def model(self):
           if self._model is None:
@@ -511,7 +518,7 @@ This rulebook defines the operational rules, best practices, and guidelines for 
 - **Example**:
   ```python
   async def process_file(path: str) -> dict:
-      async with aiofiles.open(path, 'r') as f:
+      async with aiofiles.open(path, "r") as f:
           content = await f.read()
       return await process_content(content)
   ```
@@ -524,13 +531,14 @@ This rulebook defines the operational rules, best practices, and guidelines for 
   # Use context managers
   with open(file_path) as f:
       process(f)
-  
+
+
   # Or implement __enter__/__exit__
   class Resource:
       def __enter__(self):
           self.acquire()
           return self
-      
+
       def __exit__(self, *args):
           self.release()
   ```
@@ -545,7 +553,7 @@ This rulebook defines the operational rules, best practices, and guidelines for 
   name: workflow_name
   version: 1.0.0
   description: Workflow purpose
-  
+
   steps:
     - name: step_name
       agent: agent_name
@@ -564,7 +572,7 @@ This rulebook defines the operational rules, best practices, and guidelines for 
     - name: fetch_data
       agent: data_fetcher
       input: "source_url"
-    
+
     - name: process_data
       agent: data_processor
       input: ${fetch_data.result}
@@ -587,12 +595,13 @@ This rulebook defines the operational rules, best practices, and guidelines for 
 - **Example**:
   ```python
   from mcp import Server
-  
+
+
   class MyMCPServer(Server):
       def __init__(self):
           super().__init__(name="my-server", version="1.0.0")
           self.register_tools()
-      
+
       def register_tools(self):
           @self.tool("tool_name")
           async def tool_name(param: str) -> dict:
@@ -668,6 +677,7 @@ All code must meet these quality thresholds:
 def append(item, items=[]):
     items.append(item)
 
+
 # Good
 def append(item, items=None):
     if items is None:
@@ -683,6 +693,7 @@ with open("/absolute/path/file.txt") as f:
 
 # Good
 from pathlib import Path
+
 base = Path(__file__).parent
 with open(base / "file.txt") as f:
     pass
@@ -694,6 +705,7 @@ with open(base / "file.txt") as f:
 def process():
     result = risky_operation()
     return result
+
 
 # Good
 def process():
@@ -726,8 +738,8 @@ This rulebook is a living document. To propose changes:
 
 ---
 
-**Version:** 1.0.0  
-**Maintained by:** @cbwinslow  
+**Version:** 1.0.0
+**Maintained by:** @cbwinslow
 **Last Updated:** 2026-02-13
 
 *These rules ensure consistent, high-quality AI-assisted development across the CloudCurio Monorepo ecosystem.*

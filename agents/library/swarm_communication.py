@@ -6,17 +6,13 @@ enabling agents to communicate, vote, and coordinate autonomously.
 
 from __future__ import annotations
 
-import asyncio
-import json
 import logging
-import threading
 import time
-from abc import ABC, abstractmethod
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from queue import Empty, Queue
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any
 
 from base_agent import BaseAgent
 
@@ -29,28 +25,28 @@ class Message:
     sender: str
     recipient: str
     message_type: str
-    content: Dict[str, Any]
+    content: dict[str, Any]
     timestamp: float = field(default_factory=time.time)
     priority: int = 1  # 1=low, 5=high
     ttl: int = 300  # Time to live in seconds
-    correlation_id: Optional[str] = None  # For request-response patterns
+    correlation_id: str | None = None  # For request-response patterns
 
     def is_expired(self) -> bool:
         """Check if message has expired."""
         return time.time() - self.timestamp > self.ttl
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert message to dictionary for serialization."""
         return {
-            'message_id': self.message_id,
-            'sender': self.sender,
-            'recipient': self.recipient,
-            'message_type': self.message_type,
-            'content': self.content,
-            'timestamp': self.timestamp,
-            'priority': self.priority,
-            'ttl': self.ttl,
-            'correlation_id': self.correlation_id
+            "message_id": self.message_id,
+            "sender": self.sender,
+            "recipient": self.recipient,
+            "message_type": self.message_type,
+            "content": self.content,
+            "timestamp": self.timestamp,
+            "priority": self.priority,
+            "ttl": self.ttl,
+            "correlation_id": self.correlation_id,
         }
 
 
@@ -62,20 +58,22 @@ class VoteProposal:
     proposer: str
     title: str
     description: str
-    options: List[str]
+    options: list[str]
     context: str = ""
     required_quorum: float = 0.5  # Fraction of agents needed
-    consensus_threshold: float = 0.66  # Fraction (by weight) required for winner to be considered consensus
+    consensus_threshold: float = (
+        0.66  # Fraction (by weight) required for winner to be considered consensus
+    )
     min_votes: int = 1  # Absolute minimum number of votes required for consensus
-    voting_deadline: Optional[float] = None
-    votes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    voting_deadline: float | None = None
+    votes: dict[str, dict[str, Any]] = field(default_factory=dict)
     status: str = "active"  # active, completed, cancelled
     created_at: float = field(default_factory=time.time)
-    attendance_log: Dict[str, Dict[str, Any]] = field(default_factory=dict)  # Track attendance
-    validation_errors: List[str] = field(default_factory=list)  # Validation issues
-    conversation_log: List[Dict[str, Any]] = field(default_factory=list)  # Related conversations
+    attendance_log: dict[str, dict[str, Any]] = field(default_factory=dict)  # Track attendance
+    validation_errors: list[str] = field(default_factory=list)  # Validation issues
+    conversation_log: list[dict[str, Any]] = field(default_factory=list)  # Related conversations
 
-    def add_vote(self, agent_name: str, vote: Dict[str, Any]) -> bool:
+    def add_vote(self, agent_name: str, vote: dict[str, Any]) -> bool:
         """Add a vote to the proposal with validation.
 
         Args:
@@ -91,10 +89,10 @@ class VoteProposal:
 
         # Record attendance
         self.attendance_log[agent_name] = {
-            'timestamp': time.time(),
-            'action': 'voted',
-            'vote_decision': vote.get('decision'),
-            'confidence': vote.get('confidence', 0.0)
+            "timestamp": time.time(),
+            "action": "voted",
+            "vote_decision": vote.get("decision"),
+            "confidence": vote.get("confidence", 0.0),
         }
 
         self.votes[agent_name] = vote
@@ -108,12 +106,14 @@ class VoteProposal:
             action: Attendance action (present, absent, abstained, etc.)
         """
         self.attendance_log[agent_name] = {
-            'timestamp': time.time(),
-            'action': action,
-            'vote_decision': None
+            "timestamp": time.time(),
+            "action": action,
+            "vote_decision": None,
         }
 
-    def log_conversation(self, agent_name: str, message: str, message_type: str = "discussion") -> None:
+    def log_conversation(
+        self, agent_name: str, message: str, message_type: str = "discussion"
+    ) -> None:
         """Log a conversation related to this proposal.
 
         Args:
@@ -122,15 +122,15 @@ class VoteProposal:
             message_type: Type of conversation (discussion, clarification, objection, etc.)
         """
         conversation_entry = {
-            'timestamp': time.time(),
-            'agent': agent_name,
-            'message': message,
-            'type': message_type,
-            'proposal_id': self.proposal_id
+            "timestamp": time.time(),
+            "agent": agent_name,
+            "message": message,
+            "type": message_type,
+            "proposal_id": self.proposal_id,
         }
         self.conversation_log.append(conversation_entry)
 
-    def _validate_vote(self, agent_name: str, vote: Dict[str, Any]) -> bool:
+    def _validate_vote(self, agent_name: str, vote: dict[str, Any]) -> bool:
         """Validate a vote before accepting it.
 
         Args:
@@ -147,17 +147,19 @@ class VoteProposal:
             errors.append(f"Agent {agent_name} has already voted on this proposal")
 
         # Validate decision
-        decision = vote.get('decision')
-        if decision not in ['abstain'] + self.options:
-            errors.append(f"Invalid decision '{decision}'. Must be one of: {['abstain'] + self.options}")
+        decision = vote.get("decision")
+        if decision not in ["abstain"] + self.options:
+            errors.append(
+                f"Invalid decision '{decision}'. Must be one of: {['abstain'] + self.options}"
+            )
 
         # Validate weight
-        weight = vote.get('weight', 1.0)
+        weight = vote.get("weight", 1.0)
         if not isinstance(weight, (int, float)) or weight < 0 or weight > 2.0:
             errors.append(f"Invalid weight {weight}. Must be between 0.0 and 2.0")
 
         # Validate confidence
-        confidence = vote.get('confidence', 0.0)
+        confidence = vote.get("confidence", 0.0)
         if not isinstance(confidence, (int, float)) or confidence < 0 or confidence > 1.0:
             errors.append(f"Invalid confidence {confidence}. Must be between 0.0 and 1.0")
 
@@ -166,7 +168,7 @@ class VoteProposal:
             errors.append("Voting deadline has passed")
 
         # Check proposal status
-        if self.status != 'active':
+        if self.status != "active":
             errors.append(f"Proposal is not active (status: {self.status})")
 
         if errors:
@@ -175,33 +177,33 @@ class VoteProposal:
 
         return True
 
-    def get_vote_summary(self, total_registered_agents: Optional[int] = None) -> Dict[str, Any]:
+    def get_vote_summary(self, total_registered_agents: int | None = None) -> dict[str, Any]:
         """Get summary of votes with enhanced metrics.
 
         Args:
-            total_registered_agents: Optional explicit total number of registered agents to compute quorum against. 
+            total_registered_agents: Optional explicit total number of registered agents to compute quorum against.
                                      If None, uses attendance_log length (legacy behavior).
         """
         if not self.votes:
             return {
-                'total_votes': 0,
-                'total_weight': 0.0,
-                'results': {},
-                'quorum_reached': False,
-                'attendance_rate': 0.0,
-                'abstention_rate': 0.0,
-                'validation_errors': self.validation_errors
+                "total_votes": 0,
+                "total_weight": 0.0,
+                "results": {},
+                "quorum_reached": False,
+                "attendance_rate": 0.0,
+                "abstention_rate": 0.0,
+                "validation_errors": self.validation_errors,
             }
 
         # Count votes by option
-        vote_counts: Dict[str, float] = defaultdict(float)
+        vote_counts: dict[str, float] = defaultdict(float)
         total_weight = 0.0
         abstentions = 0
 
         for agent_name, vote in self.votes.items():
-            decision = vote.get('decision', 'abstain')
-            weight = vote.get('weight', 1.0)
-            if decision == 'abstain':
+            decision = vote.get("decision", "abstain")
+            weight = vote.get("weight", 1.0)
+            if decision == "abstain":
                 abstentions += 1
             else:
                 vote_counts[decision] += weight
@@ -211,20 +213,24 @@ class VoteProposal:
         results = {}
         for option, weight in vote_counts.items():
             results[option] = {
-                'weight': weight,
-                'percentage': (weight / total_weight * 100) if total_weight > 0 else 0
+                "weight": weight,
+                "percentage": (weight / total_weight * 100) if total_weight > 0 else 0,
             }
 
         # Calculate attendance and abstention rates
         total_registered_agents = len(self.attendance_log)
-        attendance_rate = len(self.votes) / total_registered_agents if total_registered_agents > 0 else 0
+        attendance_rate = (
+            len(self.votes) / total_registered_agents if total_registered_agents > 0 else 0
+        )
         abstention_rate = abstentions / len(self.votes) if self.votes else 0
 
         # Determine whether quorum is reached based on registered attendance
         total_registered_agents = len(self.attendance_log)
         required_votes = 0
         if total_registered_agents > 0:
-            required_votes = int(self.required_quorum * total_registered_agents + 0.9999)  # ceil-like
+            required_votes = int(
+                self.required_quorum * total_registered_agents + 0.9999
+            )  # ceil-like
 
         quorum_reached = len(self.votes) >= required_votes if required_votes > 0 else False
 
@@ -241,22 +247,22 @@ class VoteProposal:
             consensus_met = winner_ratio >= self.consensus_threshold
 
         return {
-            'total_votes': len(self.votes),
-            'total_weight': total_weight,
-            'results': results,
-            'quorum_reached': quorum_reached,
-            'consensus_met': consensus_met,
-            'consensus_winner': winner,
-            'consensus_winner_ratio': winner_ratio,
-            'attendance_rate': attendance_rate,
-            'abstention_rate': abstention_rate,
-            'validation_errors': self.validation_errors,
-            'conversation_count': len(self.conversation_log)
+            "total_votes": len(self.votes),
+            "total_weight": total_weight,
+            "results": results,
+            "quorum_reached": quorum_reached,
+            "consensus_met": consensus_met,
+            "consensus_winner": winner,
+            "consensus_winner_ratio": winner_ratio,
+            "attendance_rate": attendance_rate,
+            "abstention_rate": abstention_rate,
+            "validation_errors": self.validation_errors,
+            "conversation_count": len(self.conversation_log),
         }
 
     def is_complete(self) -> bool:
         """Check if voting is complete with enhanced logic."""
-        if self.status != 'active':
+        if self.status != "active":
             return True
 
         if self.voting_deadline and time.time() > self.voting_deadline:
@@ -264,49 +270,57 @@ class VoteProposal:
 
         # Check if quorum reached
         summary = self.get_vote_summary()
-        return summary.get('quorum_reached', False)
+        return summary.get("quorum_reached", False)
 
-    def get_attendance_report(self) -> Dict[str, Any]:
+    def get_attendance_report(self) -> dict[str, Any]:
         """Get detailed attendance report.
 
         Returns:
             Attendance statistics and details
         """
         total_agents = len(self.attendance_log)
-        voted_agents = len([a for a in self.attendance_log.values() if a['action'] == 'voted'])
-        abstained_agents = len([a for a in self.attendance_log.values() if a.get('vote_decision') == 'abstain' and a['action'] == 'voted'])
-        absent_agents = len([a for a in self.attendance_log.values() if a['action'] == 'absent'])
+        voted_agents = len([a for a in self.attendance_log.values() if a["action"] == "voted"])
+        abstained_agents = len(
+            [
+                a
+                for a in self.attendance_log.values()
+                if a.get("vote_decision") == "abstain" and a["action"] == "voted"
+            ]
+        )
+        absent_agents = len([a for a in self.attendance_log.values() if a["action"] == "absent"])
 
         return {
-            'total_registered': total_agents,
-            'voted': voted_agents,
-            'abstained': abstained_agents,
-            'absent': absent_agents,
-            'attendance_rate': voted_agents / total_agents if total_agents > 0 else 0,
-            'details': dict(self.attendance_log)
+            "total_registered": total_agents,
+            "voted": voted_agents,
+            "abstained": abstained_agents,
+            "absent": absent_agents,
+            "attendance_rate": voted_agents / total_agents if total_agents > 0 else 0,
+            "details": dict(self.attendance_log),
         }
 
-    def get_conversation_summary(self) -> Dict[str, Any]:
+    def get_conversation_summary(self) -> dict[str, Any]:
         """Get summary of conversations related to this proposal.
 
         Returns:
             Conversation statistics and recent messages
         """
         if not self.conversation_log:
-            return {'total_messages': 0, 'message_types': {}, 'recent_messages': []}
+            return {"total_messages": 0, "message_types": {}, "recent_messages": []}
 
         # Count message types
         message_types = defaultdict(int)
         for msg in self.conversation_log:
-            message_types[msg['type']] += 1
+            message_types[msg["type"]] += 1
 
         # Get recent messages (last 5)
-        recent_messages = sorted(self.conversation_log, key=lambda x: x['timestamp'], reverse=True)[:5]
+        recent_messages = sorted(self.conversation_log, key=lambda x: x["timestamp"], reverse=True)[
+            :5
+        ]
 
         return {
-            'total_messages': len(self.conversation_log),
-            'message_types': dict(message_types),
-            'recent_messages': recent_messages
+            "total_messages": len(self.conversation_log),
+            "message_types": dict(message_types),
+            "recent_messages": recent_messages,
         }
 
 
@@ -316,14 +330,14 @@ class MessageBus:
     def __init__(self):
         """Initialize the message bus."""
         self.logger = logging.getLogger(__name__)
-        self.agents: Dict[str, BaseAgent] = {}
-        self.message_queues: Dict[str, Queue] = {}
-        self.broadcast_channels: Dict[str, Set[str]] = defaultdict(set)
+        self.agents: dict[str, BaseAgent] = {}
+        self.message_queues: dict[str, Queue] = {}
+        self.broadcast_channels: dict[str, set[str]] = defaultdict(set)
         self.running = False
         self.executor = ThreadPoolExecutor(max_workers=4)
 
         # Message processing
-        self.message_history: List[Message] = []
+        self.message_history: list[Message] = []
         self.max_history = 1000
 
     def register_agent(self, agent: BaseAgent) -> None:
@@ -426,7 +440,7 @@ class MessageBus:
             self.logger.warning(f"Unknown recipient: {recipient}")
             return False
 
-    def get_messages(self, agent_name: str, timeout: float = 0.1) -> List[Message]:
+    def get_messages(self, agent_name: str, timeout: float = 0.1) -> list[Message]:
         """Get pending messages for an agent.
 
         Args:
@@ -497,15 +511,21 @@ class VotingSystem:
         """
         self.message_bus = message_bus
         self.logger = logging.getLogger(__name__)
-        self.proposals: Dict[str, VoteProposal] = {}
-        self.completed_proposals: Dict[str, VoteProposal] = {}
+        self.proposals: dict[str, VoteProposal] = {}
+        self.completed_proposals: dict[str, VoteProposal] = {}
 
-    def create_proposal(self, proposer: str, title: str, description: str,
-                       options: List[str], context: str = "",
-                       required_quorum: float = 0.5,
-                       consensus_threshold: float = 0.66,
-                       min_votes: int = 1,
-                       voting_deadline: Optional[float] = None) -> str:
+    def create_proposal(
+        self,
+        proposer: str,
+        title: str,
+        description: str,
+        options: list[str],
+        context: str = "",
+        required_quorum: float = 0.5,
+        consensus_threshold: float = 0.66,
+        min_votes: int = 1,
+        voting_deadline: float | None = None,
+    ) -> str:
         """Create a new voting proposal.
 
         Args:
@@ -521,6 +541,7 @@ class VotingSystem:
             Proposal ID
         """
         import uuid
+
         proposal_id = str(uuid.uuid4())
 
         proposal = VoteProposal(
@@ -533,7 +554,7 @@ class VotingSystem:
             required_quorum=required_quorum,
             consensus_threshold=consensus_threshold,
             min_votes=min_votes,
-            voting_deadline=voting_deadline
+            voting_deadline=voting_deadline,
         )
 
         self.proposals[proposal_id] = proposal
@@ -545,17 +566,17 @@ class VotingSystem:
             recipient="broadcast",
             message_type="vote_proposal",
             content={
-                'proposal': {
-                    'id': proposal_id,
-                    'title': title,
-                    'description': description,
-                    'options': options,
-                    'context': context,
-                    'proposer': proposer,
-                    'deadline': voting_deadline
+                "proposal": {
+                    "id": proposal_id,
+                    "title": title,
+                    "description": description,
+                    "options": options,
+                    "context": context,
+                    "proposer": proposer,
+                    "deadline": voting_deadline,
                 }
             },
-            priority=3
+            priority=3,
         )
 
         self.message_bus.send_message(message)
@@ -591,17 +612,21 @@ class VotingSystem:
         success = proposal.add_vote(agent.agent_name, vote)
 
         if success:
-            self.logger.info(f"Agent {agent.agent_name} voted on proposal {proposal_id}: {vote['decision']} (weight: {vote.get('weight', 1.0):.2f})")
+            self.logger.info(
+                f"Agent {agent.agent_name} voted on proposal {proposal_id}: {vote['decision']} (weight: {vote.get('weight', 1.0):.2f})"
+            )
 
             # Check if voting is complete
             if proposal.is_complete():
                 self._finalize_proposal(proposal_id)
         else:
-            self.logger.warning(f"Vote validation failed for agent {agent.agent_name} on proposal {proposal_id}: {proposal.validation_errors[-1] if proposal.validation_errors else 'Unknown error'}")
+            self.logger.warning(
+                f"Vote validation failed for agent {agent.agent_name} on proposal {proposal_id}: {proposal.validation_errors[-1] if proposal.validation_errors else 'Unknown error'}"
+            )
 
         return success
 
-    def get_proposal_status(self, proposal_id: str) -> Optional[Dict[str, Any]]:
+    def get_proposal_status(self, proposal_id: str) -> dict[str, Any] | None:
         """Get the status of a proposal.
 
         Args:
@@ -617,18 +642,17 @@ class VotingSystem:
         summary = proposal.get_vote_summary(total_registered_agents=len(self.message_bus.agents))
 
         return {
-            'proposal_id': proposal.proposal_id,
-            'title': proposal.title,
-            'status': proposal.status,
-            'proposer': proposal.proposer,
-            'context': proposal.context,
-            'options': proposal.options,
-            'vote_summary': summary,
-            'deadline': proposal.voting_deadline,
-            'time_remaining': (
-                max(0, proposal.voting_deadline - time.time())
-                if proposal.voting_deadline else None
-            )
+            "proposal_id": proposal.proposal_id,
+            "title": proposal.title,
+            "status": proposal.status,
+            "proposer": proposal.proposer,
+            "context": proposal.context,
+            "options": proposal.options,
+            "vote_summary": summary,
+            "deadline": proposal.voting_deadline,
+            "time_remaining": (
+                max(0, proposal.voting_deadline - time.time()) if proposal.voting_deadline else None
+            ),
         }
 
     def _finalize_proposal(self, proposal_id: str) -> None:
@@ -644,13 +668,13 @@ class VotingSystem:
 
         # Determine winner (use full swarm size for quorum calculations)
         summary = proposal.get_vote_summary(total_registered_agents=len(self.message_bus.agents))
-        results = summary['results']
+        results = summary["results"]
 
         winner = None
         max_weight = 0
         for option, stats in results.items():
-            if stats['weight'] > max_weight:
-                max_weight = stats['weight']
+            if stats["weight"] > max_weight:
+                max_weight = stats["weight"]
                 winner = option
 
         proposal.status = "completed"
@@ -660,7 +684,7 @@ class VotingSystem:
         del self.proposals[proposal_id]
 
         # Compute consensus_met (already available in summary)
-        consensus_met = summary.get('consensus_met', False)
+        consensus_met = summary.get("consensus_met", False)
 
         # Broadcast results
         message = Message(
@@ -669,14 +693,14 @@ class VotingSystem:
             recipient="broadcast",
             message_type="vote_results",
             content={
-                'proposal_id': proposal_id,
-                'title': proposal.title,
-                'winner': winner,
-                'results': summary,
-                'consensus_met': consensus_met,
-                'finalized_at': time.time()
+                "proposal_id": proposal_id,
+                "title": proposal.title,
+                "winner": winner,
+                "results": summary,
+                "consensus_met": consensus_met,
+                "finalized_at": time.time(),
             },
-            priority=3
+            priority=3,
         )
 
         self.message_bus.send_message(message)
@@ -685,7 +709,9 @@ class VotingSystem:
         else:
             self.logger.info(f"Finalized proposal {proposal_id}: Winner = {winner} (NO consensus)")
 
-    def log_conversation(self, proposal_id: str, agent_name: str, message: str, message_type: str = "discussion") -> bool:
+    def log_conversation(
+        self, proposal_id: str, agent_name: str, message: str, message_type: str = "discussion"
+    ) -> bool:
         """Log a conversation related to a proposal.
 
         Args:
@@ -703,10 +729,12 @@ class VotingSystem:
             return False
 
         proposal.log_conversation(agent_name, message, message_type)
-        self.logger.debug(f"Logged conversation for proposal {proposal_id}: {agent_name} - {message_type}")
+        self.logger.debug(
+            f"Logged conversation for proposal {proposal_id}: {agent_name} - {message_type}"
+        )
         return True
 
-    def get_enhanced_proposal_status(self, proposal_id: str) -> Optional[Dict[str, Any]]:
+    def get_enhanced_proposal_status(self, proposal_id: str) -> dict[str, Any] | None:
         """Get enhanced status of a proposal including attendance and conversations.
 
         Args:
@@ -724,13 +752,15 @@ class VotingSystem:
             return None
 
         # Add enhanced information
-        basic_status.update({
-            'attendance_report': proposal.get_attendance_report(),
-            'conversation_summary': proposal.get_conversation_summary(),
-            'validation_errors': proposal.validation_errors,
-            'created_at': proposal.created_at,
-            'age_seconds': time.time() - proposal.created_at
-        })
+        basic_status.update(
+            {
+                "attendance_report": proposal.get_attendance_report(),
+                "conversation_summary": proposal.get_conversation_summary(),
+                "validation_errors": proposal.validation_errors,
+                "created_at": proposal.created_at,
+                "age_seconds": time.time() - proposal.created_at,
+            }
+        )
 
         return basic_status
 
@@ -750,9 +780,9 @@ class SwarmCoordinator:
         self.logger = logging.getLogger(__name__)
 
         # Swarm state
-        self.active_tasks: Dict[str, Dict[str, Any]] = {}
-        self.completed_tasks: Dict[str, Dict[str, Any]] = {}
-        self.task_assignments: Dict[str, str] = {}  # task_id -> agent_name
+        self.active_tasks: dict[str, dict[str, Any]] = {}
+        self.completed_tasks: dict[str, dict[str, Any]] = {}
+        self.task_assignments: dict[str, str] = {}  # task_id -> agent_name
 
         # Termination conditions
         self.max_runtime = 3600  # 1 hour default
@@ -762,7 +792,7 @@ class SwarmCoordinator:
         self.iteration_count = 0
 
         # Performance tracking
-        self.task_history: List[Dict[str, Any]] = []
+        self.task_history: list[dict[str, Any]] = []
 
     def should_terminate(self) -> tuple[bool, str]:
         """Check if swarm should terminate.
@@ -798,8 +828,10 @@ class SwarmCoordinator:
             return False
 
         # Check recent task patterns
-        recent_tasks = self.task_history[-self.loop_detection_window:]
-        previous_tasks = self.task_history[-(self.loop_detection_window * 2):-self.loop_detection_window]
+        recent_tasks = self.task_history[-self.loop_detection_window :]
+        previous_tasks = self.task_history[
+            -(self.loop_detection_window * 2) : -self.loop_detection_window
+        ]
 
         # Simple loop detection: same sequence repeating
         if recent_tasks == previous_tasks:
@@ -807,7 +839,7 @@ class SwarmCoordinator:
 
         return False
 
-    def assign_task(self, task: Dict[str, Any]) -> Optional[str]:
+    def assign_task(self, task: dict[str, Any]) -> str | None:
         """Assign a task to the most suitable agent.
 
         Args:
@@ -816,9 +848,9 @@ class SwarmCoordinator:
         Returns:
             Name of assigned agent or None if no suitable agent
         """
-        task_id = task.get('id', str(time.time()))
-        task_type = task.get('type', 'general')
-        context = task.get('context', '')
+        task_id = task.get("id", str(time.time()))
+        task_type = task.get("type", "general")
+        context = task.get("context", "")
 
         best_agent = None
         best_score = 0
@@ -846,8 +878,8 @@ class SwarmCoordinator:
                 sender="coordinator",
                 recipient=best_agent,
                 message_type="task_assignment",
-                content={'task': task},
-                priority=4
+                content={"task": task},
+                priority=4,
             )
             self.message_bus.send_message(message)
 
@@ -884,8 +916,9 @@ class SwarmCoordinator:
 
         return min(base_score, 1.0)
 
-    def report_task_completion(self, task_id: str, agent_name: str, success: bool,
-                             result: Any = None) -> None:
+    def report_task_completion(
+        self, task_id: str, agent_name: str, success: bool, result: Any = None
+    ) -> None:
         """Report task completion.
 
         Args:
@@ -896,10 +929,10 @@ class SwarmCoordinator:
         """
         if task_id in self.active_tasks:
             task = self.active_tasks[task_id]
-            task['completed_at'] = time.time()
-            task['success'] = success
-            task['result'] = result
-            task['agent'] = agent_name
+            task["completed_at"] = time.time()
+            task["success"] = success
+            task["result"] = result
+            task["agent"] = agent_name
 
             # Move to completed
             self.completed_tasks[task_id] = task
@@ -912,17 +945,21 @@ class SwarmCoordinator:
                 agent.record_vote_outcome(success)  # Treat as vote outcome
 
             # Record in history
-            self.task_history.append({
-                'task_id': task_id,
-                'agent': agent_name,
-                'type': task.get('type'),
-                'success': success,
-                'timestamp': task['completed_at']
-            })
+            self.task_history.append(
+                {
+                    "task_id": task_id,
+                    "agent": agent_name,
+                    "type": task.get("type"),
+                    "success": success,
+                    "timestamp": task["completed_at"],
+                }
+            )
 
-            self.logger.info(f"Task {task_id} completed by {agent_name}: {'success' if success else 'failed'}")
+            self.logger.info(
+                f"Task {task_id} completed by {agent_name}: {'success' if success else 'failed'}"
+            )
 
-    def get_swarm_status(self) -> Dict[str, Any]:
+    def get_swarm_status(self) -> dict[str, Any]:
         """Get overall swarm status.
 
         Returns:
@@ -931,22 +968,27 @@ class SwarmCoordinator:
         total_tasks = len(self.active_tasks) + len(self.completed_tasks)
         completed_tasks = len(self.completed_tasks)
         success_rate = (
-            sum(1 for t in self.completed_tasks.values() if t.get('success'))
-            / completed_tasks * 100
-        ) if completed_tasks > 0 else 0
+            (
+                sum(1 for t in self.completed_tasks.values() if t.get("success"))
+                / completed_tasks
+                * 100
+            )
+            if completed_tasks > 0
+            else 0
+        )
 
         should_term, reason = self.should_terminate()
 
         return {
-            'active_tasks': len(self.active_tasks),
-            'completed_tasks': completed_tasks,
-            'total_tasks': total_tasks,
-            'success_rate': success_rate,
-            'runtime': time.time() - self.start_time,
-            'iterations': self.iteration_count,
-            'should_terminate': should_term,
-            'termination_reason': reason,
-            'agents': len(self.message_bus.agents)
+            "active_tasks": len(self.active_tasks),
+            "completed_tasks": completed_tasks,
+            "total_tasks": total_tasks,
+            "success_rate": success_rate,
+            "runtime": time.time() - self.start_time,
+            "iterations": self.iteration_count,
+            "should_terminate": should_term,
+            "termination_reason": reason,
+            "agents": len(self.message_bus.agents),
         }
 
 

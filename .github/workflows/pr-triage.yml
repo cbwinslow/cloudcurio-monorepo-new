@@ -89,14 +89,14 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-message: |
-            👋 Thanks for opening your first pull request in CloudCurio Monorepo! 
-            
+            👋 Thanks for opening your first pull request in CloudCurio Monorepo!
+
             Please make sure your PR:
             - ✅ Passes all CI checks
             - ✅ Includes tests for new functionality
             - ✅ Updates documentation if needed
             - ✅ Follows our [Code Quality Rules](kb/rules/code_quality_rules.md)
-            
+
             A maintainer will review your PR soon. Feel free to join our community if you have questions!
 
       - name: Check for security changes
@@ -130,12 +130,12 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.issue.number
             });
-            
+
             if (pr.draft) {
               console.log('PR is draft, skipping review request');
               return;
             }
-            
+
             // Request review from codeowners
             await github.rest.pulls.requestReviewers({
               owner: context.repo.owner,

@@ -155,7 +155,7 @@ description: "My custom agent for [purpose]"
 version: "1.0.0"
 system_prompt: |
   You are a helpful agent that [does X].
-  
+
 tools:
   - name: some_tool
     description: "Tool description"

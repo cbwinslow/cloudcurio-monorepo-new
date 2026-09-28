@@ -1,7 +1,7 @@
 # GitHub Copilot Instructions for CloudCurio Monorepo
 
-**Version:** 1.0.0  
-**Last Updated:** 2026-02-13  
+**Version:** 1.0.0
+**Last Updated:** 2026-02-13
 **Repository:** CloudCurio Monorepo (Master Toolbox)
 
 ## Repository Overview
@@ -45,17 +45,17 @@ Use Google-style docstrings for all functions and classes:
 ```python
 def process_data(items: list[dict[str, Any]], threshold: float = 0.8) -> list[dict[str, Any]]:
     """Process data items above a threshold.
-    
+
     Args:
         items: List of data dictionaries to process
         threshold: Minimum confidence threshold (0.0-1.0)
-    
+
     Returns:
         List of filtered data items above threshold
-    
+
     Raises:
         ValueError: If threshold is not between 0.0 and 1.0
-    
+
     Example:
         >>> data = [{"score": 0.9, "name": "test"}]
         >>> process_data(data, 0.8)
@@ -142,7 +142,7 @@ from pydantic import BaseModel, Field
 
 class AgentConfig(BaseModel):
     """Configuration for AgentName agent."""
-    
+
     model: str = Field(default="qwen2.5-coder", description="LLM model to use")
     temperature: float = Field(default=0.7, ge=0.0, le=1.0, description="Model temperature")
     timeout: int = Field(default=300, gt=0, description="Execution timeout in seconds")
@@ -150,37 +150,33 @@ class AgentConfig(BaseModel):
 
 class AgentNameAgent:
     """Agent for [specific purpose]."""
-    
+
     def __init__(self, config: Optional[AgentConfig] = None) -> None:
         """Initialize the agent.
-        
+
         Args:
             config: Agent configuration, uses defaults if None
         """
         self.config = config or AgentConfig()
-    
+
     def execute(self, task: str, **kwargs: Any) -> dict[str, Any]:
         """Execute the agent task.
-        
+
         Args:
             task: Task description
             **kwargs: Additional task parameters
-        
+
         Returns:
             Execution result dictionary
-        
+
         Raises:
             ValueError: If task is empty or invalid
         """
         if not task:
             raise ValueError("Task cannot be empty")
-        
+
         # Implementation
-        return {
-            "status": "success",
-            "result": "Task completed",
-            "metadata": {}
-        }
+        return {"status": "success", "result": "Task completed", "metadata": {}}
 ```
 
 ### Tool Development
@@ -202,27 +198,27 @@ from pydantic import BaseModel, Field
 
 class ToolConfig(BaseModel):
     """Configuration for ToolName."""
-    
+
     option1: str = Field(description="First configuration option")
     option2: bool = Field(default=True, description="Second configuration option")
 
 
 class ToolName:
     """Tool for [specific purpose]."""
-    
+
     name: str = "tool_name"
     description: str = "Brief description for agent use"
-    
+
     def __init__(self, config: ToolConfig) -> None:
         """Initialize tool with configuration."""
         self.config = config
-    
+
     def execute(self, **kwargs: Any) -> dict[str, Any]:
         """Execute tool operation.
-        
+
         Args:
             **kwargs: Tool-specific parameters
-        
+
         Returns:
             Tool execution result
         """
@@ -246,19 +242,19 @@ from module_name import ClassName
 
 class TestClassName:
     """Test suite for ClassName."""
-    
+
     def test_basic_functionality(self) -> None:
         """Test basic functionality works as expected."""
         obj = ClassName()
         result = obj.method()
         assert result is not None
-    
+
     def test_error_handling(self) -> None:
         """Test error handling for invalid input."""
         obj = ClassName()
         with pytest.raises(ValueError, match="Expected error message"):
             obj.method(invalid_param=True)
-    
+
     @pytest.mark.integration
     def test_integration_scenario(self) -> None:
         """Test integration with external systems."""
@@ -312,7 +308,7 @@ steps:
     input: ${previous_step.output}
     config:
       timeout: 300
-  
+
   - name: next_step
     agent: another_agent
     input: ${step_name.result}
@@ -337,19 +333,18 @@ from typing import Optional
 
 def main() -> int:
     """Main CLI entry point.
-    
+
     Returns:
         Exit code (0 for success, non-zero for errors)
     """
     parser = argparse.ArgumentParser(
-        description="Tool description",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        description="Tool description", formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("--input", required=True, help="Input parameter")
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
-    
+
     args = parser.parse_args()
-    
+
     try:
         # CLI logic
         print("Success")
@@ -385,22 +380,22 @@ from mcp import Server, Tool
 
 class ServerNameMCP(Server):
     """MCP server for [specific purpose]."""
-    
+
     def __init__(self) -> None:
         """Initialize MCP server."""
         super().__init__(name="server-name", version="1.0.0")
         self.register_tools()
-    
+
     def register_tools(self) -> None:
         """Register available tools."""
-        
+
         @self.tool("tool_name")
         async def tool_name(param: str) -> dict[str, Any]:
             """Tool description.
-            
+
             Args:
                 param: Parameter description
-            
+
             Returns:
                 Tool result
             """
@@ -439,19 +434,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-      
+
       - name: Run tests
         run: pytest -q
-      
+
       - name: Lint
         run: ruff check .
 ```

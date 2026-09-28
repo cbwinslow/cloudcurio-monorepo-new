@@ -149,17 +149,17 @@ app:
 models:
   default_provider: "ollama"
   default_model: "qwen2.5-coder"
-  
+
   providers:
     ollama:
       base_url: "http://localhost:11434"
       timeout: 30
-      
+
     openai:
       api_key: "${OPENAI_API_KEY}"
       organization: "${OPENAI_ORG_ID}"
       timeout: 60
-      
+
     anthropic:
       api_key: "${ANTHROPIC_API_KEY}"
       timeout: 60
@@ -167,19 +167,19 @@ models:
 # Runtime settings
 runtime:
   default: "local"
-  
+
   local:
     max_concurrent: 10
     timeout: 300
-    
+
   crewai:
     verbose: true
     allow_delegation: false
-    
+
   langchain:
     verbose: true
     max_iterations: 10
-    
+
   pydanticai:
     retry_attempts: 3
     timeout: 300
@@ -207,15 +207,15 @@ tools:
 # Observability
 observability:
   enabled: true
-  
+
   opentelemetry:
     endpoint: "http://localhost:4317"
     service_name: "cloudcurio-agents"
-    
+
   prometheus:
     enabled: true
     port: 9090
-    
+
   jaeger:
     enabled: true
     agent_host: "localhost"
@@ -430,12 +430,12 @@ tools:
     retry_attempts: 3
     enable_caching: true
     cache_ttl: 300
-  
+
   # Python tools
   python:
     enabled: true
     max_execution_time: 30
-    
+
   # Shell tools
   shell:
     enabled: true
@@ -445,7 +445,7 @@ tools:
       - cat
       - grep
     max_execution_time: 60
-    
+
   # MCP tools
   mcp:
     enabled: true
@@ -458,7 +458,7 @@ tools:
         enabled: true
         command: "node"
         args: ["mcp-servers/media/index.js"]
-        
+
   # HTTP tools
   http:
     enabled: true
@@ -474,12 +474,12 @@ tools:
   data_processor:
     max_records: 1000
     output_format: "json"
-    
+
   api_client:
     timeout: 30
     max_retries: 3
     base_url: "https://api.example.com"
-    
+
   file_handler:
     max_file_size: "10MB"
     allowed_extensions:
@@ -506,13 +506,13 @@ spec:
     fallbacks:
       - provider: openai
         model: gpt-4-turbo
-  
+
   runtime:
     supported: [local, pydanticai]
     config:
       timeout: 600
       max_retries: 5
-  
+
   tools:
     - id: data_processor
       type: python
@@ -596,6 +596,6 @@ Override configuration via CLI:
 
 ---
 
-**Last Updated:** 2026-01-24  
-**Version:** 1.0.0  
+**Last Updated:** 2026-01-24
+**Version:** 1.0.0
 **Maintained By:** @cbwinslow
