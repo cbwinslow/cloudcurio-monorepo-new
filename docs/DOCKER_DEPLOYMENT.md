@@ -140,7 +140,7 @@ scrape_configs:
   - job_name: 'cloudcurio-agents'
     static_configs:
       - targets: ['host.docker.internal:8000']
-    
+
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
@@ -242,7 +242,7 @@ services:
     networks:
       - cloudcurio
     restart: unless-stopped
-    
+
   agent-worker-1:
     image: cloudcurio-agent:latest
     container_name: cloudcurio-worker-1
@@ -421,7 +421,7 @@ upstream agent_backend {
 
 server {
     listen 80;
-    
+
     location / {
         proxy_pass http://agent_backend;
         proxy_set_header Host $host;
@@ -504,6 +504,6 @@ docker run --user root ...
 
 ---
 
-**Last Updated:** 2026-01-24  
-**Version:** 1.0.0  
+**Last Updated:** 2026-01-24
+**Version:** 1.0.0
 **Maintained By:** @cbwinslow

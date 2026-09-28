@@ -18,64 +18,64 @@ jobs:
         uses: actions/stale@v9
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          
+
           # Issue settings
           stale-issue-message: |
             👋 This issue has been automatically marked as stale because it has not had recent activity.
-            
+
             It will be closed in 7 days if no further activity occurs. If this issue is still relevant, please:
             - Comment to keep it open
             - Add the `keep-open` label
             - Provide additional context or updates
-            
+
             Thank you for your contributions to CloudCurio Monorepo!
           close-issue-message: |
             🔒 This issue has been automatically closed due to inactivity.
-            
+
             If you believe this issue should be reopened:
             - Comment on this issue with updated information
             - Open a new issue referencing this one
-            
+
             Thank you!
           stale-issue-label: 'stale'
           days-before-issue-stale: 60
           days-before-issue-close: 7
           exempt-issue-labels: 'keep-open,blocked,in-progress,security'
-          
+
           # PR settings
           stale-pr-message: |
             👋 This pull request has been automatically marked as stale because it has not had recent activity.
-            
+
             It will be closed in 14 days if no further activity occurs. If this PR is still relevant, please:
             - Push new commits or rebase
             - Comment to keep it open
             - Add the `keep-open` label
             - Request review if ready
-            
+
             Thank you for your contributions!
           close-pr-message: |
             🔒 This pull request has been automatically closed due to inactivity.
-            
+
             If you'd like to continue this work:
             - Comment on this PR to reopen it
             - Open a new PR with updated changes
-            
+
             Thank you for your contributions!
           stale-pr-label: 'stale'
           days-before-pr-stale: 30
           days-before-pr-close: 14
           exempt-pr-labels: 'keep-open,blocked,in-progress,security,dependencies'
           exempt-draft-pr: true
-          
+
           # General settings
           operations-per-run: 50
           remove-stale-when-updated: true
           ascending: false
           exempt-all-milestones: false
-          
+
           # Only mark as stale if there's been no activity
           any-of-labels: ''
-          
+
           # Custom messages for different labels
           labels-to-add-when-unstale: ''
           labels-to-remove-when-unstale: 'stale'

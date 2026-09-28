@@ -4,10 +4,10 @@ Provides connection management and query execution for various database systems.
 Supports SQL and NoSQL databases with connection pooling and error handling.
 """
 
-from typing import Any, Dict, List, Optional
 import logging
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ class DatabaseConfig:
     host: str
     port: int
     database: str
-    username: Optional[str] = None
-    password: Optional[str] = None
+    username: str | None = None
+    password: str | None = None
     ssl: bool = False
     pool_size: int = 5
 
@@ -50,7 +50,7 @@ class DatabaseConnector:
         self.connected = False
         logger.info(f"Initialized DatabaseConnector for {config.db_type}")
 
-    def connect(self) -> Dict[str, Any]:
+    def connect(self) -> dict[str, Any]:
         """Establish database connection.
 
         Returns:
@@ -68,7 +68,7 @@ class DatabaseConnector:
             logger.error(f"Connection failed: {e}")
             return {"success": False, "error": str(e)}
 
-    def disconnect(self) -> Dict[str, Any]:
+    def disconnect(self) -> dict[str, Any]:
         """Close database connection.
 
         Returns:
@@ -80,7 +80,7 @@ class DatabaseConnector:
             return {"success": True}
         return {"success": False, "message": "Not connected"}
 
-    def execute_query(self, query: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def execute_query(self, query: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute a database query.
 
         Args:
@@ -107,8 +107,8 @@ class DatabaseConnector:
             return {"success": False, "error": str(e)}
 
     def execute_transaction(
-        self, queries: List[str], params_list: Optional[List[Dict[str, Any]]] = None
-    ) -> Dict[str, Any]:
+        self, queries: list[str], params_list: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """Execute multiple queries in a transaction.
 
         Args:
@@ -133,7 +133,7 @@ class DatabaseConnector:
             logger.error(f"Transaction failed: {e}")
             return {"success": False, "error": str(e)}
 
-    def fetch_one(self, query: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    def fetch_one(self, query: str, params: dict[str, Any] | None = None) -> Any:
         """Fetch single row from query result.
 
         Args:
@@ -148,7 +148,7 @@ class DatabaseConnector:
             return result["result"][0]
         return None
 
-    def fetch_all(self, query: str, params: Optional[Dict[str, Any]] = None) -> List[Any]:
+    def fetch_all(self, query: str, params: dict[str, Any] | None = None) -> list[Any]:
         """Fetch all rows from query result.
 
         Args:
@@ -163,7 +163,7 @@ class DatabaseConnector:
             return result.get("result", [])
         return []
 
-    def get_connection_status(self) -> Dict[str, Any]:
+    def get_connection_status(self) -> dict[str, Any]:
         """Get current connection status.
 
         Returns:
@@ -188,11 +188,11 @@ class DatabaseConnectionPool:
             config: Database configuration
         """
         self.config = config
-        self.connections: List[DatabaseConnector] = []
-        self.available_connections: List[DatabaseConnector] = []
+        self.connections: list[DatabaseConnector] = []
+        self.available_connections: list[DatabaseConnector] = []
         logger.info(f"Initialized DatabaseConnectionPool with size {config.pool_size}")
 
-    def initialize_pool(self) -> Dict[str, Any]:
+    def initialize_pool(self) -> dict[str, Any]:
         """Initialize connection pool.
 
         Returns:
@@ -214,7 +214,7 @@ class DatabaseConnectionPool:
             logger.error(f"Pool initialization failed: {e}")
             return {"success": False, "error": str(e)}
 
-    def get_connection(self) -> Optional[DatabaseConnector]:
+    def get_connection(self) -> DatabaseConnector | None:
         """Get available connection from pool.
 
         Returns:
@@ -237,7 +237,7 @@ class DatabaseConnectionPool:
             self.available_connections.append(connection)
             logger.debug("Returned connection to pool")
 
-    def close_pool(self) -> Dict[str, Any]:
+    def close_pool(self) -> dict[str, Any]:
         """Close all connections in pool.
 
         Returns:
@@ -252,8 +252,8 @@ class DatabaseConnectionPool:
 
 
 __all__ = [
-    "DatabaseConnector",
-    "DatabaseConnectionPool",
     "DatabaseConfig",
+    "DatabaseConnectionPool",
+    "DatabaseConnector",
     "DatabaseType",
 ]
