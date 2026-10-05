@@ -1,7 +1,7 @@
 # CloudCurio Monorepo - AI Agents Guide
 
-**Version:** 1.0.0  
-**Last Updated:** 2026-02-13  
+**Version:** 1.0.0
+**Last Updated:** 2026-02-13
 **Repository:** cloudcurio-monorepo-new
 
 ---
@@ -394,7 +394,7 @@ model_policy:
     config:                       # Optional model-specific config
       temperature: 0.7
       max_tokens: 2000
-  
+
   fallbacks:                      # Optional fallback chain
     - provider: openrouter
       model: qwen/qwen-2.5-coder-32b-instruct
@@ -433,7 +433,7 @@ tools:
       option1: value1
       option2: value2
     required: true               # Optional: mark as required
-  
+
   - name: another_tool
     config: {}
     required: false
@@ -458,7 +458,7 @@ eval:
   suites:
     - agents/evals/agent_name/golden_test.yaml
     - agents/evals/agent_name/integration_test.yaml
-  
+
   quality_thresholds:
     accuracy: 0.90              # Minimum accuracy
     latency_p95: 2.0           # Max 95th percentile latency (seconds)
@@ -486,7 +486,7 @@ from pydantic import BaseModel, Field
 
 class ToolConfig(BaseModel):
     """Configuration for Custom Tool."""
-    
+
     api_key: str = Field(description="API key for service")
     timeout: int = Field(default=30, gt=0, description="Request timeout")
     retries: int = Field(default=3, ge=0, le=10, description="Retry attempts")
@@ -494,23 +494,23 @@ class ToolConfig(BaseModel):
 
 class CustomTool:
     """Tool for specific purpose."""
-    
+
     name: str = "custom_tool"
     description: str = "Brief description for agent use"
-    
+
     def __init__(self, config: ToolConfig) -> None:
         """Initialize tool with configuration."""
         self.config = config
-    
+
     def execute(self, **kwargs: Any) -> dict[str, Any]:
         """Execute tool operation.
-        
+
         Args:
             **kwargs: Tool-specific parameters
-        
+
         Returns:
             Tool execution result
-        
+
         Raises:
             ValueError: If required parameters missing
             RuntimeError: If execution fails
@@ -518,18 +518,10 @@ class CustomTool:
         try:
             # Tool implementation
             result = self._process(**kwargs)
-            return {
-                "status": "success",
-                "result": result,
-                "metadata": {"tool": self.name}
-            }
+            return {"status": "success", "result": result, "metadata": {"tool": self.name}}
         except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e),
-                "metadata": {"tool": self.name}
-            }
-    
+            return {"status": "error", "error": str(e), "metadata": {"tool": self.name}}
+
     def _process(self, **kwargs: Any) -> Any:
         """Internal processing logic."""
         # Implementation details
@@ -579,8 +571,8 @@ tools:
 
 #### 1. Local Runtime ✅
 
-**Status**: Fully implemented  
-**Use Case**: Lightweight local execution  
+**Status**: Fully implemented
+**Use Case**: Lightweight local execution
 **Provider**: Built-in
 
 ```bash
@@ -595,8 +587,8 @@ tools:
 
 #### 2. LangChain Runtime 🔄
 
-**Status**: Adapter stub  
-**Use Case**: LangChain framework integration  
+**Status**: Adapter stub
+**Use Case**: LangChain framework integration
 **Provider**: LangChain
 
 ```bash
@@ -611,8 +603,8 @@ tools:
 
 #### 3. CrewAI Runtime 🔄
 
-**Status**: Adapter stub  
-**Use Case**: Multi-agent collaboration  
+**Status**: Adapter stub
+**Use Case**: Multi-agent collaboration
 **Provider**: CrewAI
 
 ```bash
@@ -627,8 +619,8 @@ tools:
 
 #### 4. PydanticAI Runtime 🔄
 
-**Status**: Adapter stub  
-**Use Case**: Type-safe agent definitions  
+**Status**: Adapter stub
+**Use Case**: Type-safe agent definitions
 **Provider**: PydanticAI
 
 ```bash
@@ -652,26 +644,22 @@ from cbw_foundry.spec import AgentSpec
 
 class CustomRuntime:
     """Custom runtime adapter."""
-    
+
     def __init__(self, config: Dict[str, Any]) -> None:
         self.config = config
-    
+
     def execute(self, agent_spec: AgentSpec, input_data: dict) -> dict:
         """Execute agent with custom runtime.
-        
+
         Args:
             agent_spec: Agent specification
             input_data: Input data for agent
-        
+
         Returns:
             Execution result
         """
         # Runtime implementation
-        return {
-            "status": "success",
-            "result": "output",
-            "metadata": {"runtime": "custom"}
-        }
+        return {"status": "success", "result": "output", "metadata": {"runtime": "custom"}}
 ```
 
 ---
@@ -909,8 +897,8 @@ We welcome contributions! To contribute an agent:
 
 ---
 
-**Version:** 1.0.0  
-**Maintained by:** @cbwinslow  
+**Version:** 1.0.0
+**Maintained by:** @cbwinslow
 **Last Updated:** 2026-02-13
 
 *This guide is your comprehensive resource for working with AI agents in the CloudCurio Monorepo. Keep it handy as you develop and deploy agents!*

@@ -310,7 +310,7 @@ None - content is publication-ready after minor edits.
 1. **Introduction too long**
    - Current intro is 3 paragraphs
    - Recommendation: Condense to 1 paragraph, move details to body
-   
+
 2. **Missing transition (Section 2 → 3)**
    - Abrupt topic change
    - Add connecting paragraph to improve flow

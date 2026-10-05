@@ -10,40 +10,40 @@ metadata:
 spec:
   # Slash command definition
   command: /SKILL_NAME
-  
+
   # Parameters for the skill
   parameters:
     - name: input
       type: string
       description: Input parameter description
       required: true
-    
+
     - name: option1
       type: string
       description: Optional parameter description
       required: false
       default: "default_value"
-    
+
     - name: verbose
       type: boolean
       description: Enable verbose output
       required: false
       default: false
-  
+
   # Agents used by this skill
   agents:
     - agent_name_1
     - agent_name_2
-  
+
   # Workflow (optional)
   workflow: workflows/skill_workflow.yaml
-  
+
   # Examples
   examples:
     - command: "/SKILL_NAME input='example data' option1='value'"
       description: "Basic usage example"
       expected_output: "Description of expected output"
-    
+
     - command: "/SKILL_NAME input='another example' verbose=true"
       description: "Example with verbose output"
       expected_output: "Description of expected output"

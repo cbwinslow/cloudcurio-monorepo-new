@@ -71,29 +71,29 @@ Welcome to the CloudCurio Knowledge Base - your comprehensive guide to working w
 ### Runbooks
 Step-by-step operational procedures for common tasks. These are living documents that should be updated as processes evolve.
 
-**Format:** Task-oriented, imperative instructions  
-**Audience:** All team members  
+**Format:** Task-oriented, imperative instructions
+**Audience:** All team members
 **Update Frequency:** As needed when processes change
 
 ### Architecture Decision Records (ADRs)
 Documents explaining significant architectural decisions, their context, and consequences.
 
-**Format:** Context, Decision, Consequences  
-**Audience:** Technical leadership, contributors  
+**Format:** Context, Decision, Consequences
+**Audience:** Technical leadership, contributors
 **Update Frequency:** Only amended, never deleted
 
 ### Context Documents
 Environmental and ecosystem documentation providing situational awareness.
 
-**Format:** Descriptive, informational  
-**Audience:** All team members  
+**Format:** Descriptive, informational
+**Audience:** All team members
 **Update Frequency:** Quarterly or when significant changes occur
 
 ### Rules & Standards
 Normative documents defining how work should be done.
 
-**Format:** Prescriptive, rule-based  
-**Audience:** Contributors  
+**Format:** Prescriptive, rule-based
+**Audience:** Contributors
 **Update Frequency:** Reviewed quarterly
 
 ## 🔍 Finding Information
@@ -174,5 +174,5 @@ last_reviewed: YYYY-MM-DD
 
 ---
 
-**Last Updated:** 2026-01-15  
+**Last Updated:** 2026-01-15
 **Maintained By:** @cbwinslow
