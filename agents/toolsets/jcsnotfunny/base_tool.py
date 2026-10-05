@@ -11,10 +11,10 @@ import logging
 import time
 import uuid
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
+from typing import Any
 
-from .error_handling import ToolError, ToolConfigError, ToolValidationError
+from .error_handling import ToolConfigError, ToolError, ToolValidationError
 
 
 class BaseTool(ABC):
@@ -29,7 +29,7 @@ class BaseTool(ABC):
     - Input validation
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None, **kwargs):
+    def __init__(self, config: dict[str, Any] | None = None, **kwargs):
         """
         Initialize the base tool.
 
@@ -65,9 +65,7 @@ class BaseTool(ABC):
         # Add console handler
         ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         ch.setFormatter(formatter)
         logger.addHandler(ch)
 
@@ -78,19 +76,20 @@ class BaseTool(ABC):
         try:
             # Basic validation - can be overridden by subclasses
             if not isinstance(self.config, dict):
-                raise ToolConfigError(f"Configuration must be a dictionary, got {type(self.config)}")
+                raise ToolConfigError(
+                    f"Configuration must be a dictionary, got {type(self.config)}"
+                )
 
             # Tool-specific validation
             self._validate_tool_config()
 
         except Exception as e:
-            error_msg = f"Configuration validation failed for {self.tool_name}: {str(e)}"
+            error_msg = f"Configuration validation failed for {self.tool_name}: {e!s}"
             self.logger.error(error_msg)
             raise ToolConfigError(error_msg) from e
 
     def _validate_tool_config(self) -> None:
         """Tool-specific configuration validation. Can be overridden by subclasses."""
-        pass
 
     def _setup_error_recovery(self) -> None:
         """Set up error recovery mechanisms."""
@@ -102,10 +101,10 @@ class BaseTool(ABC):
         """Start performance monitoring."""
         self._start_time = time.time()
         self.performance_metrics = {
-            'start_time': datetime.now().isoformat(),
-            'execution_time': None,
-            'memory_usage': None,
-            'status': 'running'
+            "start_time": datetime.now().isoformat(),
+            "execution_time": None,
+            "memory_usage": None,
+            "status": "running",
         }
 
     def _end_performance_monitoring(self) -> None:
@@ -114,18 +113,22 @@ class BaseTool(ABC):
             self._end_time = time.time()
             execution_time = self._end_time - self._start_time
 
-            self.performance_metrics.update({
-                'end_time': datetime.now().isoformat(),
-                'execution_time': execution_time,
-                'status': 'completed'
-            })
+            self.performance_metrics.update(
+                {
+                    "end_time": datetime.now().isoformat(),
+                    "execution_time": execution_time,
+                    "status": "completed",
+                }
+            )
 
-            self.logger.info(f"Performance metrics: {json.dumps(self.performance_metrics, indent=2)}")
+            self.logger.info(
+                f"Performance metrics: {json.dumps(self.performance_metrics, indent=2)}"
+            )
 
     def _handle_error(self, error: Exception) -> None:
         """Handle errors with recovery attempts."""
         self.last_error = error
-        error_msg = f"Error in {self.tool_name}: {str(error)}"
+        error_msg = f"Error in {self.tool_name}: {error!s}"
         self.logger.error(error_msg)
 
         # Attempt recovery
@@ -141,17 +144,19 @@ class BaseTool(ABC):
                 return
 
             except Exception as recovery_error:
-                self.logger.warning(f"Recovery attempt {attempt + 1} failed: {str(recovery_error)}")
+                self.logger.warning(f"Recovery attempt {attempt + 1} failed: {recovery_error!s}")
                 continue
 
         # If all recovery attempts fail
         self.logger.error(f"All recovery attempts failed for {self.tool_name}")
-        raise ToolError(f"Tool {self.tool_name} failed after recovery attempts: {str(error)}") from error
+        raise ToolError(
+            f"Tool {self.tool_name} failed after recovery attempts: {error!s}"
+        ) from error
 
     def _recover_from_error(self, error: Exception) -> None:
         """Tool-specific error recovery logic. Can be overridden by subclasses."""
         # Default recovery: log the error and continue
-        self.logger.warning(f"Default error recovery for {self.tool_name}: {str(error)}")
+        self.logger.warning(f"Default error recovery for {self.tool_name}: {error!s}")
 
     def _validate_input(self, *args, **kwargs) -> None:
         """Validate input parameters."""
@@ -164,15 +169,14 @@ class BaseTool(ABC):
             self._validate_tool_input(*args, **kwargs)
 
         except Exception as e:
-            error_msg = f"Input validation failed for {self.tool_name}: {str(e)}"
+            error_msg = f"Input validation failed for {self.tool_name}: {e!s}"
             self.logger.error(error_msg)
             raise ToolValidationError(error_msg) from e
 
     def _validate_tool_input(self, *args, **kwargs) -> None:
         """Tool-specific input validation. Can be overridden by subclasses."""
-        pass
 
-    def _log_operation(self, operation: str, details: Optional[Dict[str, Any]] = None) -> None:
+    def _log_operation(self, operation: str, details: dict[str, Any] | None = None) -> None:
         """Log tool operations with details."""
         log_message = f"Operation: {operation}"
         if details:
@@ -180,18 +184,18 @@ class BaseTool(ABC):
 
         self.logger.info(log_message)
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics for the tool."""
         return self.performance_metrics.copy()
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current status of the tool."""
         return {
-            'tool_name': self.tool_name,
-            'tool_id': self.tool_id,
-            'status': 'ready' if not self.last_error else 'error',
-            'last_error': str(self.last_error) if self.last_error else None,
-            'performance': self.performance_metrics
+            "tool_name": self.tool_name,
+            "tool_id": self.tool_id,
+            "status": "ready" if not self.last_error else "error",
+            "last_error": str(self.last_error) if self.last_error else None,
+            "performance": self.performance_metrics,
         }
 
     @abstractmethod
@@ -211,7 +215,6 @@ class BaseTool(ABC):
         Raises:
             ToolError: If tool execution fails
         """
-        pass
 
     def __str__(self) -> str:
         """String representation of the tool."""
@@ -231,7 +234,7 @@ class ToolFactory:
     """
 
     @staticmethod
-    def create_tool(tool_class, config: Optional[Dict[str, Any]] = None, **kwargs) -> BaseTool:
+    def create_tool(tool_class, config: dict[str, Any] | None = None, **kwargs) -> BaseTool:
         """
         Create a tool instance.
 
@@ -254,4 +257,4 @@ class ToolFactory:
             return tool_instance
 
         except Exception as e:
-            raise ToolError(f"Failed to create tool {tool_class.__name__}: {str(e)}") from e
+            raise ToolError(f"Failed to create tool {tool_class.__name__}: {e!s}") from e

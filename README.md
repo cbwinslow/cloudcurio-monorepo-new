@@ -345,6 +345,7 @@ CloudCurio supports multiple agent frameworks through a unified runtime adapter 
    # agents/tools/my_tool.py
    from cbw_foundry.tools import BaseTool
 
+
    class MyTool(BaseTool):
        name = "my_tool"
        description = "Description of what this tool does"

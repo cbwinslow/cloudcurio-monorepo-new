@@ -1,10 +1,11 @@
 from __future__ import annotations
-from typing import Dict
+
+from .adapters import CrewAIRuntime, LangChainRuntime, PydanticAIRuntime
 from .base import AgentRuntime
 from .local_runtime import LocalRuntime
-from .adapters import PydanticAIRuntime, LangChainRuntime, CrewAIRuntime
 
-def get_runtimes() -> Dict[str, AgentRuntime]:
+
+def get_runtimes() -> dict[str, AgentRuntime]:
     return {
         "local": LocalRuntime(),
         "pydanticai": PydanticAIRuntime(),
