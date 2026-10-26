@@ -16,8 +16,10 @@ import uuid
 import logging
 from enum import Enum
 
+
 class ToolStatus(Enum):
     """Execution status enumeration"""
+
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -25,11 +27,17 @@ class ToolStatus(Enum):
     FAILED = "failed"
     TIMEOUT = "timeout"
 
+
 class ToolResult:
     """Standardized tool execution result"""
 
-    def __init__(self, status: ToolStatus, data: Dict = None,
-                 error: Exception = None, warnings: List[str] = None):
+    def __init__(
+        self,
+        status: ToolStatus,
+        data: Dict = None,
+        error: Exception = None,
+        warnings: List[str] = None,
+    ):
         self.status = status
         self.data = data or {}
         self.error = error
@@ -39,7 +47,7 @@ class ToolResult:
 
     def add_metric(self, name: str, value: Any, unit: str = ""):
         """Add performance metric"""
-        self.metrics[name] = {'value': value, 'unit': unit}
+        self.metrics[name] = {"value": value, "unit": unit}
 
     def add_warning(self, warning: str):
         """Add warning message"""
@@ -52,21 +60,22 @@ class ToolResult:
     def to_dict(self) -> Dict:
         """Convert to dictionary for serialization"""
         result = {
-            'status': self.status.value,
-            'data': self.data,
-            'warnings': self.warnings,
-            'metrics': self.metrics,
-            'timestamp': self.timestamp
+            "status": self.status.value,
+            "data": self.data,
+            "warnings": self.warnings,
+            "metrics": self.metrics,
+            "timestamp": self.timestamp,
         }
 
         if self.error:
-            result['error'] = {
-                'type': self.error.__class__.__name__,
-                'message': str(self.error),
-                'stack_trace': traceback.format_exc()
+            result["error"] = {
+                "type": self.error.__class__.__name__,
+                "message": str(self.error),
+                "stack_trace": traceback.format_exc(),
             }
 
         return result
+
 
 class RobustTool(ABC):
     """Base class for all robust tools"""
@@ -88,9 +97,7 @@ class RobustTool(ABC):
         console_handler = logging.StreamHandler()
         file_handler = logging.FileHandler(f"logs/{self.name}.log")
 
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
         console_handler.setFormatter(formatter)
         file_handler.setFormatter(formatter)
@@ -103,11 +110,11 @@ class RobustTool(ABC):
     def _default_retry_policy(self) -> Dict:
         """Default retry policy configuration"""
         return {
-            'max_attempts': 3,
-            'backoff_strategy': 'exponential',
-            'retryable_errors': ['TimeoutError', 'ConnectionError', 'ResourceTemporaryUnavailable'],
-            'initial_delay': 1.0,
-            'max_delay': 30.0
+            "max_attempts": 3,
+            "backoff_strategy": "exponential",
+            "retryable_errors": ["TimeoutError", "ConnectionError", "ResourceTemporaryUnavailable"],
+            "initial_delay": 1.0,
+            "max_delay": 30.0,
         }
 
     def _define_fallback_strategies(self) -> List[Dict]:
@@ -123,11 +130,11 @@ class RobustTool(ABC):
         self.execution_id = self._generate_execution_id()
 
         log_data = {
-            'execution_id': self.execution_id,
-            'tool': self.name,
-            'status': 'started',
-            'parameters': self._sanitize_parameters(parameters),
-            'timestamp': datetime.now().isoformat()
+            "execution_id": self.execution_id,
+            "tool": self.name,
+            "status": "started",
+            "parameters": self._sanitize_parameters(parameters),
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.logger.info(f"Execution started: {self.execution_id}")
@@ -136,10 +143,10 @@ class RobustTool(ABC):
     def _log_progress(self, percentage: float, message: str = ""):
         """Log execution progress"""
         log_data = {
-            'execution_id': self.execution_id,
-            'progress': percentage,
-            'message': message,
-            'timestamp': datetime.now().isoformat()
+            "execution_id": self.execution_id,
+            "progress": percentage,
+            "message": message,
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.logger.info(f"Progress: {percentage:.1f}% - {message}")
@@ -147,11 +154,11 @@ class RobustTool(ABC):
     def _log_execution_end(self, result: ToolResult):
         """Log tool execution completion"""
         log_data = {
-            'execution_id': self.execution_id,
-            'status': result.status.value,
-            'duration': result.metrics.get('execution_time', 'unknown'),
-            'warnings': len(result.warnings),
-            'timestamp': datetime.now().isoformat()
+            "execution_id": self.execution_id,
+            "status": result.status.value,
+            "duration": result.metrics.get("execution_time", "unknown"),
+            "warnings": len(result.warnings),
+            "timestamp": datetime.now().isoformat(),
         }
 
         if result.is_successful():
@@ -166,15 +173,17 @@ class RobustTool(ABC):
         sanitized = {}
 
         for key, value in parameters.items():
-            if key.endswith('_password') or key.endswith('_token') or key.endswith('_secret'):
-                sanitized[key] = '***REDACTED***'
+            if key.endswith("_password") or key.endswith("_token") or key.endswith("_secret"):
+                sanitized[key] = "***REDACTED***"
             elif isinstance(value, (str, int, float, bool)):
                 sanitized[key] = value
             elif isinstance(value, dict):
                 sanitized[key] = self._sanitize_parameters(value)
             elif isinstance(value, list):
-                sanitized[key] = [self._sanitize_parameters(item) if isinstance(item, dict) else '***LIST***'
-                                 for item in value]
+                sanitized[key] = [
+                    self._sanitize_parameters(item) if isinstance(item, dict) else "***LIST***"
+                    for item in value
+                ]
             else:
                 sanitized[key] = f"<{value.__class__.__name__}>"
 
@@ -185,7 +194,7 @@ class RobustTool(ABC):
         attempt = 0
         last_error = None
 
-        while attempt < self.retry_policy['max_attempts']:
+        while attempt < self.retry_policy["max_attempts"]:
             try:
                 start_time = time.time()
                 result = func(*args, **kwargs)
@@ -201,23 +210,22 @@ class RobustTool(ABC):
                 error_type = e.__class__.__name__
 
                 # Check if error is retryable
-                if error_type not in self.retry_policy['retryable_errors']:
+                if error_type not in self.retry_policy["retryable_errors"]:
                     self.logger.warning(f"Non-retryable error: {error_type}")
                     break
 
                 # Calculate delay based on backoff strategy
-                if self.retry_policy['backoff_strategy'] == 'exponential':
+                if self.retry_policy["backoff_strategy"] == "exponential":
                     delay = min(
-                        self.retry_policy['initial_delay'] * (2 ** (attempt - 1)),
-                        self.retry_policy['max_delay']
+                        self.retry_policy["initial_delay"] * (2 ** (attempt - 1)),
+                        self.retry_policy["max_delay"],
                     )
-                elif self.retry_policy['backoff_strategy'] == 'linear':
+                elif self.retry_policy["backoff_strategy"] == "linear":
                     delay = min(
-                        self.retry_policy['initial_delay'] * attempt,
-                        self.retry_policy['max_delay']
+                        self.retry_policy["initial_delay"] * attempt, self.retry_policy["max_delay"]
                     )
                 else:
-                    delay = self.retry_policy['initial_delay']
+                    delay = self.retry_policy["initial_delay"]
 
                 self.logger.warning(
                     f"Attempt {attempt} failed: {error_type} - {str(e)}. "
@@ -230,21 +238,23 @@ class RobustTool(ABC):
         self.logger.error(f"All {self.retry_policy['max_attempts']} attempts failed")
         raise RetryExhaustedError(
             f"Tool {self.name} failed after {self.retry_policy['max_attempts']} attempts",
-            original_error=last_error
+            original_error=last_error,
         ) from last_error
 
-    def _apply_fallback_strategies(self, error: Exception, parameters: Dict) -> Optional[ToolResult]:
+    def _apply_fallback_strategies(
+        self, error: Exception, parameters: Dict
+    ) -> Optional[ToolResult]:
         """Apply fallback strategies when primary execution fails"""
         for strategy in self.fallback_strategies:
             try:
                 # Check if strategy applies to this error
-                if not strategy['condition'](error):
+                if not strategy["condition"](error):
                     continue
 
                 self.logger.info(f"Applying fallback strategy: {strategy['name']}")
 
                 # Execute fallback action
-                fallback_result = strategy['action'](error, parameters)
+                fallback_result = strategy["action"](error, parameters)
 
                 if fallback_result and fallback_result.is_successful():
                     self.logger.info(f"Fallback strategy succeeded: {strategy['name']}")
@@ -268,25 +278,19 @@ class RobustTool(ABC):
             return parameters
 
         # Check required parameters
-        for required_param in validation_schema.get('required', []):
+        for required_param in validation_schema.get("required", []):
             if required_param not in parameters:
-                raise ValidationError(
-                    f"Missing required parameter: {required_param}"
-                )
+                raise ValidationError(f"Missing required parameter: {required_param}")
 
         # Validate parameter types and constraints
-        for param_name, param_config in validation_schema.get('properties', {}).items():
+        for param_name, param_config in validation_schema.get("properties", {}).items():
             if param_name in parameters:
-                self._validate_parameter(
-                    param_name,
-                    parameters[param_name],
-                    param_config
-                )
+                self._validate_parameter(param_name, parameters[param_name], param_config)
 
         # Apply default values
-        for param_name, param_config in validation_schema.get('properties', {}).items():
-            if param_name not in parameters and 'default' in param_config:
-                parameters[param_name] = param_config['default']
+        for param_name, param_config in validation_schema.get("properties", {}).items():
+            if param_name not in parameters and "default" in param_config:
+                parameters[param_name] = param_config["default"]
                 self.logger.debug(f"Applied default value for {param_name}")
 
         return parameters
@@ -294,26 +298,26 @@ class RobustTool(ABC):
     def _validate_parameter(self, name: str, value: Any, config: Dict):
         """Validate individual parameter"""
         # Type validation
-        expected_type = config.get('type')
+        expected_type = config.get("type")
         if expected_type and not self._check_type(value, expected_type):
             raise ValidationError(
                 f"Parameter '{name}' must be of type {expected_type}, got {type(value).__name__}"
             )
 
         # Constraint validation
-        if 'constraints' in config:
-            self._validate_constraints(name, value, config['constraints'])
+        if "constraints" in config:
+            self._validate_constraints(name, value, config["constraints"])
 
     def _check_type(self, value: Any, expected_type: str) -> bool:
         """Check if value matches expected type"""
         type_mapping = {
-            'string': str,
-            'number': (int, float),
-            'boolean': bool,
-            'array': list,
-            'object': dict,
-            'integer': int,
-            'float': float
+            "string": str,
+            "number": (int, float),
+            "boolean": bool,
+            "array": list,
+            "object": dict,
+            "integer": int,
+            "float": float,
         }
 
         expected_types = type_mapping.get(expected_type, expected_type)
@@ -326,27 +330,28 @@ class RobustTool(ABC):
     def _validate_constraints(self, name: str, value: Any, constraints: Dict):
         """Validate parameter constraints"""
         # Minimum/Maximum validation
-        if 'min' in constraints and value < constraints['min']:
+        if "min" in constraints and value < constraints["min"]:
             raise ValidationError(
                 f"Parameter '{name}' must be >= {constraints['min']}, got {value}"
             )
 
-        if 'max' in constraints and value > constraints['max']:
+        if "max" in constraints and value > constraints["max"]:
             raise ValidationError(
                 f"Parameter '{name}' must be <= {constraints['max']}, got {value}"
             )
 
         # Pattern validation
-        if 'pattern' in constraints and isinstance(value, str):
+        if "pattern" in constraints and isinstance(value, str):
             import re
-            if not re.match(constraints['pattern'], value):
+
+            if not re.match(constraints["pattern"], value):
                 raise ValidationError(
                     f"Parameter '{name}' must match pattern {constraints['pattern']}"
                 )
 
         # Allowed values validation
-        if 'allowed_values' in constraints:
-            if value not in constraints['allowed_values']:
+        if "allowed_values" in constraints:
+            if value not in constraints["allowed_values"]:
                 raise ValidationError(
                     f"Parameter '{name}' must be one of {constraints['allowed_values']}, got {value}"
                 )
@@ -371,17 +376,14 @@ class RobustTool(ABC):
         try:
             # Start execution logging
             self._log_execution_start(parameters)
-            result.add_metric('execution_start', datetime.now().isoformat())
+            result.add_metric("execution_start", datetime.now().isoformat())
 
             # Validate parameters
             validated_params = self._validate_parameters(parameters)
 
             # Execute core logic with retry
             start_time = time.time()
-            core_result = self._execute_with_retry(
-                self._execute_core_logic,
-                validated_params
-            )
+            core_result = self._execute_with_retry(self._execute_core_logic, validated_params)
             execution_time = time.time() - start_time
 
             # Perform quality assurance
@@ -392,8 +394,8 @@ class RobustTool(ABC):
             # Set success result
             result.status = ToolStatus.SUCCESS
             result.data = core_result
-            result.add_metric('execution_time', execution_time, 'seconds')
-            result.add_metric('execution_end', datetime.now().isoformat())
+            result.add_metric("execution_time", execution_time, "seconds")
+            result.add_metric("execution_end", datetime.now().isoformat())
 
             return result
 
@@ -405,7 +407,7 @@ class RobustTool(ABC):
                 # Partial success with fallback
                 result.status = ToolStatus.PARTIAL_SUCCESS
                 result.data = fallback_result.data
-                result.add_metric('fallback_used', fallback_result.data.get('fallback_strategy'))
+                result.add_metric("fallback_used", fallback_result.data.get("fallback_strategy"))
 
                 # Merge warnings
                 for warning in fallback_result.warnings:
@@ -416,19 +418,23 @@ class RobustTool(ABC):
                 # Complete failure
                 result.status = ToolStatus.FAILED
                 result.error = e
-                result.add_metric('execution_time', time.time() - start_time, 'seconds')
+                result.add_metric("execution_time", time.time() - start_time, "seconds")
 
                 return result
         finally:
             # Log execution end
             self._log_execution_end(result)
 
+
 class RetryExhaustedError(Exception):
     """Exception raised when all retry attempts are exhausted"""
+
     pass
+
 
 class ValidationError(Exception):
     """Exception raised when parameter validation fails"""
+
     pass
 ```
 
@@ -445,61 +451,56 @@ class VideoAnalysisTool(RobustTool):
     def __init__(self):
         super().__init__(
             name="video_analysis",
-            description="Analyze video footage for speaker detection, engagement scoring, and technical quality"
+            description="Analyze video footage for speaker detection, engagement scoring, and technical quality",
         )
 
     def _get_validation_schema(self) -> Dict:
         return {
-            'required': ['video_path', 'analysis_type'],
-            'properties': {
-                'video_path': {
-                    'type': 'string',
-                    'constraints': {
-                        'pattern': r'\.(mp4|mov|avi)$'
-                    }
-                },
-                'analysis_type': {
-                    'type': 'string',
-                    'constraints': {
-                        'allowed_values': ['speaker_detection', 'engagement_scoring',
-                                         'optimal_cut_points', 'technical_quality', 'all']
-                    }
-                },
-                'confidence_threshold': {
-                    'type': 'number',
-                    'constraints': {
-                        'min': 0.1,
-                        'max': 1.0
+            "required": ["video_path", "analysis_type"],
+            "properties": {
+                "video_path": {"type": "string", "constraints": {"pattern": r"\.(mp4|mov|avi)$"}},
+                "analysis_type": {
+                    "type": "string",
+                    "constraints": {
+                        "allowed_values": [
+                            "speaker_detection",
+                            "engagement_scoring",
+                            "optimal_cut_points",
+                            "technical_quality",
+                            "all",
+                        ]
                     },
-                    'default': 0.75
                 },
-                'output_format': {
-                    'type': 'string',
-                    'constraints': {
-                        'allowed_values': ['json', 'xml', 'csv']
-                    },
-                    'default': 'json'
-                }
-            }
+                "confidence_threshold": {
+                    "type": "number",
+                    "constraints": {"min": 0.1, "max": 1.0},
+                    "default": 0.75,
+                },
+                "output_format": {
+                    "type": "string",
+                    "constraints": {"allowed_values": ["json", "xml", "csv"]},
+                    "default": "json",
+                },
+            },
         }
 
     def _define_fallback_strategies(self) -> List[Dict]:
         return [
             {
-                'name': 'file_repair_attempt',
-                'condition': lambda e: isinstance(e, FileCorruptError),
-                'action': self._attempt_file_repair
+                "name": "file_repair_attempt",
+                "condition": lambda e: isinstance(e, FileCorruptError),
+                "action": self._attempt_file_repair,
             },
             {
-                'name': 'reduce_quality',
-                'condition': lambda e: isinstance(e, MemoryError),
-                'action': self._reduce_quality_and_retry
+                "name": "reduce_quality",
+                "condition": lambda e: isinstance(e, MemoryError),
+                "action": self._reduce_quality_and_retry,
             },
             {
-                'name': 'partial_analysis',
-                'condition': lambda e: isinstance(e, ProcessingTimeout),
-                'action': self._perform_partial_analysis
-            }
+                "name": "partial_analysis",
+                "condition": lambda e: isinstance(e, ProcessingTimeout),
+                "action": self._perform_partial_analysis,
+            },
         ]
 
     def _attempt_file_repair(self, error: Exception, parameters: Dict) -> ToolResult:
@@ -509,13 +510,18 @@ class VideoAnalysisTool(RobustTool):
 
             # Use ffmpeg to attempt repair
             import subprocess
-            repaired_path = parameters['video_path'] + ".repaired"
+
+            repaired_path = parameters["video_path"] + ".repaired"
 
             cmd = [
-                'ffmpeg', '-err_detect', 'ignore_err',
-                '-i', parameters['video_path'],
-                '-c', 'copy',
-                repaired_path
+                "ffmpeg",
+                "-err_detect",
+                "ignore_err",
+                "-i",
+                parameters["video_path"],
+                "-c",
+                "copy",
+                repaired_path,
             ]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
@@ -524,12 +530,12 @@ class VideoAnalysisTool(RobustTool):
                 self.logger.info("File repair successful")
 
                 # Retry with repaired file
-                parameters['video_path'] = repaired_path
+                parameters["video_path"] = repaired_path
                 core_result = self._execute_core_logic(parameters)
 
                 result = ToolResult(ToolStatus.PARTIAL_SUCCESS, core_result)
                 result.add_warning("Analysis performed on repaired video file")
-                result.data['repaired_file'] = repaired_path
+                result.data["repaired_file"] = repaired_path
 
                 return result
             else:
@@ -547,24 +553,29 @@ class VideoAnalysisTool(RobustTool):
 
             # Create lower quality version
             import subprocess
-            low_quality_path = parameters['video_path'] + ".lowres"
+
+            low_quality_path = parameters["video_path"] + ".lowres"
 
             cmd = [
-                'ffmpeg', '-i', parameters['video_path'],
-                '-vf', 'scale=640:-1',
-                '-crf', '28',
-                low_quality_path
+                "ffmpeg",
+                "-i",
+                parameters["video_path"],
+                "-vf",
+                "scale=640:-1",
+                "-crf",
+                "28",
+                low_quality_path,
             ]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
 
             if result.returncode == 0:
-                parameters['video_path'] = low_quality_path
+                parameters["video_path"] = low_quality_path
                 core_result = self._execute_core_logic(parameters)
 
                 result = ToolResult(ToolStatus.PARTIAL_SUCCESS, core_result)
                 result.add_warning("Analysis performed on reduced quality video")
-                result.data['quality_reduction'] = 'applied'
+                result.data["quality_reduction"] = "applied"
 
                 return result
             else:
@@ -580,14 +591,14 @@ class VideoAnalysisTool(RobustTool):
             self.logger.info("Performing partial analysis due to timeout")
 
             # Analyze only first 5 minutes
-            parameters['analysis_duration'] = 300  # 5 minutes in seconds
+            parameters["analysis_duration"] = 300  # 5 minutes in seconds
 
             core_result = self._execute_core_logic(parameters)
 
             result = ToolResult(ToolStatus.PARTIAL_SUCCESS, core_result)
             result.add_warning("Partial analysis - only first 5 minutes processed")
-            result.data['partial_analysis'] = True
-            result.data['analyzed_duration'] = 300
+            result.data["partial_analysis"] = True
+            result.data["analyzed_duration"] = 300
 
             return result
 
@@ -602,9 +613,9 @@ class VideoAnalysisTool(RobustTool):
         import os
 
         analysis_results = {
-            'video_path': parameters['video_path'],
-            'analysis_type': parameters['analysis_type'],
-            'timestamp': datetime.now().isoformat()
+            "video_path": parameters["video_path"],
+            "analysis_type": parameters["analysis_type"],
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Step 1: Get video technical information
@@ -612,37 +623,42 @@ class VideoAnalysisTool(RobustTool):
 
         try:
             cmd = [
-                'ffprobe', '-v', 'quiet', '-print_format', 'json',
-                '-show_format', '-show_streams',
-                parameters['video_path']
+                "ffprobe",
+                "-v",
+                "quiet",
+                "-print_format",
+                "json",
+                "-show_format",
+                "-show_streams",
+                parameters["video_path"],
             ]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                analysis_results['technical_info'] = json.loads(result.stdout)
+                analysis_results["technical_info"] = json.loads(result.stdout)
             else:
                 raise VideoAnalysisError("Failed to get technical information")
 
         except Exception as e:
             self.logger.warning(f"Technical analysis failed: {str(e)}")
-            analysis_results['technical_info'] = {'error': str(e)}
+            analysis_results["technical_info"] = {"error": str(e)}
 
         # Step 2: Perform requested analysis types
-        if parameters['analysis_type'] in ['speaker_detection', 'all']:
+        if parameters["analysis_type"] in ["speaker_detection", "all"]:
             self._log_progress(30, "Detecting speakers")
-            analysis_results['speakers'] = self._detect_speakers(parameters)
+            analysis_results["speakers"] = self._detect_speakers(parameters)
 
-        if parameters['analysis_type'] in ['engagement_scoring', 'all']:
+        if parameters["analysis_type"] in ["engagement_scoring", "all"]:
             self._log_progress(60, "Scoring engagement")
-            analysis_results['engagement'] = self._score_engagement(parameters)
+            analysis_results["engagement"] = self._score_engagement(parameters)
 
-        if parameters['analysis_type'] in ['optimal_cut_points', 'all']:
+        if parameters["analysis_type"] in ["optimal_cut_points", "all"]:
             self._log_progress(80, "Finding optimal cut points")
-            analysis_results['cut_points'] = self._find_cut_points(parameters)
+            analysis_results["cut_points"] = self._find_cut_points(parameters)
 
         # Step 3: Quality assurance
         self._log_progress(90, "Performing quality checks")
-        analysis_results['quality_metrics'] = self._calculate_quality_metrics(analysis_results)
+        analysis_results["quality_metrics"] = self._calculate_quality_metrics(analysis_results)
 
         return analysis_results
 
@@ -655,17 +671,20 @@ class VideoAnalysisTool(RobustTool):
 
         # Simulate detecting 2-3 speakers
         import random
+
         speaker_count = random.randint(2, 3)
 
         for i in range(speaker_count):
-            speakers.append({
-                'speaker_id': f"speaker_{i+1}",
-                'first_detected': f"{random.randint(10, 120)}s",
-                'last_detected': f"{random.randint(180, 600)}s",
-                'total_duration': f"{random.randint(60, 300)}s",
-                'confidence': round(random.uniform(0.7, 0.95), 2),
-                'dominant': i == 0  # First speaker is usually dominant
-            })
+            speakers.append(
+                {
+                    "speaker_id": f"speaker_{i + 1}",
+                    "first_detected": f"{random.randint(10, 120)}s",
+                    "last_detected": f"{random.randint(180, 600)}s",
+                    "total_duration": f"{random.randint(60, 300)}s",
+                    "confidence": round(random.uniform(0.7, 0.95), 2),
+                    "dominant": i == 0,  # First speaker is usually dominant
+                }
+            )
 
         return speakers
 
@@ -675,14 +694,13 @@ class VideoAnalysisTool(RobustTool):
         import random
 
         return {
-            'overall_score': round(random.uniform(65, 95), 1),
-            'visual_engagement': round(random.uniform(70, 90), 1),
-            'audio_clarity': round(random.uniform(75, 95), 1),
-            'pacing_score': round(random.uniform(60, 85), 1),
-            'recommended_platforms': random.sample(
-                ['youtube', 'tiktok', 'instagram', 'facebook'],
-                k=random.randint(2, 3)
-            )
+            "overall_score": round(random.uniform(65, 95), 1),
+            "visual_engagement": round(random.uniform(70, 90), 1),
+            "audio_clarity": round(random.uniform(75, 95), 1),
+            "pacing_score": round(random.uniform(60, 85), 1),
+            "recommended_platforms": random.sample(
+                ["youtube", "tiktok", "instagram", "facebook"], k=random.randint(2, 3)
+            ),
         }
 
     def _find_cut_points(self, parameters: Dict) -> List[Dict]:
@@ -694,12 +712,14 @@ class VideoAnalysisTool(RobustTool):
         current_time = 30  # Start at 30 seconds
 
         while current_time < 600:  # Up to 10 minutes
-            cut_points.append({
-                'time': f"{current_time}s",
-                'type': random.choice(['speaker_change', 'topic_change', 'natural_pause']),
-                'confidence': round(random.uniform(0.7, 0.9), 2),
-                'importance': round(random.uniform(0.5, 1.0), 2)
-            })
+            cut_points.append(
+                {
+                    "time": f"{current_time}s",
+                    "type": random.choice(["speaker_change", "topic_change", "natural_pause"]),
+                    "confidence": round(random.uniform(0.7, 0.9), 2),
+                    "importance": round(random.uniform(0.5, 1.0), 2),
+                }
+            )
 
             # Next cut point in 45-120 seconds
             current_time += random.randint(45, 120)
@@ -708,17 +728,13 @@ class VideoAnalysisTool(RobustTool):
 
     def _calculate_quality_metrics(self, analysis_results: Dict) -> Dict:
         """Calculate overall quality metrics"""
-        metrics = {
-            'completeness': 1.0,
-            'confidence_score': 0.85,
-            'data_quality': 'high'
-        }
+        metrics = {"completeness": 1.0, "confidence_score": 0.85, "data_quality": "high"}
 
         # Adjust based on what analysis was performed
-        if 'technical_info' in analysis_results and 'error' in analysis_results['technical_info']:
-            metrics['completeness'] = 0.7
-            metrics['confidence_score'] = 0.6
-            metrics['data_quality'] = 'medium'
+        if "technical_info" in analysis_results and "error" in analysis_results["technical_info"]:
+            metrics["completeness"] = 0.7
+            metrics["confidence_score"] = 0.6
+            metrics["data_quality"] = "medium"
 
         return metrics
 
@@ -727,27 +743,33 @@ class VideoAnalysisTool(RobustTool):
         warnings = []
 
         # Check if technical analysis failed
-        if 'technical_info' in result and 'error' in result['technical_info']:
+        if "technical_info" in result and "error" in result["technical_info"]:
             warnings.append("Technical analysis incomplete - some metrics may be missing")
 
         # Check speaker detection confidence
-        if 'speakers' in result:
-            avg_confidence = sum(s['confidence'] for s in result['speakers']) / len(result['speakers'])
+        if "speakers" in result:
+            avg_confidence = sum(s["confidence"] for s in result["speakers"]) / len(
+                result["speakers"]
+            )
             if avg_confidence < 0.75:
                 warnings.append(f"Low speaker detection confidence: {avg_confidence:.2f}")
 
         # Check engagement score
-        if 'engagement' in result and result['engagement']['overall_score'] < 70:
+        if "engagement" in result and result["engagement"]["overall_score"] < 70:
             warnings.append(f"Low engagement score: {result['engagement']['overall_score']}")
 
         return warnings
 
+
 class VideoAnalysisError(Exception):
     """Custom error for video analysis issues"""
+
     pass
+
 
 class FileCorruptError(Exception):
     """Error for corrupt video files"""
+
     pass
 ```
 
@@ -1283,21 +1305,21 @@ class VideoEditorAgent:
 
     def __init__(self):
         self.tools = {
-            'video_analysis': VideoAnalysisTool(),
-            'auto_cut': AutoCutTool(),  # Would be implemented similarly
-            'create_short': ShortFormCreator(),  # Would be implemented similarly
-            'add_overlays': OverlayTool()  # Would be implemented similarly
+            "video_analysis": VideoAnalysisTool(),
+            "auto_cut": AutoCutTool(),  # Would be implemented similarly
+            "create_short": ShortFormCreator(),  # Would be implemented similarly
+            "add_overlays": OverlayTool(),  # Would be implemented similarly
         }
         self.workflow_executor = WorkflowExecutor()
 
-    def analyze_video(self, video_path: str, analysis_type: str = 'all') -> ToolResult:
+    def analyze_video(self, video_path: str, analysis_type: str = "all") -> ToolResult:
         """Analyze video with comprehensive error handling"""
         try:
-            tool = self.tools['video_analysis']
+            tool = self.tools["video_analysis"]
             parameters = {
-                'video_path': video_path,
-                'analysis_type': analysis_type,
-                'confidence_threshold': 0.8
+                "video_path": video_path,
+                "analysis_type": analysis_type,
+                "confidence_threshold": 0.8,
             }
 
             result = tool.execute(parameters)
@@ -1319,9 +1341,9 @@ class VideoEditorAgent:
         analysis_data = result.data
 
         # Extract key metrics
-        speakers = len(analysis_data.get('speakers', []))
-        engagement_score = analysis_data.get('engagement', {}).get('overall_score', 'N/A')
-        cut_points = len(analysis_data.get('cut_points', []))
+        speakers = len(analysis_data.get("speakers", []))
+        engagement_score = analysis_data.get("engagement", {}).get("overall_score", "N/A")
+        cut_points = len(analysis_data.get("cut_points", []))
 
         log_message = (
             f"Video analysis completed successfully. "
@@ -1349,8 +1371,8 @@ class VideoEditorAgent:
             workflow = self._get_workflow_definition(workflow_name)
             results = {}
 
-            for step in workflow['steps']:
-                tool_name = step['tool']
+            for step in workflow["steps"]:
+                tool_name = step["tool"]
                 step_parameters = self._prepare_step_parameters(step, parameters, results)
 
                 # Execute tool
@@ -1363,18 +1385,14 @@ class VideoEditorAgent:
                 if not self._should_continue_workflow(step, tool_result):
                     break
 
-            return {
-                'status': 'completed',
-                'workflow': workflow_name,
-                'results': results
-            }
+            return {"status": "completed", "workflow": workflow_name, "results": results}
 
         except Exception as e:
             return {
-                'status': 'failed',
-                'workflow': workflow_name,
-                'error': str(e),
-                'partial_results': results
+                "status": "failed",
+                "workflow": workflow_name,
+                "error": str(e),
+                "partial_results": results,
             }
 
     def _execute_tool(self, tool_name: str, parameters: Dict) -> ToolResult:
@@ -1405,8 +1423,10 @@ class VideoEditorAgent:
             error_result.add_warning(f"Unexpected error executing {tool_name}")
             return error_result
 
+
 class ToolNotFoundError(Exception):
     """Error for missing tools"""
+
     pass
 ```
 
@@ -1420,16 +1440,16 @@ class ProductionOrchestrator:
 
     def __init__(self):
         self.agents = {
-            'video_editor': VideoEditorAgent(),
-            'audio_engineer': AudioEngineerAgent(),
-            'social_media_manager': SocialMediaManagerAgent(),
-            'content_distributor': ContentDistributorAgent()
+            "video_editor": VideoEditorAgent(),
+            "audio_engineer": AudioEngineerAgent(),
+            "social_media_manager": SocialMediaManagerAgent(),
+            "content_distributor": ContentDistributorAgent(),
         }
 
         self.collaboration_protocols = {
-            'episode_production': self._execute_episode_production,
-            'short_form_creation': self._execute_short_form_creation,
-            'tour_promotion': self._execute_tour_promotion
+            "episode_production": self._execute_episode_production,
+            "short_form_creation": self._execute_short_form_creation,
+            "tour_promotion": self._execute_tour_promotion,
         }
 
     def execute_protocol(self, protocol_name: str, parameters: Dict) -> Dict:
@@ -1445,17 +1465,17 @@ class ProductionOrchestrator:
             result = protocol(parameters)
             execution_time = time.time() - start_time
 
-            result['execution_time'] = execution_time
-            result['status'] = 'completed'
+            result["execution_time"] = execution_time
+            result["status"] = "completed"
 
             return result
 
         except Exception as e:
             return {
-                'status': 'failed',
-                'protocol': protocol_name,
-                'error': str(e),
-                'timestamp': datetime.now().isoformat()
+                "status": "failed",
+                "protocol": protocol_name,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat(),
             }
 
     def _execute_episode_production(self, parameters: Dict) -> Dict:
@@ -1465,48 +1485,40 @@ class ProductionOrchestrator:
         # Phase 1: Video Processing
         try:
             video_params = {
-                'video_files': parameters.get('video_files', []),
-                'analysis_type': 'all',
-                'editing_style': parameters.get('editing_style', 'dynamic')
+                "video_files": parameters.get("video_files", []),
+                "analysis_type": "all",
+                "editing_style": parameters.get("editing_style", "dynamic"),
             }
 
-            video_result = self.agents['video_editor'].execute_workflow(
-                'episode_edit',
-                video_params
+            video_result = self.agents["video_editor"].execute_workflow(
+                "episode_edit", video_params
             )
 
-            results['video_processing'] = video_result
+            results["video_processing"] = video_result
 
         except Exception as e:
-            results['video_processing'] = {
-                'status': 'failed',
-                'error': str(e)
-            }
+            results["video_processing"] = {"status": "failed", "error": str(e)}
 
             # Decide whether to continue or abort
-            if parameters.get('require_video', True):
+            if parameters.get("require_video", True):
                 raise EpisodeProductionError("Video processing failed and is required")
 
         # Phase 2: Audio Processing
         try:
             audio_params = {
-                'audio_files': parameters.get('audio_files', []),
-                'sponsor_info': parameters.get('sponsors', []),
-                'noise_reduction': parameters.get('noise_reduction', 'medium')
+                "audio_files": parameters.get("audio_files", []),
+                "sponsor_info": parameters.get("sponsors", []),
+                "noise_reduction": parameters.get("noise_reduction", "medium"),
             }
 
-            audio_result = self.agents['audio_engineer'].execute_workflow(
-                'episode_audio',
-                audio_params
+            audio_result = self.agents["audio_engineer"].execute_workflow(
+                "episode_audio", audio_params
             )
 
-            results['audio_processing'] = audio_result
+            results["audio_processing"] = audio_result
 
         except Exception as e:
-            results['audio_processing'] = {
-                'status': 'failed',
-                'error': str(e)
-            }
+            results["audio_processing"] = {"status": "failed", "error": str(e)}
 
             # Audio is typically required
             raise EpisodeProductionError("Audio processing failed")
@@ -1514,47 +1526,39 @@ class ProductionOrchestrator:
         # Phase 3: Content Packaging
         try:
             package_params = {
-                'video_results': results['video_processing']['results'],
-                'audio_results': results['audio_processing']['results'],
-                'metadata': parameters.get('metadata', {}),
-                'publish_strategy': parameters.get('publish_strategy', 'immediate')
+                "video_results": results["video_processing"]["results"],
+                "audio_results": results["audio_processing"]["results"],
+                "metadata": parameters.get("metadata", {}),
+                "publish_strategy": parameters.get("publish_strategy", "immediate"),
             }
 
-            package_result = self.agents['content_distributor'].execute_workflow(
-                'package_episode',
-                package_params
+            package_result = self.agents["content_distributor"].execute_workflow(
+                "package_episode", package_params
             )
 
-            results['content_packaging'] = package_result
+            results["content_packaging"] = package_result
 
         except Exception as e:
-            results['content_packaging'] = {
-                'status': 'failed',
-                'error': str(e)
-            }
+            results["content_packaging"] = {"status": "failed", "error": str(e)}
 
             raise EpisodeProductionError("Content packaging failed")
 
         # Phase 4: Social Promotion
         try:
             promo_params = {
-                'episode_data': package_result['results'],
-                'platforms': parameters.get('promotion_platforms', ['twitter', 'instagram']),
-                'promotion_strategy': parameters.get('promotion_strategy', 'balanced')
+                "episode_data": package_result["results"],
+                "platforms": parameters.get("promotion_platforms", ["twitter", "instagram"]),
+                "promotion_strategy": parameters.get("promotion_strategy", "balanced"),
             }
 
-            promo_result = self.agents['social_media_manager'].execute_workflow(
-                'promote_episode',
-                promo_params
+            promo_result = self.agents["social_media_manager"].execute_workflow(
+                "promote_episode", promo_params
             )
 
-            results['social_promotion'] = promo_result
+            results["social_promotion"] = promo_result
 
         except Exception as e:
-            results['social_promotion'] = {
-                'status': 'failed',
-                'error': str(e)
-            }
+            results["social_promotion"] = {"status": "failed", "error": str(e)}
 
             # Social promotion failure is not critical
             print(f"Social promotion failed but production can continue: {str(e)}")
@@ -1562,47 +1566,43 @@ class ProductionOrchestrator:
         # Generate final report
         final_report = self._generate_production_report(results, parameters)
 
-        return {
-            'episode_production': final_report,
-            'phase_results': results
-        }
+        return {"episode_production": final_report, "phase_results": results}
 
     def _generate_production_report(self, results: Dict, parameters: Dict) -> Dict:
         """Generate comprehensive production report"""
         report = {
-            'production_id': f"prod_{uuid.uuid4().hex[:8]}",
-            'timestamp': datetime.now().isoformat(),
-            'status': 'completed',
-            'phases': {}
+            "production_id": f"prod_{uuid.uuid4().hex[:8]}",
+            "timestamp": datetime.now().isoformat(),
+            "status": "completed",
+            "phases": {},
         }
 
         # Analyze each phase
         for phase_name, phase_result in results.items():
-            phase_status = phase_result.get('status', 'unknown')
+            phase_status = phase_result.get("status", "unknown")
 
-            report['phases'][phase_name] = {
-                'status': phase_status,
-                'warnings': phase_result.get('warnings', []),
-                'metrics': phase_result.get('metrics', {})
+            report["phases"][phase_name] = {
+                "status": phase_status,
+                "warnings": phase_result.get("warnings", []),
+                "metrics": phase_result.get("metrics", {}),
             }
 
-            if phase_status != 'completed':
-                report['status'] = 'partial_completion'
+            if phase_status != "completed":
+                report["status"] = "partial_completion"
 
         # Calculate overall metrics
-        report['metrics'] = {
-            'total_execution_time': sum(
-                phase.get('metrics', {}).get('execution_time', 0)
-                for phase in results.values()
+        report["metrics"] = {
+            "total_execution_time": sum(
+                phase.get("metrics", {}).get("execution_time", 0) for phase in results.values()
             ),
-            'successful_phases': sum(
-                1 for phase in results.values() if phase.get('status') == 'completed'
+            "successful_phases": sum(
+                1 for phase in results.values() if phase.get("status") == "completed"
             ),
-            'total_phases': len(results)
+            "total_phases": len(results),
         }
 
         # Generate recommendations
-        report['recommendations'] = self._generate_recommendations(results)
+        report["recommendations"] = self._generate_recommendations(results)
 
         return report
 
@@ -1611,38 +1611,42 @@ class ProductionOrchestrator:
         recommendations = []
 
         # Check video processing
-        video_result = results.get('video_processing', {})
-        if video_result.get('status') != 'completed':
+        video_result = results.get("video_processing", {})
+        if video_result.get("status") != "completed":
             recommendations.append(
                 "Review video processing workflow - consider alternative tools or manual intervention"
             )
-        elif video_result.get('warnings'):
+        elif video_result.get("warnings"):
             recommendations.append(
                 f"Video processing completed with warnings: {', '.join(video_result['warnings'])}"
             )
 
         # Check audio processing
-        audio_result = results.get('audio_processing', {})
-        if audio_result.get('status') != 'completed':
+        audio_result = results.get("audio_processing", {})
+        if audio_result.get("status") != "completed":
             recommendations.append(
                 "Audio processing failed - this is critical and requires immediate attention"
             )
 
         # Check social promotion
-        promo_result = results.get('social_promotion', {})
-        if promo_result.get('status') != 'completed':
+        promo_result = results.get("social_promotion", {})
+        if promo_result.get("status") != "completed":
             recommendations.append(
                 "Social promotion failed - consider manual posting or alternative promotion methods"
             )
 
         return recommendations
 
+
 class UnknownProtocolError(Exception):
     """Error for unknown collaboration protocols"""
+
     pass
+
 
 class EpisodeProductionError(Exception):
     """Error for episode production failures"""
+
     pass
 ```
 
@@ -1658,20 +1662,27 @@ class ToolTestFramework:
         self.test_cases = []
         self.performance_metrics = {}
 
-    def add_test_case(self, name: str, tool: RobustTool, parameters: Dict,
-                     expected_status: ToolStatus = ToolStatus.SUCCESS,
-                     validate_result: callable = None,
-                     tags: List[str] = None):
+    def add_test_case(
+        self,
+        name: str,
+        tool: RobustTool,
+        parameters: Dict,
+        expected_status: ToolStatus = ToolStatus.SUCCESS,
+        validate_result: callable = None,
+        tags: List[str] = None,
+    ):
         """Add a test case"""
 
-        self.test_cases.append({
-            'name': name,
-            'tool': tool,
-            'parameters': parameters,
-            'expected_status': expected_status,
-            'validate_result': validate_result,
-            'tags': tags or []
-        })
+        self.test_cases.append(
+            {
+                "name": name,
+                "tool": tool,
+                "parameters": parameters,
+                "expected_status": expected_status,
+                "validate_result": validate_result,
+                "tags": tags or [],
+            }
+        )
 
     def run_all_tests(self) -> Dict:
         """Execute all test cases"""
@@ -1682,15 +1693,15 @@ class ToolTestFramework:
             results.append(test_result)
 
             # Update performance metrics
-            if test_result['status'] == 'passed':
+            if test_result["status"] == "passed":
                 self._update_performance_metrics(test_result)
 
         return {
-            'total_tests': len(self.test_cases),
-            'passed': sum(1 for r in results if r['status'] == 'passed'),
-            'failed': sum(1 for r in results if r['status'] == 'failed'),
-            'performance': self.performance_metrics,
-            'detailed_results': results
+            "total_tests": len(self.test_cases),
+            "passed": sum(1 for r in results if r["status"] == "passed"),
+            "failed": sum(1 for r in results if r["status"] == "failed"),
+            "performance": self.performance_metrics,
+            "detailed_results": results,
         }
 
     def _run_single_test(self, test_case: Dict) -> Dict:
@@ -1699,84 +1710,85 @@ class ToolTestFramework:
             start_time = time.time()
 
             # Execute tool
-            result = test_case['tool'].execute(test_case['parameters'])
+            result = test_case["tool"].execute(test_case["parameters"])
 
             execution_time = time.time() - start_time
 
             # Validate status
-            if result.status != test_case['expected_status']:
+            if result.status != test_case["expected_status"]:
                 return {
-                    'name': test_case['name'],
-                    'status': 'failed',
-                    'expected_status': test_case['expected_status'].value,
-                    'actual_status': result.status.value,
-                    'execution_time': execution_time,
-                    'error': f"Status mismatch: expected {test_case['expected_status'].value}, got {result.status.value}",
-                    'tags': test_case['tags']
+                    "name": test_case["name"],
+                    "status": "failed",
+                    "expected_status": test_case["expected_status"].value,
+                    "actual_status": result.status.value,
+                    "execution_time": execution_time,
+                    "error": f"Status mismatch: expected {test_case['expected_status'].value}, got {result.status.value}",
+                    "tags": test_case["tags"],
                 }
 
             # Validate result content if validator provided
-            if test_case['validate_result']:
-                validation_result = test_case['validate_result'](result)
-                if not validation_result['valid']:
+            if test_case["validate_result"]:
+                validation_result = test_case["validate_result"](result)
+                if not validation_result["valid"]:
                     return {
-                        'name': test_case['name'],
-                        'status': 'failed',
-                        'expected_status': test_case['expected_status'].value,
-                        'actual_status': result.status.value,
-                        'execution_time': execution_time,
-                        'error': f"Result validation failed: {validation_result['message']}",
-                        'tags': test_case['tags']
+                        "name": test_case["name"],
+                        "status": "failed",
+                        "expected_status": test_case["expected_status"].value,
+                        "actual_status": result.status.value,
+                        "execution_time": execution_time,
+                        "error": f"Result validation failed: {validation_result['message']}",
+                        "tags": test_case["tags"],
                     }
 
             # Test passed
             return {
-                'name': test_case['name'],
-                'status': 'passed',
-                'expected_status': test_case['expected_status'].value,
-                'actual_status': result.status.value,
-                'execution_time': execution_time,
-                'warnings': result.warnings,
-                'tags': test_case['tags']
+                "name": test_case["name"],
+                "status": "passed",
+                "expected_status": test_case["expected_status"].value,
+                "actual_status": result.status.value,
+                "execution_time": execution_time,
+                "warnings": result.warnings,
+                "tags": test_case["tags"],
             }
 
         except Exception as e:
             # Test failed with exception
             return {
-                'name': test_case['name'],
-                'status': 'failed',
-                'expected_status': test_case['expected_status'].value,
-                'execution_time': time.time() - start_time,
-                'error': str(e),
-                'error_type': e.__class__.__name__,
-                'stack_trace': traceback.format_exc(),
-                'tags': test_case['tags']
+                "name": test_case["name"],
+                "status": "failed",
+                "expected_status": test_case["expected_status"].value,
+                "execution_time": time.time() - start_time,
+                "error": str(e),
+                "error_type": e.__class__.__name__,
+                "stack_trace": traceback.format_exc(),
+                "tags": test_case["tags"],
             }
 
     def _update_performance_metrics(self, test_result: Dict):
         """Update performance metrics from test results"""
-        tool_name = test_result['name'].split('_')[0]  # Simple extraction
+        tool_name = test_result["name"].split("_")[0]  # Simple extraction
 
         if tool_name not in self.performance_metrics:
             self.performance_metrics[tool_name] = {
-                'executions': 0,
-                'total_time': 0,
-                'min_time': float('inf'),
-                'max_time': 0,
-                'warnings': 0
+                "executions": 0,
+                "total_time": 0,
+                "min_time": float("inf"),
+                "max_time": 0,
+                "warnings": 0,
             }
 
         metrics = self.performance_metrics[tool_name]
 
-        metrics['executions'] += 1
-        metrics['total_time'] += test_result['execution_time']
-        metrics['min_time'] = min(metrics['min_time'], test_result['execution_time'])
-        metrics['max_time'] = max(metrics['max_time'], test_result['execution_time'])
-        metrics['warnings'] += len(test_result.get('warnings', []))
+        metrics["executions"] += 1
+        metrics["total_time"] += test_result["execution_time"]
+        metrics["min_time"] = min(metrics["min_time"], test_result["execution_time"])
+        metrics["max_time"] = max(metrics["max_time"], test_result["execution_time"])
+        metrics["warnings"] += len(test_result.get("warnings", []))
 
         # Calculate averages
-        metrics['avg_time'] = metrics['total_time'] / metrics['executions']
-        metrics['avg_warnings'] = metrics['warnings'] / metrics['executions']
+        metrics["avg_time"] = metrics["total_time"] / metrics["executions"]
+        metrics["avg_warnings"] = metrics["warnings"] / metrics["executions"]
+
 
 # Example Usage
 def test_video_analysis_tool():
@@ -1792,39 +1804,36 @@ def test_video_analysis_tool():
     test_framework.add_test_case(
         name="video_analysis_basic",
         tool=video_tool,
-        parameters={
-            'video_path': 'test_videos/sample.mp4',
-            'analysis_type': 'speaker_detection'
-        },
+        parameters={"video_path": "test_videos/sample.mp4", "analysis_type": "speaker_detection"},
         expected_status=ToolStatus.SUCCESS,
-        tags=['basic', 'speaker_detection']
+        tags=["basic", "speaker_detection"],
     )
 
     test_framework.add_test_case(
         name="video_analysis_comprehensive",
         tool=video_tool,
         parameters={
-            'video_path': 'test_videos/episode.mp4',
-            'analysis_type': 'all',
-            'confidence_threshold': 0.8
+            "video_path": "test_videos/episode.mp4",
+            "analysis_type": "all",
+            "confidence_threshold": 0.8,
         },
         expected_status=ToolStatus.SUCCESS,
         validate_result=lambda r: {
-            'valid': 'speakers' in r.data and 'engagement' in r.data,
-            'message': 'Missing expected analysis data'
+            "valid": "speakers" in r.data and "engagement" in r.data,
+            "message": "Missing expected analysis data",
         },
-        tags=['comprehensive', 'full_analysis']
+        tags=["comprehensive", "full_analysis"],
     )
 
     test_framework.add_test_case(
         name="video_analysis_invalid_file",
         tool=video_tool,
         parameters={
-            'video_path': 'test_videos/nonexistent.mp4',
-            'analysis_type': 'technical_quality'
+            "video_path": "test_videos/nonexistent.mp4",
+            "analysis_type": "technical_quality",
         },
         expected_status=ToolStatus.FAILED,
-        tags=['error_handling', 'file_not_found']
+        tags=["error_handling", "file_not_found"],
     )
 
     # Run tests
@@ -1837,8 +1846,8 @@ def test_video_analysis_tool():
     print(f"Failed: {test_results['failed']}")
 
     # Print performance metrics
-    if 'video_analysis' in test_results['performance']:
-        perf = test_results['performance']['video_analysis']
+    if "video_analysis" in test_results["performance"]:
+        perf = test_results["performance"]["video_analysis"]
         print(f"\nPerformance Metrics:")
         print(f"  Average Time: {perf['avg_time']:.3f}s")
         print(f"  Min Time: {perf['min_time']:.3f}s")
@@ -1846,14 +1855,15 @@ def test_video_analysis_tool():
         print(f"  Avg Warnings: {perf['avg_warnings']:.1f}")
 
     # Print detailed results for failed tests
-    for test_result in test_results['detailed_results']:
-        if test_result['status'] == 'failed':
+    for test_result in test_results["detailed_results"]:
+        if test_result["status"] == "failed":
             print(f"\nFailed Test: {test_result['name']}")
             print(f"  Error: {test_result['error']}")
-            if 'stack_trace' in test_result:
+            if "stack_trace" in test_result:
                 print(f"  Stack Trace: {test_result['stack_trace']}")
 
     return test_results
+
 
 if __name__ == "__main__":
     # Run example tests
@@ -1877,18 +1887,18 @@ class ToolDeploymentManager:
             self._check_permissions,
             self._check_resource_availability,
             self._run_integration_tests,
-            self._verify_backward_compatibility
+            self._verify_backward_compatibility,
         ]
 
-    def deploy_tool(self, tool: RobustTool, environment: str = 'production') -> Dict:
+    def deploy_tool(self, tool: RobustTool, environment: str = "production") -> Dict:
         """Deploy tool with comprehensive validation"""
 
         deployment_report = {
-            'tool': tool.name,
-            'environment': environment,
-            'timestamp': datetime.now().isoformat(),
-            'checks': {},
-            'status': 'pending'
+            "tool": tool.name,
+            "environment": environment,
+            "timestamp": datetime.now().isoformat(),
+            "checks": {},
+            "status": "pending",
         }
 
         try:
@@ -1898,41 +1908,42 @@ class ToolDeploymentManager:
 
                 try:
                     check_result = check(tool, environment)
-                    deployment_report['checks'][check_name] = {
-                        'status': 'passed',
-                        'details': check_result
+                    deployment_report["checks"][check_name] = {
+                        "status": "passed",
+                        "details": check_result,
                     }
 
                 except Exception as e:
-                    deployment_report['checks'][check_name] = {
-                        'status': 'failed',
-                        'error': str(e),
-                        'details': traceback.format_exc()
+                    deployment_report["checks"][check_name] = {
+                        "status": "failed",
+                        "error": str(e),
+                        "details": traceback.format_exc(),
                     }
 
             # Check if all checks passed
             failed_checks = [
-                name for name, check in deployment_report['checks'].items()
-                if check['status'] == 'failed'
+                name
+                for name, check in deployment_report["checks"].items()
+                if check["status"] == "failed"
             ]
 
             if failed_checks:
-                deployment_report['status'] = 'failed'
-                deployment_report['failed_checks'] = failed_checks
+                deployment_report["status"] = "failed"
+                deployment_report["failed_checks"] = failed_checks
                 return deployment_report
 
             # Proceed with deployment
             deployment_result = self._perform_deployment(tool, environment)
 
-            deployment_report['status'] = 'completed'
-            deployment_report['deployment_result'] = deployment_result
+            deployment_report["status"] = "completed"
+            deployment_report["deployment_result"] = deployment_result
 
             return deployment_report
 
         except Exception as e:
-            deployment_report['status'] = 'error'
-            deployment_report['error'] = str(e)
-            deployment_report['stack_trace'] = traceback.format_exc()
+            deployment_report["status"] = "error"
+            deployment_report["error"] = str(e)
+            deployment_report["stack_trace"] = traceback.format_exc()
             return deployment_report
 
     def _check_dependencies(self, tool: RobustTool, environment: str) -> Dict:
@@ -1941,9 +1952,9 @@ class ToolDeploymentManager:
         # For this example, we'll simulate the process
 
         return {
-            'dependencies_checked': ['ffmpeg', 'opencv', 'numpy'],
-            'missing_dependencies': [],
-            'status': 'all_dependencies_satisfied'
+            "dependencies_checked": ["ffmpeg", "opencv", "numpy"],
+            "missing_dependencies": [],
+            "status": "all_dependencies_satisfied",
         }
 
     def _check_configuration(self, tool: RobustTool, environment: str) -> Dict:
@@ -1951,9 +1962,9 @@ class ToolDeploymentManager:
         # This would validate configuration files
 
         return {
-            'configuration_files': ['config.json', 'settings.yml'],
-            'validation_result': 'valid',
-            'warnings': []
+            "configuration_files": ["config.json", "settings.yml"],
+            "validation_result": "valid",
+            "warnings": [],
         }
 
     def _perform_deployment(self, tool: RobustTool, environment: str) -> Dict:
@@ -1962,10 +1973,10 @@ class ToolDeploymentManager:
         # For this example, we'll simulate success
 
         return {
-            'deployment_method': 'containerized',
-            'target_environment': environment,
-            'status': 'success',
-            'timestamp': datetime.now().isoformat()
+            "deployment_method": "containerized",
+            "target_environment": environment,
+            "status": "success",
+            "timestamp": datetime.now().isoformat(),
         }
 ```
 
@@ -1984,26 +1995,26 @@ class ToolMonitoringDashboard:
     def record_execution(self, tool_result: ToolResult):
         """Record tool execution metrics"""
 
-        tool_name = tool_result.data.get('tool_name', 'unknown')
+        tool_name = tool_result.data.get("tool_name", "unknown")
 
         if tool_name not in self.metrics_store:
             self.metrics_store[tool_name] = {
-                'executions': [],
-                'success_rate': 0,
-                'error_distribution': {},
-                'performance': {}
+                "executions": [],
+                "success_rate": 0,
+                "error_distribution": {},
+                "performance": {},
             }
 
         # Store execution data
         execution_record = {
-            'timestamp': tool_result.timestamp,
-            'status': tool_result.status.value,
-            'execution_time': tool_result.metrics.get('execution_time'),
-            'warnings': len(tool_result.warnings),
-            'metrics': tool_result.metrics
+            "timestamp": tool_result.timestamp,
+            "status": tool_result.status.value,
+            "execution_time": tool_result.metrics.get("execution_time"),
+            "warnings": len(tool_result.warnings),
+            "metrics": tool_result.metrics,
         }
 
-        self.metrics_store[tool_name]['executions'].append(execution_record)
+        self.metrics_store[tool_name]["executions"].append(execution_record)
 
         # Update statistics
         self._update_statistics(tool_name)
@@ -2014,33 +2025,33 @@ class ToolMonitoringDashboard:
     def _update_statistics(self, tool_name: str):
         """Update statistical metrics"""
 
-        executions = self.metrics_store[tool_name]['executions']
+        executions = self.metrics_store[tool_name]["executions"]
 
         if not executions:
             return
 
         # Calculate success rate
-        successful = sum(1 for e in executions if e['status'] in ['success', 'partial_success'])
-        self.metrics_store[tool_name]['success_rate'] = successful / len(executions)
+        successful = sum(1 for e in executions if e["status"] in ["success", "partial_success"])
+        self.metrics_store[tool_name]["success_rate"] = successful / len(executions)
 
         # Update error distribution
         error_distribution = {}
         for execution in executions:
-            if execution['status'] == 'failed':
-                error_type = execution.get('error_type', 'unknown')
+            if execution["status"] == "failed":
+                error_type = execution.get("error_type", "unknown")
                 error_distribution[error_type] = error_distribution.get(error_type, 0) + 1
 
-        self.metrics_store[tool_name]['error_distribution'] = error_distribution
+        self.metrics_store[tool_name]["error_distribution"] = error_distribution
 
         # Update performance metrics
-        execution_times = [e['execution_time'] for e in executions if e['execution_time']]
+        execution_times = [e["execution_time"] for e in executions if e["execution_time"]]
 
         if execution_times:
-            self.metrics_store[tool_name]['performance'] = {
-                'average': sum(execution_times) / len(execution_times),
-                'min': min(execution_times),
-                'max': max(execution_times),
-                'median': self._calculate_median(execution_times)
+            self.metrics_store[tool_name]["performance"] = {
+                "average": sum(execution_times) / len(execution_times),
+                "min": min(execution_times),
+                "max": max(execution_times),
+                "median": self._calculate_median(execution_times),
             }
 
     def _calculate_median(self, values: List[float]) -> float:
@@ -2062,37 +2073,40 @@ class ToolMonitoringDashboard:
         # Example alert rules
         alert_rules = [
             {
-                'name': 'high_error_rate',
-                'condition': lambda stats: stats['success_rate'] < 0.95,
-                'severity': 'warning',
-                'message': lambda tool: f"High error rate for {tool}: {stats['success_rate']:.1%}"
+                "name": "high_error_rate",
+                "condition": lambda stats: stats["success_rate"] < 0.95,
+                "severity": "warning",
+                "message": lambda tool: f"High error rate for {tool}: {stats['success_rate']:.1%}",
             },
             {
-                'name': 'performance_degradation',
-                'condition': lambda stats: stats['performance']['average'] > stats.get('baseline_performance', 0) * 1.5,
-                'severity': 'warning',
-                'message': lambda tool: f"Performance degradation detected for {tool}"
+                "name": "performance_degradation",
+                "condition": lambda stats: (
+                    stats["performance"]["average"] > stats.get("baseline_performance", 0) * 1.5
+                ),
+                "severity": "warning",
+                "message": lambda tool: f"Performance degradation detected for {tool}",
             },
             {
-                'name': 'critical_failure',
-                'condition': lambda record: record['status'] == 'failed' and
-                                           'timeout' in record.get('error', '').lower(),
-                'severity': 'critical',
-                'message': lambda tool: f"Critical timeout failure for {tool}"
-            }
+                "name": "critical_failure",
+                "condition": lambda record: (
+                    record["status"] == "failed" and "timeout" in record.get("error", "").lower()
+                ),
+                "severity": "critical",
+                "message": lambda tool: f"Critical timeout failure for {tool}",
+            },
         ]
 
         tool_stats = self.metrics_store[tool_name]
 
         for rule in alert_rules:
-            if rule['condition'](tool_stats):
+            if rule["condition"](tool_stats):
                 alert = {
-                    'tool': tool_name,
-                    'rule': rule['name'],
-                    'severity': rule['severity'],
-                    'message': rule['message'](tool_name),
-                    'timestamp': datetime.now().isoformat(),
-                    'execution_record': execution_record
+                    "tool": tool_name,
+                    "rule": rule["name"],
+                    "severity": rule["severity"],
+                    "message": rule["message"](tool_name),
+                    "timestamp": datetime.now().isoformat(),
+                    "execution_record": execution_record,
                 }
 
                 self._trigger_alert(alert)
@@ -2114,18 +2128,17 @@ class ToolMonitoringDashboard:
     def get_dashboard_data(self) -> Dict:
         """Get data for monitoring dashboard"""
 
-        dashboard_data = {
-            'timestamp': datetime.now().isoformat(),
-            'tools': {}
-        }
+        dashboard_data = {"timestamp": datetime.now().isoformat(), "tools": {}}
 
         for tool_name, tool_stats in self.metrics_store.items():
-            dashboard_data['tools'][tool_name] = {
-                'success_rate': tool_stats['success_rate'],
-                'execution_count': len(tool_stats['executions']),
-                'performance': tool_stats['performance'],
-                'error_distribution': tool_stats['error_distribution'],
-                'last_execution': tool_stats['executions'][-1] if tool_stats['executions'] else None
+            dashboard_data["tools"][tool_name] = {
+                "success_rate": tool_stats["success_rate"],
+                "execution_count": len(tool_stats["executions"]),
+                "performance": tool_stats["performance"],
+                "error_distribution": tool_stats["error_distribution"],
+                "last_execution": tool_stats["executions"][-1]
+                if tool_stats["executions"]
+                else None,
             }
 
         return dashboard_data

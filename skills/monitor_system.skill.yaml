@@ -9,34 +9,34 @@ metadata:
 
 spec:
   command: /monitor
-  
+
   parameters:
     - name: target
       type: string
       description: What to monitor (cpu, memory, disk, processes, all)
       required: false
       default: "all"
-    
+
     - name: duration
       type: integer
       description: Monitoring duration in seconds
       required: false
       default: 10
-    
+
     - name: alert_threshold
       type: integer
       description: Alert threshold percentage
       required: false
       default: 80
-  
+
   agents:
     - system_monitor
-  
+
   examples:
     - command: '/monitor'
       description: "Monitor all system resources for 10 seconds"
       expected_output: "System health report"
-    
+
     - command: '/monitor target="cpu" duration=30 alert_threshold=90'
       description: "Monitor CPU for 30 seconds with 90% alert threshold"
       expected_output: "CPU monitoring report with alerts"

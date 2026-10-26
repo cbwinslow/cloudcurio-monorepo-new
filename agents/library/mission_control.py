@@ -6,32 +6,29 @@ This script provides a web-based dashboard to view the status of all streams,
 diagnostics, and alerts. It uses Flask to serve the dashboard.
 """
 
-import os
 import json
 import logging
-from flask import Flask, render_template, jsonify
-from typing import Dict, List, Optional
+import os
+
+from flask import Flask, jsonify, render_template
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/mission_control.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("logs/mission_control.log"), logging.StreamHandler()],
 )
-logger = logging.getLogger('MissionControl')
+logger = logging.getLogger("MissionControl")
 
 
 class MissionControl:
     """Mission Control Center Dashboard."""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """Initialize the MissionControl with a configuration file."""
         self.config = self._load_config(config_path)
-        self.base_dir = self.config.get('base_dir', os.getcwd())
-        self.log_dir = os.path.join(self.base_dir, self.config.get('log_dir', 'logs'))
+        self.base_dir = self.config.get("base_dir", os.getcwd())
+        self.log_dir = os.path.join(self.base_dir, self.config.get("log_dir", "logs"))
         self.app = Flask(__name__)
 
         # Ensure log directory exists
@@ -40,17 +37,17 @@ class MissionControl:
         # Set up Flask routes
         self._setup_routes()
 
-    def _load_config(self, config_path: Optional[str]) -> Dict:
+    def _load_config(self, config_path: str | None) -> dict:
         """Load configuration from a JSON file."""
         default_config = {
-            'base_dir': os.getcwd(),
-            'log_dir': 'logs',
-            'port': 5000,
-            'host': '0.0.0.0'
+            "base_dir": os.getcwd(),
+            "log_dir": "logs",
+            "port": 5000,
+            "host": "0.0.0.0",
         }
 
         if config_path and os.path.exists(config_path):
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 user_config = json.load(f)
                 default_config.update(user_config)
 
@@ -59,42 +56,38 @@ class MissionControl:
     def _setup_routes(self) -> None:
         """Set up Flask routes for the dashboard."""
 
-        @self.app.route('/')
+        @self.app.route("/")
         def index():
             """Render the main dashboard page."""
-            return render_template('index.html')
+            return render_template("index.html")
 
-        @self.app.route('/api/status')
+        @self.app.route("/api/status")
         def status():
             """Get the status of all streams, diagnostics, and alerts."""
             status_data = self._get_status_data()
             return jsonify(status_data)
 
-        @self.app.route('/api/logs')
+        @self.app.route("/api/logs")
         def logs():
             """Get the logs from the monitoring and diagnostic agents."""
             log_files = self._get_log_files()
             return jsonify(log_files)
 
-    def _get_status_data(self) -> Dict:
+    def _get_status_data(self) -> dict:
         """Get the status data for all streams, diagnostics, and alerts."""
         # Placeholder for status data
         # This can be expanded to load status data from files or databases
-        status_data = {
-            'streams': [],
-            'diagnostics': [],
-            'alerts': []
-        }
+        status_data = {"streams": [], "diagnostics": [], "alerts": []}
 
         return status_data
 
-    def _get_log_files(self) -> List[str]:
+    def _get_log_files(self) -> list[str]:
         """Get the list of log files from the log directory."""
         log_files = []
 
         if os.path.exists(self.log_dir):
             for file_name in os.listdir(self.log_dir):
-                if file_name.endswith('.log'):
+                if file_name.endswith(".log"):
                     log_files.append(file_name)
 
         return log_files
@@ -104,7 +97,7 @@ class MissionControl:
         logger.info("Starting Mission Control Center Dashboard...")
 
         # Create templates directory if it doesn't exist
-        templates_dir = os.path.join(self.base_dir, 'templates')
+        templates_dir = os.path.join(self.base_dir, "templates")
         os.makedirs(templates_dir, exist_ok=True)
 
         # Create a simple HTML template for the dashboard
@@ -112,19 +105,17 @@ class MissionControl:
 
         # Run the Flask app
         self.app.run(
-            host=self.config.get('host', '0.0.0.0'),
-            port=self.config.get('port', 5000),
-            debug=True
+            host=self.config.get("host", "0.0.0.0"), port=self.config.get("port", 5000), debug=True
         )
 
     def _create_template(self) -> None:
         """Create a simple HTML template for the dashboard."""
-        templates_dir = os.path.join(self.base_dir, 'templates')
-        template_path = os.path.join(templates_dir, 'index.html')
+        templates_dir = os.path.join(self.base_dir, "templates")
+        template_path = os.path.join(templates_dir, "index.html")
 
         if not os.path.exists(template_path):
-            with open(template_path, 'w') as f:
-                f.write('''<!DOCTYPE html>
+            with open(template_path, "w") as f:
+                f.write("""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -246,12 +237,12 @@ class MissionControl:
     </script>
 </body>
 </html>
-''')
+""")
 
             logger.info(f"Created template at {template_path}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Example usage
-    mission_control = MissionControl('agents/config.json')
+    mission_control = MissionControl("agents/config.json")
     mission_control.run()

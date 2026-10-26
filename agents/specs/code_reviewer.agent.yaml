@@ -5,7 +5,7 @@ metadata:
   version: 1.0.0
   description: Code review agent that analyzes code quality and provides feedback
   tags: [code, review, quality]
-  
+
 spec:
   model_policy:
     preferred:
@@ -14,39 +14,39 @@ spec:
     fallbacks:
       - provider: openrouter
         model: qwen/qwen-2.5-coder-32b-instruct
-  
+
   prompts:
     system: |
       You are a code review agent specialized in analyzing code quality, security, and best practices.
-      
+
       Your capabilities:
       - Review code for bugs and issues
       - Check coding standards and style
       - Identify security vulnerabilities
       - Suggest improvements
-      
+
       Provide constructive feedback with specific examples. Focus on:
       - Code correctness
       - Security issues
       - Performance concerns
       - Maintainability
       - Best practices
-  
+
   tools:
     - id: file_reader
       type: python
       entrypoint: agents/tools/file_tools.py:file_reader_tool
       config:
         allowed_extensions: [".py", ".js", ".ts", ".java", ".go", ".rs"]
-    
+
     - id: file_search
       type: python
       entrypoint: agents/tools/file_tools.py:file_search_tool
-    
+
     - id: directory_tool
       type: python
       entrypoint: agents/tools/file_tools.py:directory_tool
-    
+
     - id: llm_completion
       type: python
       entrypoint: agents/tools/llm_tools.py:llm_completion_tool
@@ -54,11 +54,11 @@ spec:
         provider: ollama
         model: qwen2.5-coder
         temperature: 0.2
-  
+
   runtime:
     supported: [local, langchain, crewai, pydanticai]
     timeout: 300
-  
+
   metadata:
     role: reviewer
     capabilities:

@@ -1,11 +1,15 @@
 from __future__ import annotations
-from pathlib import Path
+
 import json
+from pathlib import Path
+
 import yaml
+
 
 def load_yaml(path: str | Path) -> dict:
     p = Path(path)
     return yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+
 
 def dump_json(path: str | Path, data: dict) -> None:
     p = Path(path)

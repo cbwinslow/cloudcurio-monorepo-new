@@ -6,15 +6,15 @@ integrated with the agent framework for automated video production.
 
 import os
 import re
-from typing import Dict, List, Any, Optional
 from pathlib import Path
+from typing import Any
 
 try:
     import cv2
 except ImportError:
     cv2 = None
 
-from agents.base_agent import BaseAgent, AgentTool
+from agents.base_agent import AgentTool, BaseAgent
 from agents.robust_tool import RobustTool, ToolResult
 
 
@@ -34,7 +34,7 @@ class VideoEditingAgentTool(AgentTool):
 class VideoEditingAgent(BaseAgent):
     """Agent for video downloading, analysis, and editing."""
 
-    def _initialize_tools(self) -> Dict[str, AgentTool]:
+    def _initialize_tools(self) -> dict[str, AgentTool]:
         """Initialize video editing tools."""
         return {
             "download_video": VideoEditingAgentTool(
@@ -74,7 +74,7 @@ class VideoDownloadTool(RobustTool):
             description="Download videos from YouTube, Facebook, and other platforms",
         )
 
-    def _define_validation_schema(self) -> Dict[str, Any]:
+    def _define_validation_schema(self) -> dict[str, Any]:
         """Define validation schema for video download."""
         return {
             "type": "object",
@@ -100,7 +100,7 @@ class VideoDownloadTool(RobustTool):
             },
         }
 
-    def _define_fallback_strategies(self) -> List[Dict[str, Any]]:
+    def _define_fallback_strategies(self) -> list[dict[str, Any]]:
         """Define fallback strategies."""
         return [
             {
@@ -111,7 +111,7 @@ class VideoDownloadTool(RobustTool):
             }
         ]
 
-    def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
+    def _execute_core(self, parameters: dict[str, Any], execution_id: str) -> Any:
         """Download video from URL."""
         try:
             import yt_dlp
@@ -155,7 +155,7 @@ class VideoDownloadTool(RobustTool):
         }
 
     def _fallback_lower_quality(
-        self, error: Exception, parameters: Dict[str, Any], execution_id: str
+        self, error: Exception, parameters: dict[str, Any], execution_id: str
     ) -> ToolResult:
         """Fallback to lower quality download."""
         alt_params = parameters.copy()
@@ -175,7 +175,7 @@ class VideoDownloadTool(RobustTool):
             warnings=[f"Downloaded at lower quality: {alt_params['quality']}"],
         )
 
-    def _extract_video_id(self, url: str) -> Optional[str]:
+    def _extract_video_id(self, url: str) -> str | None:
         """Extract video ID from URL."""
         # YouTube patterns
         patterns = [
@@ -215,7 +215,7 @@ class VideoAnalysisTool(RobustTool):
             description="Analyze video for duration, resolution, and basic content info",
         )
 
-    def _define_validation_schema(self) -> Dict[str, Any]:
+    def _define_validation_schema(self) -> dict[str, Any]:
         """Define validation schema for video analysis."""
         return {
             "type": "object",
@@ -228,11 +228,11 @@ class VideoAnalysisTool(RobustTool):
             },
         }
 
-    def _define_fallback_strategies(self) -> List[Dict[str, Any]]:
+    def _define_fallback_strategies(self) -> list[dict[str, Any]]:
         """Define fallback strategies."""
         return []
 
-    def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
+    def _execute_core(self, parameters: dict[str, Any], execution_id: str) -> Any:
         """Analyze video file."""
         video_path = parameters["video_path"]
 
@@ -278,10 +278,10 @@ class VideoAnalysisTool(RobustTool):
             "file_size_mb": file_size / (1024 * 1024),
         }
 
-    def _analyze_with_ffprobe(self, video_path: str) -> Dict[str, Any]:
+    def _analyze_with_ffprobe(self, video_path: str) -> dict[str, Any]:
         """Fallback analysis using ffprobe."""
-        import subprocess
         import json
+        import subprocess
 
         try:
             # Run ffprobe to get video info
@@ -355,7 +355,7 @@ class VideoTrimTool(RobustTool):
             name="trim_video", description="Trim video to specified start and end times"
         )
 
-    def _define_validation_schema(self) -> Dict[str, Any]:
+    def _define_validation_schema(self) -> dict[str, Any]:
         """Define validation schema for video trimming."""
         return {
             "type": "object",
@@ -382,11 +382,11 @@ class VideoTrimTool(RobustTool):
             },
         }
 
-    def _define_fallback_strategies(self) -> List[Dict[str, Any]]:
+    def _define_fallback_strategies(self) -> list[dict[str, Any]]:
         """Define fallback strategies."""
         return []
 
-    def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
+    def _execute_core(self, parameters: dict[str, Any], execution_id: str) -> Any:
         """Trim video using ffmpeg."""
         import subprocess
 
@@ -423,9 +423,7 @@ class VideoTrimTool(RobustTool):
             raise RuntimeError(f"ffmpeg trim failed: {result.stderr}")
 
         # Get output file info
-        output_size = (
-            os.path.getsize(output_video) if os.path.exists(output_video) else 0
-        )
+        output_size = os.path.getsize(output_video) if os.path.exists(output_video) else 0
 
         return {
             "input_video": input_video,
@@ -441,11 +439,9 @@ class VideoWatermarkTool(RobustTool):
     """Tool for adding watermarks to videos."""
 
     def __init__(self):
-        super().__init__(
-            name="add_watermark", description="Add text or image watermark to video"
-        )
+        super().__init__(name="add_watermark", description="Add text or image watermark to video")
 
-    def _define_validation_schema(self) -> Dict[str, Any]:
+    def _define_validation_schema(self) -> dict[str, Any]:
         """Define validation schema for watermarking."""
         return {
             "type": "object",
@@ -483,11 +479,11 @@ class VideoWatermarkTool(RobustTool):
             },
         }
 
-    def _define_fallback_strategies(self) -> List[Dict[str, Any]]:
+    def _define_fallback_strategies(self) -> list[dict[str, Any]]:
         """Define fallback strategies."""
         return []
 
-    def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
+    def _execute_core(self, parameters: dict[str, Any], execution_id: str) -> Any:
         """Add watermark to video using ffmpeg."""
         import subprocess
 
@@ -534,9 +530,7 @@ class VideoWatermarkTool(RobustTool):
             raise RuntimeError(f"ffmpeg watermark failed: {result.stderr}")
 
         # Get output file info
-        output_size = (
-            os.path.getsize(output_video) if os.path.exists(output_video) else 0
-        )
+        output_size = os.path.getsize(output_video) if os.path.exists(output_video) else 0
 
         return {
             "input_video": input_video,
@@ -551,11 +545,9 @@ class AudioExtractionTool(RobustTool):
     """Tool for extracting audio from video."""
 
     def __init__(self):
-        super().__init__(
-            name="extract_audio", description="Extract audio track from video file"
-        )
+        super().__init__(name="extract_audio", description="Extract audio track from video file")
 
-    def _define_validation_schema(self) -> Dict[str, Any]:
+    def _define_validation_schema(self) -> dict[str, Any]:
         """Define validation schema for audio extraction."""
         return {
             "type": "object",
@@ -583,11 +575,11 @@ class AudioExtractionTool(RobustTool):
             },
         }
 
-    def _define_fallback_strategies(self) -> List[Dict[str, Any]]:
+    def _define_fallback_strategies(self) -> list[dict[str, Any]]:
         """Define fallback strategies."""
         return []
 
-    def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
+    def _execute_core(self, parameters: dict[str, Any], execution_id: str) -> Any:
         """Extract audio from video using ffmpeg."""
         import subprocess
 
@@ -621,9 +613,7 @@ class AudioExtractionTool(RobustTool):
             raise RuntimeError(f"ffmpeg audio extraction failed: {result.stderr}")
 
         # Get output file info
-        output_size = (
-            os.path.getsize(output_audio) if os.path.exists(output_audio) else 0
-        )
+        output_size = os.path.getsize(output_audio) if os.path.exists(output_audio) else 0
 
         return {
             "input_video": input_video,
