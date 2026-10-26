@@ -5,18 +5,22 @@ Provides comprehensive monitoring, tracing, and metrics for agent operations.
 
 import logging
 import time
-from typing import Dict, Any, Optional, Callable
+from collections.abc import Callable
 from functools import wraps
+from typing import Any
 
 # Try to import OpenTelemetry components
 try:
     from opentelemetry import trace
+    from opentelemetry.metrics import get_meter
+    from opentelemetry.sdk.metrics import MeterProvider
+    from opentelemetry.sdk.metrics.export import (
+        ConsoleMetricExporter,
+        PeriodicExportingMetricReader,
+    )
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
-    from opentelemetry.sdk.metrics import MeterProvider
-    from opentelemetry.sdk.metrics.export import ConsoleMetricExporter, PeriodicExportingMetricReader
     from opentelemetry.trace import Status, StatusCode
-    from opentelemetry.metrics import get_meter
 
     # Setup OpenTelemetry tracing
     trace.set_tracer_provider(TracerProvider())
@@ -37,32 +41,27 @@ try:
 
     # Create metrics
     agent_execution_counter = meter.create_counter(
-        name="agent_execution_count",
-        description="Number of agent executions",
-        unit="executions"
+        name="agent_execution_count", description="Number of agent executions", unit="executions"
     )
 
     tool_execution_counter = meter.create_counter(
-        name="tool_execution_count",
-        description="Number of tool executions",
-        unit="executions"
+        name="tool_execution_count", description="Number of tool executions", unit="executions"
     )
 
     execution_duration_histogram = meter.create_histogram(
         name="execution_duration_ms",
         description="Duration of agent/tool executions in milliseconds",
-        unit="ms"
+        unit="ms",
     )
 
     error_counter = meter.create_counter(
-        name="execution_errors",
-        description="Number of execution errors",
-        unit="errors"
+        name="execution_errors", description="Number of execution errors", unit="errors"
     )
 
     OPENTELEMETRY_AVAILABLE = True
 except ImportError:
     OPENTELEMETRY_AVAILABLE = False
+
     # Create dummy functions for when OpenTelemetry is not available
     class DummyTracer:
         def start_as_current_span(self, name, **kwargs):
@@ -118,6 +117,7 @@ class TelemetryManager:
 
     def trace_agent_execution(self, agent_method: Callable) -> Callable:
         """Decorator to trace agent method executions."""
+
         @wraps(agent_method)
         def wrapper(*args, **kwargs):
             method_name = agent_method.__name__
@@ -131,7 +131,11 @@ class TelemetryManager:
                 span.set_attribute("method", method_name)
 
                 # Add method parameters as attributes (excluding sensitive data)
-                safe_params = {k: str(v) for k, v in kwargs.items() if not k.endswith('_secret') and not k.endswith('_token')}
+                safe_params = {
+                    k: str(v)
+                    for k, v in kwargs.items()
+                    if not k.endswith("_secret") and not k.endswith("_token")
+                }
                 for key, value in safe_params.items():
                     span.set_attribute(f"param.{key}", value)
 
@@ -142,22 +146,21 @@ class TelemetryManager:
                     # Record success metrics
                     duration_ms = (time.time() - start_time) * 1000
 
-                    agent_execution_counter.add(1, {
-                        "agent": self.agent_name,
-                        "method": method_name,
-                        "status": "success"
-                    })
+                    agent_execution_counter.add(
+                        1, {"agent": self.agent_name, "method": method_name, "status": "success"}
+                    )
 
-                    execution_duration_histogram.record(duration_ms, {
-                        "agent": self.agent_name,
-                        "method": method_name
-                    })
+                    execution_duration_histogram.record(
+                        duration_ms, {"agent": self.agent_name, "method": method_name}
+                    )
 
                     span.set_attribute("duration_ms", duration_ms)
                     span.set_attribute("success", True)
                     span.set_status(Status(StatusCode.OK))
 
-                    self.logger.info(f"Agent {self.agent_name}.{method_name} executed successfully in {duration_ms:.2f}ms")
+                    self.logger.info(
+                        f"Agent {self.agent_name}.{method_name} executed successfully in {duration_ms:.2f}ms"
+                    )
 
                     return result
 
@@ -165,23 +168,23 @@ class TelemetryManager:
                     # Record error metrics
                     duration_ms = (time.time() - start_time) * 1000
 
-                    agent_execution_counter.add(1, {
-                        "agent": self.agent_name,
-                        "method": method_name,
-                        "status": "error"
-                    })
+                    agent_execution_counter.add(
+                        1, {"agent": self.agent_name, "method": method_name, "status": "error"}
+                    )
 
-                    error_counter.add(1, {
-                        "agent": self.agent_name,
-                        "method": method_name,
-                        "error_type": type(e).__name__
-                    })
+                    error_counter.add(
+                        1,
+                        {
+                            "agent": self.agent_name,
+                            "method": method_name,
+                            "error_type": type(e).__name__,
+                        },
+                    )
 
-                    execution_duration_histogram.record(duration_ms, {
-                        "agent": self.agent_name,
-                        "method": method_name,
-                        "error": True
-                    })
+                    execution_duration_histogram.record(
+                        duration_ms,
+                        {"agent": self.agent_name, "method": method_name, "error": True},
+                    )
 
                     span.set_attribute("duration_ms", duration_ms)
                     span.set_attribute("success", False)
@@ -190,7 +193,9 @@ class TelemetryManager:
                     span.set_status(Status(StatusCode.ERROR))
                     span.record_exception(e)
 
-                    self.logger.error(f"Agent {self.agent_name}.{method_name} failed after {duration_ms:.2f}ms: {str(e)}")
+                    self.logger.error(
+                        f"Agent {self.agent_name}.{method_name} failed after {duration_ms:.2f}ms: {e!s}"
+                    )
 
                     raise
 
@@ -198,6 +203,7 @@ class TelemetryManager:
 
     def trace_tool_execution(self, tool_name: str) -> Callable:
         """Decorator factory for tracing tool executions."""
+
         def decorator(tool_method: Callable) -> Callable:
             @wraps(tool_method)
             def wrapper(*args, **kwargs):
@@ -211,7 +217,11 @@ class TelemetryManager:
                     span.set_attribute("tool", tool_name)
 
                     # Add tool parameters as attributes (excluding sensitive data)
-                    safe_params = {k: str(v) for k, v in kwargs.items() if not k.endswith('_secret') and not k.endswith('_token')}
+                    safe_params = {
+                        k: str(v)
+                        for k, v in kwargs.items()
+                        if not k.endswith("_secret") and not k.endswith("_token")
+                    }
                     for key, value in safe_params.items():
                         span.set_attribute(f"param.{key}", value)
 
@@ -222,22 +232,21 @@ class TelemetryManager:
                         # Record success metrics
                         duration_ms = (time.time() - start_time) * 1000
 
-                        tool_execution_counter.add(1, {
-                            "agent": self.agent_name,
-                            "tool": tool_name,
-                            "status": "success"
-                        })
+                        tool_execution_counter.add(
+                            1, {"agent": self.agent_name, "tool": tool_name, "status": "success"}
+                        )
 
-                        execution_duration_histogram.record(duration_ms, {
-                            "agent": self.agent_name,
-                            "tool": tool_name
-                        })
+                        execution_duration_histogram.record(
+                            duration_ms, {"agent": self.agent_name, "tool": tool_name}
+                        )
 
                         span.set_attribute("duration_ms", duration_ms)
                         span.set_attribute("success", True)
                         span.set_status(Status(StatusCode.OK))
 
-                        self.logger.info(f"Tool {self.agent_name}.{tool_name} executed successfully in {duration_ms:.2f}ms")
+                        self.logger.info(
+                            f"Tool {self.agent_name}.{tool_name} executed successfully in {duration_ms:.2f}ms"
+                        )
 
                         return result
 
@@ -245,23 +254,23 @@ class TelemetryManager:
                         # Record error metrics
                         duration_ms = (time.time() - start_time) * 1000
 
-                        tool_execution_counter.add(1, {
-                            "agent": self.agent_name,
-                            "tool": tool_name,
-                            "status": "error"
-                        })
+                        tool_execution_counter.add(
+                            1, {"agent": self.agent_name, "tool": tool_name, "status": "error"}
+                        )
 
-                        error_counter.add(1, {
-                            "agent": self.agent_name,
-                            "tool": tool_name,
-                            "error_type": type(e).__name__
-                        })
+                        error_counter.add(
+                            1,
+                            {
+                                "agent": self.agent_name,
+                                "tool": tool_name,
+                                "error_type": type(e).__name__,
+                            },
+                        )
 
-                        execution_duration_histogram.record(duration_ms, {
-                            "agent": self.agent_name,
-                            "tool": tool_name,
-                            "error": True
-                        })
+                        execution_duration_histogram.record(
+                            duration_ms,
+                            {"agent": self.agent_name, "tool": tool_name, "error": True},
+                        )
 
                         span.set_attribute("duration_ms", duration_ms)
                         span.set_attribute("success", False)
@@ -270,7 +279,9 @@ class TelemetryManager:
                         span.set_status(Status(StatusCode.ERROR))
                         span.record_exception(e)
 
-                        self.logger.error(f"Tool {self.agent_name}.{tool_name} failed after {duration_ms:.2f}ms: {str(e)}")
+                        self.logger.error(
+                            f"Tool {self.agent_name}.{tool_name} failed after {duration_ms:.2f}ms: {e!s}"
+                        )
 
                         raise
 
@@ -278,7 +289,9 @@ class TelemetryManager:
 
         return decorator
 
-    def log_metric(self, metric_name: str, value: float, attributes: Optional[Dict[str, Any]] = None) -> None:
+    def log_metric(
+        self, metric_name: str, value: float, attributes: dict[str, Any] | None = None
+    ) -> None:
         """Log a custom metric."""
         if attributes is None:
             attributes = {}
@@ -289,14 +302,14 @@ class TelemetryManager:
         # In a real implementation, this would be sent to a metrics backend
         self.logger.info(f"Metric {metric_name}: {value} (attributes: {attributes})")
 
-    def get_telemetry_status(self) -> Dict[str, Any]:
+    def get_telemetry_status(self) -> dict[str, Any]:
         """Get current telemetry status."""
         return {
             "opentelemetry_available": OPENTELEMETRY_AVAILABLE,
             "agent_name": self.agent_name,
             "tracing_enabled": True,
             "metrics_enabled": True,
-            "logging_enabled": True
+            "logging_enabled": True,
         }
 
 
@@ -306,6 +319,7 @@ def create_telemetry_manager(agent_name: str) -> TelemetryManager:
 
 
 # Global telemetry functions for convenience
+
 
 def trace_agent_method(agent_name: str, method_name: str):
     """Decorator for tracing agent methods."""

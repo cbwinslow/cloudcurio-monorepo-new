@@ -38,14 +38,14 @@
 def calculate_total(items: list[float], tax_rate: float = 0.1) -> float:
     """
     Calculate total price including tax.
-    
+
     Args:
         items: List of item prices
         tax_rate: Tax rate as decimal (default: 0.1 for 10%)
-    
+
     Returns:
         Total price including tax
-    
+
     Example:
         >>> calculate_total([10.0, 20.0], 0.1)
         33.0

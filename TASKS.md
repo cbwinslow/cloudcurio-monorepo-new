@@ -1,9 +1,9 @@
 # CloudCurio Monorepo - AI Agent Task List
 
-**Version:** 1.1.0  
-**Created:** 2026-02-13  
-**Updated:** 2026-02-23  
-**Purpose:** Comprehensive task list for AI agents to implement improvements and features  
+**Version:** 1.1.0
+**Created:** 2026-02-13
+**Updated:** 2026-02-23
+**Purpose:** Comprehensive task list for AI agents to implement improvements and features
 **Repository:** cloudcurio-monorepo-new
 
 ---
@@ -22,7 +22,7 @@ This document provides a structured, detailed task list that AI agents can follo
 
 ## ✅ Completed Work (Phase 1 – Inventory & Search)
 
-**PR: "Remote Inventory Management System – Phase 1"**  
+**PR: "Remote Inventory Management System – Phase 1"**
 **Status:** ✅ Merged
 
 ### What was built
@@ -93,12 +93,12 @@ cbw-search list --type tool --format plain
 > with a single command.
 
 ### TASK-RMS-002: Download & Install Assets from a Remote Registry
-**Priority:** P0 (Critical)  
-**Status:** ❌ Not Started  
-**Estimated Effort:** 4-6 days  
+**Priority:** P0 (Critical)
+**Status:** ❌ Not Started
+**Estimated Effort:** 4-6 days
 **Depends on:** Phase 1 (completed)
 
-**Description:**  
+**Description:**
 Build a `cbw install` / `cbw download` command that lets users pull individual
 assets (agents, tools, skills, scripts, MCP servers) from a remote source
 (GitHub release, raw URL, or a manifest file) into the local repo and
@@ -234,11 +234,11 @@ cbw-install remove researcher
 ---
 
 ### TASK-RMS-003: Shell Terminal Enhancement (Starship / fzf Style)
-**Priority:** P1 (High)  
-**Status:** ❌ Not Started  
+**Priority:** P1 (High)
+**Status:** ❌ Not Started
 **Estimated Effort:** 2-3 days
 
-**Description:**  
+**Description:**
 Enhance the shell environment with a richer prompt, keybindings, and tab
 completions so that the CloudCurio tools feel as polished as `fzf` + `starship`.
 
@@ -279,11 +279,11 @@ completions so that the CloudCurio tools feel as polished as `fzf` + `starship`.
 ---
 
 ### TASK-RMS-004: Python API Server for Remote Management
-**Priority:** P1 (High)  
-**Status:** ❌ Not Started  
+**Priority:** P1 (High)
+**Status:** ❌ Not Started
 **Estimated Effort:** 3-5 days
 
-**Description:**  
+**Description:**
 Expose the inventory and installer as a lightweight HTTP API (FastAPI) so that
 external tools, CI pipelines, and remote machines can query and manage assets
 over HTTP without needing a shell.
@@ -321,11 +321,13 @@ from cbw_foundry.inventory import Inventory
 app = FastAPI(title="CloudCurio Asset API", version="1.0.0")
 inv = Inventory()
 
+
 @app.get("/api/v1/assets")
 def list_assets(type: str | None = None, q: str | None = None):
     if q:
         return inv.search(q, item_type=type)
     return inv.list_all(item_type=type)
+
 
 @app.get("/api/v1/assets/{name}")
 def get_asset(name: str):
@@ -333,6 +335,7 @@ def get_asset(name: str):
     if not item:
         raise HTTPException(404, detail=f"Asset '{name}' not found")
     return item
+
 
 @app.post("/api/v1/assets/index")
 def rebuild_index():
@@ -344,11 +347,11 @@ def rebuild_index():
 ---
 
 ### TASK-RMS-005: MCP Server for Inventory Management
-**Priority:** P2 (Medium)  
-**Status:** ❌ Not Started  
+**Priority:** P2 (Medium)
+**Status:** ❌ Not Started
 **Estimated Effort:** 2-3 days
 
-**Description:**  
+**Description:**
 Create an MCP server that exposes the inventory as MCP tools so AI assistants
 (Claude, Copilot, etc.) can query and manage assets directly in conversation.
 
@@ -370,8 +373,8 @@ Create an MCP server that exposes the inventory as MCP tools so AI assistants
 ## Runtime Adapters
 
 ### TASK-RA-001: Implement Full LangChain Runtime Adapter
-**Priority:** P1 (High)  
-**Status:** 🔄 In Progress (Stub exists)  
+**Priority:** P1 (High)
+**Status:** 🔄 In Progress (Stub exists)
 **Estimated Effort:** 3-5 days
 
 **Description:**
@@ -443,8 +446,8 @@ Implement complete LangChain runtime adapter to enable running CloudCurio agents
 ---
 
 ### TASK-RA-002: Implement Full CrewAI Runtime Adapter
-**Priority:** P1 (High)  
-**Status:** 🔄 In Progress (Stub exists)  
+**Priority:** P1 (High)
+**Status:** 🔄 In Progress (Stub exists)
 **Estimated Effort:** 3-5 days
 
 **Description:**
@@ -503,8 +506,8 @@ Implement complete CrewAI runtime adapter to enable multi-agent collaboration wo
 ---
 
 ### TASK-RA-003: Implement Full PydanticAI Runtime Adapter
-**Priority:** P1 (High)  
-**Status:** 🔄 In Progress (Stub exists)  
+**Priority:** P1 (High)
+**Status:** 🔄 In Progress (Stub exists)
 **Estimated Effort:** 2-4 days
 
 **Description:**
@@ -537,8 +540,8 @@ Implement complete PydanticAI runtime adapter for type-safe agent execution.
 ## Agent Development
 
 ### TASK-AD-001: Create Agent Discovery API
-**Priority:** P0 (Critical)  
-**Status:** 🔄 Partially Complete (inventory.py covers discovery; REST API layer still needed)  
+**Priority:** P0 (Critical)
+**Status:** 🔄 Partially Complete (inventory.py covers discovery; REST API layer still needed)
 **Estimated Effort:** 1-2 days (REST layer only)
 
 See `TASK-RMS-004` for the full API server implementation.
@@ -553,8 +556,8 @@ The `cbw_foundry.inventory.Inventory` class already provides:
 ---
 
 ### TASK-AD-002: Implement Agent Templates System
-**Priority:** P2 (Medium)  
-**Status:** ❌ Not Started  
+**Priority:** P2 (Medium)
+**Status:** ❌ Not Started
 **Estimated Effort:** 2-3 days
 
 **Description:**
@@ -579,7 +582,7 @@ Create a templating system for quickly scaffolding new agents based on common pa
    class AgentTemplate:
        def render(self, name: str, **kwargs) -> dict:
            """Render template with provided parameters."""
-       
+
        def list_templates(self) -> list[str]:
            """List available templates."""
    ```
@@ -600,8 +603,8 @@ Create a templating system for quickly scaffolding new agents based on common pa
 ## MCP Server Enhancements
 
 ### TASK-MCP-001: Add Docker Configurations for All MCP Servers
-**Priority:** P1 (High)  
-**Status:** ❌ Not Started  
+**Priority:** P1 (High)
+**Status:** ❌ Not Started
 **Estimated Effort:** 2-3 days
 
 **Description:**
@@ -613,14 +616,14 @@ Create Dockerfile and docker-compose configurations for all MCP servers to enabl
    ```dockerfile
    # mcp-servers/automation/Dockerfile
    FROM python:3.11-slim
-   
+
    WORKDIR /app
    COPY requirements.txt .
    RUN pip install --no-cache-dir -r requirements.txt
-   
+
    COPY . .
    EXPOSE 8000
-   
+
    CMD ["python", "-m", "mcp_servers.automation"]
    ```
 
@@ -658,10 +661,10 @@ Create Dockerfile and docker-compose configurations for all MCP servers to enabl
 ## Testing & Quality
 
 ### TASK-TQ-001: Achieve 80% Test Coverage
-**Priority:** P1 (High)  
-**Status:** 🔄 In Progress  
-**Current Coverage:** ~60%  
-**Target Coverage:** 80%+  
+**Priority:** P1 (High)
+**Status:** 🔄 In Progress
+**Current Coverage:** ~60%
+**Target Coverage:** 80%+
 **Estimated Effort:** 5-7 days
 
 **Implementation Steps:**
@@ -698,8 +701,8 @@ pytest --cov=cbw_foundry --cov-report=term --cov-fail-under=80
 ## Documentation
 
 ### TASK-DOC-001: Generate API Documentation
-**Priority:** P1 (High)  
-**Status:** ❌ Not Started  
+**Priority:** P1 (High)
+**Status:** ❌ Not Started
 **Estimated Effort:** 2-3 days
 
 **Implementation Steps:**
@@ -712,7 +715,7 @@ pytest --cov=cbw_foundry --cov-report=term --cov-fail-under=80
 2. **Configure Sphinx**
    ```python
    # docs/conf.py
-   extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx_autodoc_typehints']
+   extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx_autodoc_typehints"]
    ```
 
 3. **Generate Documentation**
@@ -726,8 +729,8 @@ pytest --cov=cbw_foundry --cov-report=term --cov-fail-under=80
 ## Infrastructure & DevOps
 
 ### TASK-INFRA-001: Create Windows Installation Script
-**Priority:** P2 (Medium)  
-**Status:** ❌ Not Started  
+**Priority:** P2 (Medium)
+**Status:** ❌ Not Started
 **Estimated Effort:** 2-3 days
 
 **Implementation Steps:**
@@ -763,6 +766,6 @@ pytest --cov=cbw_foundry --cov-report=term --cov-fail-under=80
 
 ---
 
-**Version:** 1.1.0  
-**Maintained by:** @cbwinslow  
+**Version:** 1.1.0
+**Maintained by:** @cbwinslow
 **Last Updated:** 2026-02-23

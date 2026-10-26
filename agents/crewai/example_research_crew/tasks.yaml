@@ -2,7 +2,7 @@ tasks:
   - description: |
       Research the following topic thoroughly:
       {topic}
-      
+
       Gather information from reliable sources and organize findings
       by key themes and concepts. Include:
       - Main concepts and definitions
@@ -23,7 +23,7 @@ tasks:
       - Best practices and recommendations
       - Practical examples
       - Conclusion and next steps
-      
+
       Ensure the documentation is well-structured, easy to read,
       and suitable for both technical and non-technical audiences.
     agent: "writer"

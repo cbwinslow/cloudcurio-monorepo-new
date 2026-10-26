@@ -300,7 +300,7 @@ tests:
   - name: "basic_functionality"
     input: "test input 1"
     expected_output: "expected output 1"
-    
+
   - name: "edge_case"
     input: "edge case input"
     expected_output: "expected edge case output"
@@ -353,30 +353,31 @@ Implement tool:
 ```python
 from cbw_foundry.tools import BaseTool
 
+
 class MyTool(BaseTool):
     """Tool for doing X."""
-    
+
     name = "my_tool"
     description = "Detailed description of what this tool does"
-    
+
     def __init__(self):
         super().__init__()
         # Initialize any resources
-    
+
     def execute(self, **kwargs):
         """
         Execute the tool.
-        
+
         Args:
             **kwargs: Tool-specific parameters
-            
+
         Returns:
             Tool execution result
         """
         # Implementation
         result = self._do_work(kwargs)
         return result
-    
+
     def _do_work(self, params):
         """Internal implementation."""
         pass
@@ -392,10 +393,12 @@ nano tests/test_my_tool.py
 import pytest
 from agents.tools.my_tool import MyTool
 
+
 def test_my_tool_basic():
     tool = MyTool()
     result = tool.execute(param1="value1")
     assert result is not None
+
 
 def test_my_tool_error_handling():
     tool = MyTool()
@@ -689,6 +692,6 @@ make clean && make compile    # Rebuild
 
 ---
 
-**Last Updated:** 2026-01-15  
-**Maintained By:** @cbwinslow  
+**Last Updated:** 2026-01-15
+**Maintained By:** @cbwinslow
 **Related:** [Adding New Agents](adding_new_agent.md), [Code Quality Rules](../rules/code_quality_rules.md)

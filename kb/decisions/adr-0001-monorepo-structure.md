@@ -21,7 +21,7 @@ When building a comprehensive AI agent framework and tooling ecosystem, we need 
    - Tools in another repo
    - Framework core in yet another repo
    - Documentation separately
-   
+
 2. **Monorepo (Single Repository)**: All components in one unified repository
    - Everything in a single repo with organized subdirectories
    - Shared versioning and dependency management
@@ -364,7 +364,7 @@ This ADR should be reviewed:
 
 ---
 
-**Decision Date:** 2026-01-11  
-**Decision Makers:** @cbwinslow  
-**Last Reviewed:** 2026-01-15  
+**Decision Date:** 2026-01-11
+**Decision Makers:** @cbwinslow
+**Last Reviewed:** 2026-01-15
 **Next Review:** 2027-01-15

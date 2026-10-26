@@ -88,9 +88,9 @@ OR
 
 ---
 
-**Completed by:** @username  
-**Completion date:** YYYY-MM-DD  
-**Time spent:** X hours  
+**Completed by:** @username
+**Completion date:** YYYY-MM-DD
+**Time spent:** X hours
 **Priority:** P0/P1/P2/P3
 ```
 
@@ -212,9 +212,9 @@ Status: success
 
 ---
 
-**Completed by:** @ai-agent  
-**Completion date:** 2026-02-13  
-**Time spent:** 8 hours  
+**Completed by:** @ai-agent
+**Completion date:** 2026-02-13
+**Time spent:** 8 hours
 **Priority:** P1 (High)
 ```
 
@@ -256,6 +256,6 @@ This template can be used with GitHub Actions to automatically:
 
 ---
 
-**Version:** 1.0.0  
-**Last Updated:** 2026-02-13  
+**Version:** 1.0.0
+**Last Updated:** 2026-02-13
 **Maintained by:** @cbwinslow

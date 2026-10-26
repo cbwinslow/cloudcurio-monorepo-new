@@ -1,16 +1,20 @@
 from __future__ import annotations
+
 import argparse
 from pathlib import Path
+
 from rich.console import Console
 from rich.table import Table
-from .util.fs import expand_paths
-from .spec.models import AgentSpec
-from .spec.io import load_yaml
-from .spec.compiler import compile_agent
+
 from .evals.runner import run_golden_suite
 from .runtime.registry import get_runtimes
+from .spec.compiler import compile_agent
+from .spec.io import load_yaml
+from .spec.models import AgentSpec
+from .util.fs import expand_paths
 
 console = Console()
+
 
 def cmd_validate(paths: list[str]) -> int:
     files = expand_paths(paths)
@@ -24,6 +28,7 @@ def cmd_validate(paths: list[str]) -> int:
     console.print(f"Validated {len(files)} file(s), {bad} failed")
     return 0 if bad == 0 else 1
 
+
 def cmd_compile(paths: list[str], out: str) -> int:
     files = expand_paths(paths)
     out_dir = Path(out)
@@ -31,11 +36,13 @@ def cmd_compile(paths: list[str], out: str) -> int:
     for f in files:
         compiled.append(compile_agent(f, out_dir))
     t = Table(title="Compiled agents")
-    t.add_column("YAML"); t.add_column("JSON")
+    t.add_column("YAML")
+    t.add_column("JSON")
     for f, j in zip(files, compiled):
         t.add_row(str(f), str(j))
     console.print(t)
     return 0
+
 
 def cmd_eval(paths: list[str]) -> int:
     files = expand_paths(paths)
@@ -47,8 +54,9 @@ def cmd_eval(paths: list[str]) -> int:
             console.print(f"[red]FAIL[/red] {f}")
             for msg in failures:
                 console.print(f"  - {msg}")
-    console.print(f"Evals: {len(files)-failed} passed, {failed} failed")
+    console.print(f"Evals: {len(files) - failed} passed, {failed} failed")
     return 0 if failed == 0 else 1
+
 
 def cmd_run(spec: str, user_input: str, runtime: str) -> int:
     runtimes = get_runtimes()
@@ -58,6 +66,7 @@ def cmd_run(spec: str, user_input: str, runtime: str) -> int:
     res = runtimes[runtime].run(spec, user_input)
     console.print({"runtime": res.runtime, "output": res.output})
     return 0
+
 
 def main() -> None:
     ap = argparse.ArgumentParser(prog="cbw-agent")

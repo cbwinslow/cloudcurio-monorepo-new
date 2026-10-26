@@ -10,7 +10,7 @@ Located in: `agents/tools/llm_tools.py`
 - **llm_completion** - Generate text completions using local or cloud LLMs
   - Supports: Ollama, OpenAI, OpenRouter, Anthropic
   - Use cases: Text generation, code completion, content creation
-  
+
 - **llm_embedding** - Generate text embeddings for semantic search
   - Supports: Ollama (nomic-embed-text)
   - Use cases: Similarity search, document indexing, clustering
@@ -95,7 +95,7 @@ Located in: `agents/tools/`
 
 - **echo_tool** - Simple echo tool for testing
   - Location: `python/echo_tool.py`
-  
+
 - **database_connector** - Database connection and query execution
   - Location: `database_connector.py`
 
@@ -126,7 +126,7 @@ tools:
       timeout: 30
       user_agent: "MyBot/1.0"
       verify_ssl: true
-  
+
   - id: file_reader
     type: python
     entrypoint: agents/tools/file_tools.py:file_reader_tool
@@ -142,15 +142,9 @@ tools:
 ```python
 from agents.tools.llm_tools import llm_completion_tool
 
-tool = llm_completion_tool({
-    "provider": "ollama",
-    "model": "qwen2.5-coder"
-})
+tool = llm_completion_tool({"provider": "ollama", "model": "qwen2.5-coder"})
 
-result = tool.execute(
-    prompt="Write a function to calculate fibonacci numbers",
-    temperature=0.5
-)
+result = tool.execute(prompt="Write a function to calculate fibonacci numbers", temperature=0.5)
 print(result["text"])
 ```
 
@@ -162,7 +156,7 @@ from agents.tools.web_tools import web_scraper_tool
 tool = web_scraper_tool()
 result = tool.execute(
     url="https://example.com",
-    selector="article h2"  # Extract all h2 titles in articles
+    selector="article h2",  # Extract all h2 titles in articles
 )
 print(result["content"])
 ```
@@ -176,13 +170,13 @@ tool = data_transform_tool()
 data = [
     {"name": "Alice", "score": 95},
     {"name": "Bob", "score": 87},
-    {"name": "Charlie", "score": 92}
+    {"name": "Charlie", "score": 92},
 ]
 
 result = tool.execute(
     data=data,
     operation="filter",
-    condition={"score": 90}  # Only scores >= 90
+    condition={"score": 90},  # Only scores >= 90
 )
 print(result["result"])
 ```
@@ -193,11 +187,9 @@ print(result["result"])
 from agents.tools.system_tools import health_check_tool
 
 tool = health_check_tool()
-result = tool.execute(thresholds={
-    "cpu_percent": 80.0,
-    "memory_percent": 85.0,
-    "disk_percent": 90.0
-})
+result = tool.execute(
+    thresholds={"cpu_percent": 80.0, "memory_percent": 85.0, "disk_percent": 90.0}
+)
 
 if not result["healthy"]:
     print("System health check failed!")
@@ -224,34 +216,32 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class MyToolConfig(BaseModel):
     """Configuration for MyTool."""
+
     param1: str = Field(description="Parameter 1")
+
 
 class MyTool:
     """Brief description of what the tool does."""
-    
+
     name: str = "my_tool"
     description: str = "Brief description for agents"
-    
+
     def __init__(self, config: Optional[MyToolConfig] = None) -> None:
         """Initialize tool."""
         self.config = config or MyToolConfig()
-    
+
     def execute(self, **kwargs: Any) -> Dict[str, Any]:
         """Execute tool operation."""
         try:
             # Implementation here
-            return {
-                "status": "success",
-                "result": "data"
-            }
+            return {"status": "success", "result": "data"}
         except Exception as e:
             logger.error(f"Tool failed: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
+
 
 def my_tool(config: Optional[Dict[str, Any]] = None) -> MyTool:
     """Factory function."""

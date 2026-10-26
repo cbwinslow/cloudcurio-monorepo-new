@@ -17,22 +17,22 @@ This guide provides comprehensive installation instructions for CloudCurio Monor
 
 ### Minimum Requirements
 
-- **Operating System**: 
+- **Operating System**:
   - Linux (Ubuntu 20.04+, Debian 11+, RHEL 8+)
   - macOS 11+ (Big Sur or later)
   - Windows 10/11 with WSL2 (recommended) or native
-  
+
 - **Python**: Version 3.10 or higher
   - Check: `python --version` or `python3 --version`
   - With pip and venv modules
-  
+
 - **Node.js**: Version 18 or higher (for MCP servers)
   - Check: `node --version`
   - With npm package manager
-  
+
 - **Git**: Version 2.30 or higher
   - Check: `git --version`
-  
+
 - **Disk Space**: Minimum 500MB free space
   - ~200MB for dependencies
   - ~100MB for virtual environment
@@ -42,7 +42,7 @@ This guide provides comprehensive installation instructions for CloudCurio Monor
 
 - **Docker**: Version 20.10+ (for observability stack)
   - Docker Compose v2.0+
-  
+
 - **Database**: PostgreSQL 14+ or MySQL 8+ (for certain agents)
 
 ## Fresh Installation (Recommended)
@@ -176,7 +176,7 @@ make index
 This generates three key registry files:
 
 - `registry/agents.json` - Catalog of all agent specifications
-- `registry/tools.json` - Catalog of all available tools  
+- `registry/tools.json` - Catalog of all available tools
 - `registry/workflows.json` - Catalog of workflow definitions
 
 **Expected output:**
@@ -299,7 +299,7 @@ LOG_FORMAT=json                          # json or text
 MCP_AUTOMATION_ENABLED=true              # Enable automation MCP server
 MCP_MEDIA_ENABLED=true                   # Enable media MCP server
 
-# Agent Configuration  
+# Agent Configuration
 AGENT_TIMEOUT=300                        # Agent execution timeout (seconds)
 MAX_ITERATIONS=10                        # Max agent reasoning iterations
 ```
@@ -369,7 +369,7 @@ npm start
 
 **Start media server:**
 ```bash
-cd mcp-servers/media  
+cd mcp-servers/media
 pip install -r requirements.txt
 python server.py
 ```
