@@ -8,7 +8,7 @@ metadata:
 
 spec:
   coordination: sequential
-  
+
   steps:
     - id: research
       name: "Research Topic"
@@ -18,7 +18,7 @@ spec:
         depth: "comprehensive"
       output_var: research_data
       timeout: 300
-    
+
     - id: analyze
       name: "Analyze Data"
       agent: data_analyst
@@ -28,7 +28,7 @@ spec:
       output_var: analysis_results
       depends_on: [research]
       timeout: 180
-    
+
     - id: write_report
       name: "Generate Report"
       agent: writer
@@ -40,7 +40,7 @@ spec:
       output_var: draft_report
       depends_on: [analyze]
       timeout: 300
-    
+
     - id: review
       name: "Review and Edit"
       agent: editor
@@ -51,7 +51,7 @@ spec:
       output_var: final_report
       depends_on: [write_report]
       timeout: 180
-    
+
     - id: save_report
       name: "Save Final Report"
       action: file_write
@@ -64,7 +64,7 @@ spec:
     retry_failed_steps: true
     max_retries: 2
     continue_on_error: false
-    
+
   outputs:
     final_report: "${final_report}"
     research_data: "${research_data}"

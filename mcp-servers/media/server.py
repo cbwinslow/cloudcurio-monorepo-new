@@ -1,13 +1,14 @@
-from FastMCP import Server, Tool
-from FastMCP.tools import CallToolRequestSchema, ListToolsRequestSchema
-import os
-import subprocess
 import json
 import logging
+import os
+
+from FastMCP import Server, Tool
+from FastMCP.tools import CallToolRequestSchema
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 class MediaProcessingMCPServer:
     def __init__(self):
@@ -26,13 +27,27 @@ class MediaProcessingMCPServer:
                 input_schema={
                     "type": "object",
                     "properties": {
-                        "media_path": {"type": "string", "description": "Path to the audio or video file."},
-                        "output_dir": {"type": "string", "description": "Directory to save the transcripts."},
-                        "backend": {"type": "string", "enum": ["whisper", "api"], "default": "whisper", "description": "Transcription backend to use."}, 
-                        "model": {"type": "string", "description": "Specific model to use for transcription (e.g., 'small' for Whisper)."}
+                        "media_path": {
+                            "type": "string",
+                            "description": "Path to the audio or video file.",
+                        },
+                        "output_dir": {
+                            "type": "string",
+                            "description": "Directory to save the transcripts.",
+                        },
+                        "backend": {
+                            "type": "string",
+                            "enum": ["whisper", "api"],
+                            "default": "whisper",
+                            "description": "Transcription backend to use.",
+                        },
+                        "model": {
+                            "type": "string",
+                            "description": "Specific model to use for transcription (e.g., 'small' for Whisper).",
+                        },
                     },
-                    "required": ["media_path", "output_dir"]
-                }
+                    "required": ["media_path", "output_dir"],
+                },
             )
         )
         self.server.add_tool(
@@ -43,13 +58,21 @@ class MediaProcessingMCPServer:
                     "type": "object",
                     "properties": {
                         "video_path": {"type": "string", "description": "Path to the video file."},
-                        "output_path": {"type": "string", "description": "Path to save the analysis JSON file."},
-                        "speaker_detection": {"type": "boolean", "description": "Enable speaker detection."},
-                        "engagement_scoring": {"type": "boolean", "description": "Enable engagement scoring."
-                        }
+                        "output_path": {
+                            "type": "string",
+                            "description": "Path to save the analysis JSON file.",
+                        },
+                        "speaker_detection": {
+                            "type": "boolean",
+                            "description": "Enable speaker detection.",
+                        },
+                        "engagement_scoring": {
+                            "type": "boolean",
+                            "description": "Enable engagement scoring.",
+                        },
                     },
-                    "required": ["video_path", "output_path"]
-                }
+                    "required": ["video_path", "output_path"],
+                },
             )
         )
         # Add a handler for tool calls
@@ -78,18 +101,32 @@ class MediaProcessingMCPServer:
         # In a real implementation, you would call the Python script directly
         # or import its functions and execute them.
         logger.info(f"Calling scripts/transcribe.py for {media_path} with backend {backend}")
-        
+
         # Simulate output paths
-        vtt_path = os.path.join(output_dir, os.path.basename(media_path).split('.')[0] + ".vtt")
-        json_path = os.path.join(output_dir, os.path.basename(media_path).split('.')[0] + ".json")
-        
+        vtt_path = os.path.join(output_dir, os.path.basename(media_path).split(".")[0] + ".vtt")
+        json_path = os.path.join(output_dir, os.path.basename(media_path).split(".")[0] + ".json")
+
         os.makedirs(output_dir, exist_ok=True)
         with open(vtt_path, "w") as f:
-            f.write(f"WEBVTT\n\n00:00:00.000 --> 00:00:05.000\nPlaceholder transcription for {media_path}\n")
+            f.write(
+                f"WEBVTT\n\n00:00:00.000 --> 00:00:05.000\nPlaceholder transcription for {media_path}\n"
+            )
         with open(json_path, "w") as f:
-            json.dump({"media_path": media_path, "transcription_backend": backend, "status": "placeholder"}, f, indent=2)
+            json.dump(
+                {
+                    "media_path": media_path,
+                    "transcription_backend": backend,
+                    "status": "placeholder",
+                },
+                f,
+                indent=2,
+            )
 
-        return {"vtt_path": vtt_path, "json_path": json_path, "message": "Transcription simulated successfully."}
+        return {
+            "vtt_path": vtt_path,
+            "json_path": json_path,
+            "message": "Transcription simulated successfully.",
+        }
 
     async def _analyze_video_content(self, args: dict):
         video_path = args["video_path"]
@@ -98,26 +135,32 @@ class MediaProcessingMCPServer:
         engagement_scoring = args.get("engagement_scoring", False)
 
         # Placeholder for calling scripts/video_analyzer.py
-        logger.info(f"Calling scripts/video_analyzer.py for {video_path} with speaker_detection={speaker_detection}, engagement_scoring={engagement_scoring}")
+        logger.info(
+            f"Calling scripts/video_analyzer.py for {video_path} with speaker_detection={speaker_detection}, engagement_scoring={engagement_scoring}"
+        )
 
         # Simulate analysis data
         analysis_data = {
             "video_path": video_path,
             "speaker_detection_enabled": speaker_detection,
             "engagement_scoring_enabled": engagement_scoring,
-            "analysis_result": "Placeholder analysis data."
+            "analysis_result": "Placeholder analysis data.",
         }
-        
+
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, "w") as f:
             json.dump(analysis_data, f, indent=2)
 
-        return {"analysis_json_path": output_path, "message": "Video analysis simulated successfully."}
+        return {
+            "analysis_json_path": output_path,
+            "message": "Video analysis simulated successfully.",
+        }
 
     async def run(self):
         transport = StdioServerTransport()
         await self.server.connect(transport)
         logger.info("Python Media Processing MCP server running on stdio")
+
 
 if __name__ == "__main__":
     server = MediaProcessingMCPServer()

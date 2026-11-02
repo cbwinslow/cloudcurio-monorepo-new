@@ -10,10 +10,10 @@ Key Components:
 
 Usage:
     from cbw_foundry.swarm.communication import MessageBus, Message, MessageType
-    
+
     bus = MessageBus()
     bus.subscribe("agent_1", "task_complete")
-    
+
     message = Message(
         type=MessageType.TASK_COMPLETE,
         sender="agent_2",
@@ -25,18 +25,20 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Callable
-from dataclasses import dataclass, field
-from enum import Enum
-from datetime import datetime
 import logging
 from collections import defaultdict
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class MessageType(str, Enum):
     """Message types for agent communication."""
+
     TASK_REQUEST = "task_request"
     TASK_RESPONSE = "task_response"
     TASK_COMPLETE = "task_complete"
@@ -51,30 +53,30 @@ class MessageType(str, Enum):
 @dataclass
 class Message:
     """Structured message for inter-agent communication."""
-    
+
     type: MessageType
     sender: str
-    content: Dict[str, Any]
-    recipient: Optional[str] = None  # None for broadcast
+    content: dict[str, Any]
+    recipient: str | None = None  # None for broadcast
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     priority: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     message_id: str = field(default_factory=lambda: datetime.utcnow().isoformat())
 
 
 class MessageBus:
     """Central message bus for agent communication."""
-    
+
     def __init__(self):
         """Initialize message bus."""
-        self._subscriptions: Dict[str, List[str]] = defaultdict(list)
-        self._handlers: Dict[str, List[Callable]] = defaultdict(list)
-        self._message_queue: Dict[str, List[Message]] = defaultdict(list)
+        self._subscriptions: dict[str, list[str]] = defaultdict(list)
+        self._handlers: dict[str, list[Callable]] = defaultdict(list)
+        self._message_queue: dict[str, list[Message]] = defaultdict(list)
         logger.info("Initialized MessageBus")
-    
+
     def subscribe(self, agent_id: str, topic: str) -> None:
         """Subscribe agent to topic.
-        
+
         Args:
             agent_id: Agent identifier
             topic: Topic to subscribe to
@@ -82,10 +84,10 @@ class MessageBus:
         if topic not in self._subscriptions[agent_id]:
             self._subscriptions[agent_id].append(topic)
             logger.debug(f"Agent '{agent_id}' subscribed to '{topic}'")
-    
+
     def unsubscribe(self, agent_id: str, topic: str) -> None:
         """Unsubscribe agent from topic.
-        
+
         Args:
             agent_id: Agent identifier
             topic: Topic to unsubscribe from
@@ -93,10 +95,10 @@ class MessageBus:
         if topic in self._subscriptions[agent_id]:
             self._subscriptions[agent_id].remove(topic)
             logger.debug(f"Agent '{agent_id}' unsubscribed from '{topic}'")
-    
+
     def publish(self, message: Message) -> None:
         """Publish message to bus.
-        
+
         Args:
             message: Message to publish
         """
@@ -111,14 +113,14 @@ class MessageBus:
                 if topic in topics and agent_id != message.sender:
                     self._message_queue[agent_id].append(message)
             logger.debug(f"Broadcast message from '{message.sender}' on topic '{topic}'")
-    
-    def receive(self, agent_id: str, limit: Optional[int] = None) -> List[Message]:
+
+    def receive(self, agent_id: str, limit: int | None = None) -> list[Message]:
         """Receive messages for agent.
-        
+
         Args:
             agent_id: Agent identifier
             limit: Maximum number of messages to retrieve
-            
+
         Returns:
             List of messages for the agent
         """
@@ -129,24 +131,24 @@ class MessageBus:
         else:
             result = messages
             self._message_queue[agent_id] = []
-        
+
         logger.debug(f"Agent '{agent_id}' received {len(result)} messages")
         return result
-    
-    def peek(self, agent_id: str) -> List[Message]:
+
+    def peek(self, agent_id: str) -> list[Message]:
         """Peek at messages without removing them.
-        
+
         Args:
             agent_id: Agent identifier
-            
+
         Returns:
             List of pending messages
         """
         return self._message_queue.get(agent_id, []).copy()
-    
+
     def clear(self, agent_id: str) -> None:
         """Clear message queue for agent.
-        
+
         Args:
             agent_id: Agent identifier
         """
@@ -157,7 +159,7 @@ class MessageBus:
 
 
 __all__ = [
-    "MessageBus",
     "Message",
+    "MessageBus",
     "MessageType",
 ]

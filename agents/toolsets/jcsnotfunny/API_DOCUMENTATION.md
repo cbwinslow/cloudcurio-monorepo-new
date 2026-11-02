@@ -26,11 +26,11 @@ tool = VideoAnalysisTool()
 
 # With custom configuration
 config = {
-    'ffmpeg_path': '/usr/bin/ffmpeg',
-    'ffprobe_path': '/usr/bin/ffprobe',
-    'temp_dir': '/custom/temp',
-    'max_file_size_mb': 3000,
-    'supported_formats': ['mp4', 'mov', 'avi']
+    "ffmpeg_path": "/usr/bin/ffmpeg",
+    "ffprobe_path": "/usr/bin/ffprobe",
+    "temp_dir": "/custom/temp",
+    "max_file_size_mb": 3000,
+    "supported_formats": ["mp4", "mov", "avi"],
 }
 tool = VideoAnalysisTool(config=config)
 ```
@@ -64,15 +64,15 @@ Execute video analysis on the specified file.
 Dict containing analysis results:
 ```python
 {
-    'status': 'success',
-    'analysis_type': 'full',
-    'video_path': '/path/to/video.mp4',
-    'metadata': {...},
-    'speaker_detection': {...},
-    'cut_points': [...],
-    'engagement_scores': {...},
-    'recommendations': [...],
-    'performance': {...}
+    "status": "success",
+    "analysis_type": "full",
+    "video_path": "/path/to/video.mp4",
+    "metadata": {...},
+    "speaker_detection": {...},
+    "cut_points": [...],
+    "engagement_scores": {...},
+    "recommendations": [...],
+    "performance": {...},
 }
 ```
 
@@ -82,16 +82,10 @@ Dict containing analysis results:
 **Example:**
 ```python
 # Quick analysis
-result = tool.execute(
-    video_path='/path/to/episode.mp4',
-    analysis_type='quick'
-)
+result = tool.execute(video_path="/path/to/episode.mp4", analysis_type="quick")
 
 # Full analysis
-result = tool.execute(
-    video_path='/path/to/episode.mp4',
-    analysis_type='full'
-)
+result = tool.execute(video_path="/path/to/episode.mp4", analysis_type="full")
 
 print(f"Duration: {result['metadata']['duration']}s")
 print(f"Resolution: {result['metadata']['video']['width']}x{result['metadata']['video']['height']}")
@@ -104,32 +98,25 @@ print(f"Recommendations: {result['recommendations']}")
 
 ```python
 {
-    'status': 'success',
-    'analysis_type': 'quick',
-    'video_path': '/path/to/video.mp4',
-    'metadata': {
-        'filename': 'video.mp4',
-        'format': 'mp4',
-        'duration': 120.5,
-        'size': 104857600,
-        'bit_rate': 1048576,
-        'video': {
-            'codec': 'h264',
-            'width': 1920,
-            'height': 1080,
-            'fps': 30.0,
-            'aspect_ratio': '16:9'
+    "status": "success",
+    "analysis_type": "quick",
+    "video_path": "/path/to/video.mp4",
+    "metadata": {
+        "filename": "video.mp4",
+        "format": "mp4",
+        "duration": 120.5,
+        "size": 104857600,
+        "bit_rate": 1048576,
+        "video": {
+            "codec": "h264",
+            "width": 1920,
+            "height": 1080,
+            "fps": 30.0,
+            "aspect_ratio": "16:9",
         },
-        'audio': {
-            'codec': 'aac',
-            'sample_rate': 48000,
-            'channels': 2,
-            'bit_rate': 128000
-        }
+        "audio": {"codec": "aac", "sample_rate": 48000, "channels": 2, "bit_rate": 128000},
     },
-    'recommendations': [
-        'Video meets quality standards'
-    ]
+    "recommendations": ["Video meets quality standards"],
 }
 ```
 
@@ -138,29 +125,13 @@ print(f"Recommendations: {result['recommendations']}")
 Includes all quick analysis data plus:
 ```python
 {
-    'speaker_detection': {
-        'speakers_detected': 2,
-        'confidence': 0.85,
-        'segments': [
-            {
-                'speaker_id': 1,
-                'start_time': 0.0,
-                'end_time': 30.5,
-                'position': 'left'
-            }
-        ]
+    "speaker_detection": {
+        "speakers_detected": 2,
+        "confidence": 0.85,
+        "segments": [{"speaker_id": 1, "start_time": 0.0, "end_time": 30.5, "position": "left"}],
     },
-    'cut_points': [
-        {
-            'time': 10.5,
-            'confidence': 0.9,
-            'reason': 'speaker_change'
-        }
-    ],
-    'engagement_scores': {
-        'overall_score': 0.75,
-        'segments': [...]
-    }
+    "cut_points": [{"time": 10.5, "confidence": 0.9, "reason": "speaker_change"}],
+    "engagement_scores": {"overall_score": 0.75, "segments": [...]},
 }
 ```
 
@@ -170,7 +141,7 @@ Includes all quick analysis data plus:
 from agents.toolsets.jcsnotfunny import VideoAnalysisError
 
 try:
-    result = tool.execute(video_path='/path/to/video.mp4')
+    result = tool.execute(video_path="/path/to/video.mp4")
 except VideoAnalysisError as e:
     print(f"Analysis failed: {e.message}")
     print(f"Context: {e.context}")
@@ -195,11 +166,11 @@ tool = AudioProcessingTool()
 
 # With custom configuration
 config = {
-    'ffmpeg_path': '/usr/bin/ffmpeg',
-    'temp_dir': '/custom/temp',
-    'max_file_size_mb': 500,
-    'default_sample_rate': 44100,
-    'default_bit_rate': '256k'
+    "ffmpeg_path": "/usr/bin/ffmpeg",
+    "temp_dir": "/custom/temp",
+    "max_file_size_mb": 500,
+    "default_sample_rate": 44100,
+    "default_bit_rate": "256k",
 }
 tool = AudioProcessingTool(config=config)
 ```
@@ -245,10 +216,10 @@ Dict containing processing results
 
 ```python
 result = tool.execute(
-    operation='cleanup',
-    audio_path='/path/to/raw_audio.wav',
-    noise_reduction='medium',  # 'light', 'medium', 'aggressive'
-    hum_removal=True
+    operation="cleanup",
+    audio_path="/path/to/raw_audio.wav",
+    noise_reduction="medium",  # 'light', 'medium', 'aggressive'
+    hum_removal=True,
 )
 
 print(f"Output: {result['output_path']}")
@@ -259,11 +230,11 @@ print(f"File size: {result['file_size']} bytes")
 
 ```python
 result = tool.execute(
-    operation='enhance',
-    audio_path='/path/to/audio.wav',
-    preset='podcast',  # 'podcast', 'interview', 'narration'
+    operation="enhance",
+    audio_path="/path/to/audio.wav",
+    preset="podcast",  # 'podcast', 'interview', 'narration'
     compression_ratio=4,
-    de_essing=0.6
+    de_essing=0.6,
 )
 ```
 
@@ -271,11 +242,11 @@ result = tool.execute(
 
 ```python
 result = tool.execute(
-    operation='insert_sponsor',
-    audio_path='/path/to/main_audio.wav',
-    sponsor_audio='/path/to/sponsor_read.wav',
+    operation="insert_sponsor",
+    audio_path="/path/to/main_audio.wav",
+    sponsor_audio="/path/to/sponsor_read.wav",
     insertion_points=[120.5, 360.0],  # Timestamps in seconds
-    transition_duration=1.0
+    transition_duration=1.0,
 )
 ```
 
@@ -283,10 +254,7 @@ result = tool.execute(
 
 ```python
 result = tool.execute(
-    operation='master',
-    audio_path='/path/to/processed_audio.wav',
-    target_lufs=-16,
-    true_peak=-1.5
+    operation="master", audio_path="/path/to/processed_audio.wav", target_lufs=-16, true_peak=-1.5
 )
 ```
 
@@ -294,12 +262,12 @@ result = tool.execute(
 
 ```python
 result = tool.execute(
-    operation='convert',
-    audio_path='/path/to/audio.wav',
-    output_path='/path/to/audio.mp3',
-    target_format='mp3',
+    operation="convert",
+    audio_path="/path/to/audio.wav",
+    output_path="/path/to/audio.mp3",
+    target_format="mp3",
     sample_rate=44100,
-    bit_rate='320k'
+    bit_rate="320k",
 )
 ```
 
@@ -307,9 +275,9 @@ result = tool.execute(
 
 ```python
 result = tool.execute(
-    operation='normalize',
-    audio_path='/path/to/audio.wav',
-    method='lufs'  # 'peak' or 'lufs'
+    operation="normalize",
+    audio_path="/path/to/audio.wav",
+    method="lufs",  # 'peak' or 'lufs'
 )
 ```
 
@@ -317,15 +285,15 @@ result = tool.execute(
 
 ```python
 {
-    'status': 'success',
-    'operation': 'enhance',
-    'input_path': '/path/to/input.wav',
-    'output_path': '/tmp/audio_processing/input_enhance.mp3',
-    'preset': 'podcast',
-    'compression_ratio': 4,
-    'de_essing': 0.6,
-    'file_size': 12345678,
-    'performance': {...}
+    "status": "success",
+    "operation": "enhance",
+    "input_path": "/path/to/input.wav",
+    "output_path": "/tmp/audio_processing/input_enhance.mp3",
+    "preset": "podcast",
+    "compression_ratio": 4,
+    "de_essing": 0.6,
+    "file_size": 12345678,
+    "performance": {...},
 }
 ```
 
@@ -335,7 +303,7 @@ result = tool.execute(
 from agents.toolsets.jcsnotfunny import AudioProcessingError
 
 try:
-    result = tool.execute(operation='cleanup', audio_path='/path/to/audio.mp3')
+    result = tool.execute(operation="cleanup", audio_path="/path/to/audio.mp3")
 except AudioProcessingError as e:
     print(f"Processing failed: {e.message}")
     print(f"Suggestions: {e.recovery_suggestions}")
@@ -359,12 +327,12 @@ tool = ContentSchedulingTool()
 
 # With custom configuration
 config = {
-    'supported_platforms': ['twitter', 'instagram', 'tiktok'],
-    'max_posts_per_day': 5,
-    'min_interval_minutes': 120,
-    'working_hours_start': 8,
-    'working_hours_end': 20,
-    'timezone': 'America/New_York'
+    "supported_platforms": ["twitter", "instagram", "tiktok"],
+    "max_posts_per_day": 5,
+    "min_interval_minutes": 120,
+    "working_hours_start": 8,
+    "working_hours_end": 20,
+    "timezone": "America/New_York",
 }
 tool = ContentSchedulingTool(config=config)
 ```
@@ -414,12 +382,12 @@ from datetime import datetime, timedelta
 future_time = (datetime.now() + timedelta(hours=2)).isoformat()
 
 result = tool.execute(
-    operation='schedule',
-    content='Check out our latest episode!',
-    platforms=['twitter', 'instagram'],
+    operation="schedule",
+    content="Check out our latest episode!",
+    platforms=["twitter", "instagram"],
     schedule_time=future_time,
-    media_paths=['/path/to/image.jpg'],
-    tags=['podcast', 'newepisode']
+    media_paths=["/path/to/image.jpg"],
+    tags=["podcast", "newepisode"],
 )
 
 print(f"Post ID: {result['post_id']}")
@@ -430,14 +398,14 @@ print(f"Recommendations: {result['recommendation']}")
 
 ```python
 result = tool.execute(
-    operation='calendar',
-    start_date='2024-03-01',
-    end_date='2024-03-31',
-    platforms=['twitter', 'instagram']
+    operation="calendar",
+    start_date="2024-03-01",
+    end_date="2024-03-31",
+    platforms=["twitter", "instagram"],
 )
 
 print(f"Total posts: {result['total_posts']}")
-for date, data in result['calendar'].items():
+for date, data in result["calendar"].items():
     print(f"{date}: {data['post_count']} posts")
 ```
 
@@ -445,29 +413,23 @@ for date, data in result['calendar'].items():
 
 ```python
 result = tool.execute(
-    operation='check_conflicts',
-    schedule_time='2024-03-15T14:00:00',
-    platforms=['twitter']
+    operation="check_conflicts", schedule_time="2024-03-15T14:00:00", platforms=["twitter"]
 )
 
-if result['has_conflicts']:
+if result["has_conflicts"]:
     print("Conflicts found:")
-    for conflict in result['conflicts']:
+    for conflict in result["conflicts"]:
         print(f"  - {conflict}")
-    print("Alternative times:", result['alternative_times'])
+    print("Alternative times:", result["alternative_times"])
 ```
 
 #### Optimize Schedule
 
 ```python
-result = tool.execute(
-    operation='optimize',
-    date='2024-03-15',
-    platforms=['twitter', 'instagram']
-)
+result = tool.execute(operation="optimize", date="2024-03-15", platforms=["twitter", "instagram"])
 
 print(f"Improvement potential: {result['improvement_potential']}")
-for suggestion in result['suggestions']:
+for suggestion in result["suggestions"]:
     print(f"Post {suggestion['post_id']}:")
     print(f"  Current: {suggestion['current_time']}")
     print(f"  Suggested: {suggestion['suggested_time']}")
@@ -478,34 +440,25 @@ for suggestion in result['suggestions']:
 
 ```python
 # List all posts
-result = tool.execute(operation='list')
+result = tool.execute(operation="list")
 
 # List posts for specific date
-result = tool.execute(
-    operation='list',
-    date='2024-03-15'
-)
+result = tool.execute(operation="list", date="2024-03-15")
 
 # List posts for specific platform
-result = tool.execute(
-    operation='list',
-    platform='twitter'
-)
+result = tool.execute(operation="list", platform="twitter")
 
 print(f"Found {result['post_count']} posts")
-for post in result['posts']:
+for post in result["posts"]:
     print(f"  {post['post_id']}: {post['content'][:50]}...")
 ```
 
 #### Cancel Post
 
 ```python
-result = tool.execute(
-    operation='cancel',
-    post_id='post_abc123'
-)
+result = tool.execute(operation="cancel", post_id="post_abc123")
 
-print(result['message'])
+print(result["message"])
 ```
 
 ### Output Structures
@@ -514,25 +467,21 @@ print(result['message'])
 
 ```python
 {
-    'status': 'success',
-    'operation': 'schedule',
-    'post_id': 'post_abc123',
-    'post_entry': {
-        'post_id': 'post_abc123',
-        'content': 'Check out our latest episode!',
-        'platforms': ['twitter', 'instagram'],
-        'schedule_time': '2024-03-15T14:00:00',
-        'media_paths': ['/path/to/image.jpg'],
-        'tags': ['podcast', 'newepisode'],
-        'status': 'scheduled',
-        'created_at': '2024-03-14T10:30:00'
+    "status": "success",
+    "operation": "schedule",
+    "post_id": "post_abc123",
+    "post_entry": {
+        "post_id": "post_abc123",
+        "content": "Check out our latest episode!",
+        "platforms": ["twitter", "instagram"],
+        "schedule_time": "2024-03-15T14:00:00",
+        "media_paths": ["/path/to/image.jpg"],
+        "tags": ["podcast", "newepisode"],
+        "status": "scheduled",
+        "created_at": "2024-03-14T10:30:00",
     },
-    'conflicts': [],
-    'recommendation': {
-        'is_optimal_time': True,
-        'engagement_estimate': 'high',
-        'tips': [...]
-    }
+    "conflicts": [],
+    "recommendation": {"is_optimal_time": True, "engagement_estimate": "high", "tips": [...]},
 }
 ```
 
@@ -540,20 +489,20 @@ print(result['message'])
 
 ```python
 {
-    'status': 'success',
-    'operation': 'calendar',
-    'start_date': '2024-03-01',
-    'end_date': '2024-03-31',
-    'calendar': {
-        '2024-03-01': {
-            'date': '2024-03-01',
-            'posts': [...],
-            'post_count': 3,
-            'capacity': 7,
-            'recommended_times': [...]
+    "status": "success",
+    "operation": "calendar",
+    "start_date": "2024-03-01",
+    "end_date": "2024-03-31",
+    "calendar": {
+        "2024-03-01": {
+            "date": "2024-03-01",
+            "posts": [...],
+            "post_count": 3,
+            "capacity": 7,
+            "recommended_times": [...],
         }
     },
-    'total_posts': 45
+    "total_posts": 45,
 }
 ```
 
@@ -563,15 +512,15 @@ print(result['message'])
 from agents.toolsets.jcsnotfunny import (
     SchedulingError,
     SchedulingConflictError,
-    SchedulingValidationError
+    SchedulingValidationError,
 )
 
 try:
     result = tool.execute(
-        operation='schedule',
-        content='Test post',
-        platforms=['twitter'],
-        schedule_time='2024-03-15T14:00:00'
+        operation="schedule",
+        content="Test post",
+        platforms=["twitter"],
+        schedule_time="2024-03-15T14:00:00",
     )
 except SchedulingConflictError as e:
     print(f"Conflict detected: {e.message}")
@@ -601,7 +550,7 @@ except ToolError as e:
     print(f"Message: {e.message}")
     print(f"Context: {e.context}")
     print(f"Recovery suggestions: {e.recovery_suggestions}")
-    
+
     # Log the error
     e.log_error(logger)
 ```
@@ -614,7 +563,7 @@ All tools track performance metrics:
 result = tool.execute(...)
 
 # Get performance metrics
-metrics = result['performance']
+metrics = result["performance"]
 print(f"Execution time: {metrics['execution_time']}s")
 print(f"Start time: {metrics['start_time']}")
 print(f"End time: {metrics['end_time']}")
@@ -651,16 +600,13 @@ except ToolError as e:
 
 ```python
 # Development
-dev_config = {
-    'max_file_size_mb': 100,
-    'temp_dir': '/tmp/dev'
-}
+dev_config = {"max_file_size_mb": 100, "temp_dir": "/tmp/dev"}
 
 # Production
 prod_config = {
-    'max_file_size_mb': 5000,
-    'temp_dir': '/var/podcast/temp',
-    'ffmpeg_path': '/usr/local/bin/ffmpeg'
+    "max_file_size_mb": 5000,
+    "temp_dir": "/var/podcast/temp",
+    "ffmpeg_path": "/usr/local/bin/ffmpeg",
 }
 
 tool = VideoAnalysisTool(config=prod_config)
@@ -671,7 +617,7 @@ tool = VideoAnalysisTool(config=prod_config)
 ```python
 result = tool.execute(...)
 
-if result['performance']['execution_time'] > 60:
+if result["performance"]["execution_time"] > 60:
     logger.warning(f"Tool execution took {result['performance']['execution_time']}s")
 ```
 
@@ -684,7 +630,7 @@ result = tool.execute(...)
 # Process result...
 
 # Clean up if needed
-if hasattr(tool, 'temp_dir'):
+if hasattr(tool, "temp_dir"):
     # Remove only specific files, not the entire directory
     pass
 ```
@@ -693,13 +639,13 @@ if hasattr(tool, 'temp_dir'):
 
 ```python
 # Quick analysis for validation
-quick = video_tool.execute(video_path, analysis_type='quick')
-if quick['metadata']['duration'] > 3600:
+quick = video_tool.execute(video_path, analysis_type="quick")
+if quick["metadata"]["duration"] > 3600:
     # Video too long
     return
 
 # Full analysis only when needed
-full = video_tool.execute(video_path, analysis_type='full')
+full = video_tool.execute(video_path, analysis_type="full")
 ```
 
 ---
@@ -734,7 +680,7 @@ VideoAnalysisError: Video file too large
 
 **Solution:** Increase limit or split file
 ```python
-config = {'max_file_size_mb': 10000}
+config = {"max_file_size_mb": 10000}
 # Or split video into smaller segments
 ```
 

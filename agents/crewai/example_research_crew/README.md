@@ -21,21 +21,17 @@ from crewai import Crew, Agent, Task
 import yaml
 
 # Load configurations
-with open('crew_config.yaml') as f:
+with open("crew_config.yaml") as f:
     crew_config = yaml.safe_load(f)
 
-with open('agents.yaml') as f:
+with open("agents.yaml") as f:
     agents_config = yaml.safe_load(f)
 
-with open('tasks.yaml') as f:
+with open("tasks.yaml") as f:
     tasks_config = yaml.safe_load(f)
 
 # Create crew and run
-crew = Crew(
-    agents=[...],
-    tasks=[...],
-    process=crew_config['process']
-)
+crew = Crew(agents=[...], tasks=[...], process=crew_config["process"])
 
 result = crew.kickoff()
 ```
