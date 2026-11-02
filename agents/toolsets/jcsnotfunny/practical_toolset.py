@@ -14,31 +14,28 @@ Key Features:
 - Clear separation of concerns
 """
 
-import os
+import json
+import logging
 import sys
 import time
-import logging
-import json
-import subprocess
 import traceback
-from typing import Dict, List, Optional, Any, Tuple
-from pathlib import Path
 from dataclasses import dataclass
 from enum import Enum, auto
+from pathlib import Path
+from typing import Any
 
 # Configure logging for informative output
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger(__name__)
 
 
 class ErrorSeverity(Enum):
     """Error severity levels for informative reporting."""
+
     INFO = auto()
     WARNING = auto()
     ERROR = auto()
@@ -47,8 +44,13 @@ class ErrorSeverity(Enum):
 
 class ToolError(Exception):
     """Base exception class for all toolset errors."""
-    def __init__(self, message: str, severity: ErrorSeverity = ErrorSeverity.ERROR,
-                 context: Optional[Dict[str, Any]] = None):
+
+    def __init__(
+        self,
+        message: str,
+        severity: ErrorSeverity = ErrorSeverity.ERROR,
+        context: dict[str, Any] | None = None,
+    ):
         super().__init__(message)
         self.severity = severity
         self.context = context or {}
@@ -72,40 +74,45 @@ class ToolError(Exception):
 
 class RecoverableError(ToolError):
     """Exception for errors that can be recovered from."""
-    def __init__(self, message: str, context: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, message: str, context: dict[str, Any] | None = None):
         super().__init__(message, ErrorSeverity.WARNING, context)
 
 
 class ResourceError(ToolError):
     """Exception for resource-related errors (files, network, etc.)."""
-    def __init__(self, message: str, resource: str, context: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, message: str, resource: str, context: dict[str, Any] | None = None):
         full_context = context or {}
-        full_context['resource'] = resource
+        full_context["resource"] = resource
         super().__init__(message, ErrorSeverity.ERROR, full_context)
 
 
 class ValidationError(ToolError):
     """Exception for validation failures."""
-    def __init__(self, message: str, field: str, value: Any, context: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, message: str, field: str, value: Any, context: dict[str, Any] | None = None):
         full_context = context or {}
-        full_context['field'] = field
-        full_context['invalid_value'] = str(value)
+        full_context["field"] = field
+        full_context["invalid_value"] = str(value)
         super().__init__(message, ErrorSeverity.ERROR, full_context)
 
 
 class FatalError(ToolError):
     """Exception for unrecoverable errors that should terminate execution."""
-    def __init__(self, message: str, context: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, message: str, context: dict[str, Any] | None = None):
         super().__init__(message, ErrorSeverity.CRITICAL, context)
 
 
 @dataclass
 class ToolResult:
     """Standardized result object for tool operations."""
+
     success: bool
     message: str
-    data: Optional[Dict[str, Any]] = None
-    error: Optional[ToolError] = None
+    data: dict[str, Any] | None = None
+    error: ToolError | None = None
 
     def log(self):
         """Log the tool result with appropriate level."""
@@ -129,12 +136,12 @@ class PracticalToolsetManager:
     - Status monitoring and reporting
     """
 
-    def __init__(self, base_dir: str = ".", config: Optional[Dict[str, Any]] = None):
+    def __init__(self, base_dir: str = ".", config: dict[str, Any] | None = None):
         """Initialize the toolset manager."""
         self.base_dir = Path(base_dir).resolve()
         self.config = config or {}
-        self.tools: Dict[str, Any] = {}
-        self.active_tools: List[str] = []
+        self.tools: dict[str, Any] = {}
+        self.active_tools: list[str] = []
         self.setup_complete = False
 
         # Ensure base directory exists
@@ -149,7 +156,7 @@ class PracticalToolsetManager:
             raise ResourceError(
                 f"Failed to ensure base directory exists: {e}",
                 str(self.base_dir),
-                {"error_type": type(e).__name__}
+                {"error_type": type(e).__name__},
             )
 
     def register_tool(self, tool_name: str, tool_instance: Any):
@@ -158,11 +165,7 @@ class PracticalToolsetManager:
             raise FatalError("Toolset manager not initialized. Call setup() first.")
 
         if tool_name in self.tools:
-            raise ValidationError(
-                f"Tool '{tool_name}' already registered",
-                "tool_name",
-                tool_name
-            )
+            raise ValidationError(f"Tool '{tool_name}' already registered", "tool_name", tool_name)
 
         self.tools[tool_name] = tool_instance
         logger.info(f"Registered tool: {tool_name}")
@@ -173,8 +176,7 @@ class PracticalToolsetManager:
             # Validate base directory
             if not self.base_dir.exists():
                 raise ResourceError(
-                    f"Base directory does not exist: {self.base_dir}",
-                    str(self.base_dir)
+                    f"Base directory does not exist: {self.base_dir}", str(self.base_dir)
                 )
 
             # Initialize tools
@@ -189,16 +191,18 @@ class PracticalToolsetManager:
     def _initialize_tools(self):
         """Initialize all practical tools."""
         # Initialize video analysis tool
-        video_tool = PracticalVideoAnalysisTool(self.base_dir, self.config.get('video', {}))
-        self.register_tool('video_analysis', video_tool)
+        video_tool = PracticalVideoAnalysisTool(self.base_dir, self.config.get("video", {}))
+        self.register_tool("video_analysis", video_tool)
 
         # Initialize audio processing tool
-        audio_tool = PracticalAudioProcessingTool(self.base_dir, self.config.get('audio', {}))
-        self.register_tool('audio_processing', audio_tool)
+        audio_tool = PracticalAudioProcessingTool(self.base_dir, self.config.get("audio", {}))
+        self.register_tool("audio_processing", audio_tool)
 
         # Initialize content scheduling tool
-        scheduling_tool = PracticalContentSchedulingTool(self.base_dir, self.config.get('scheduling', {}))
-        self.register_tool('content_scheduling', scheduling_tool)
+        scheduling_tool = PracticalContentSchedulingTool(
+            self.base_dir, self.config.get("scheduling", {})
+        )
+        self.register_tool("content_scheduling", scheduling_tool)
 
     def execute_tool(self, tool_name: str, method: str, **kwargs) -> ToolResult:
         """Execute a specific tool method with error handling."""
@@ -206,11 +210,7 @@ class PracticalToolsetManager:
             return ToolResult(
                 success=False,
                 message=f"Tool '{tool_name}' not found",
-                error=ValidationError(
-                    f"Tool '{tool_name}' not registered",
-                    "tool_name",
-                    tool_name
-                )
+                error=ValidationError(f"Tool '{tool_name}' not registered", "tool_name", tool_name),
             )
 
         tool = self.tools[tool_name]
@@ -220,10 +220,8 @@ class PracticalToolsetManager:
                 success=False,
                 message=f"Method '{method}' not found on tool '{tool_name}'",
                 error=ValidationError(
-                    f"Method '{method}' does not exist on tool '{tool_name}'",
-                    "method",
-                    method
-                )
+                    f"Method '{method}' does not exist on tool '{tool_name}'", "method", method
+                ),
             )
 
         try:
@@ -240,28 +238,20 @@ class PracticalToolsetManager:
             return ToolResult(
                 success=True,
                 message=f"Successfully executed {tool_name}.{method}",
-                data=result if result else {"status": "completed"}
+                data=result if result else {"status": "completed"},
             )
 
         except ToolError as e:
             e.log()
-            return ToolResult(
-                success=False,
-                message=f"Tool execution failed: {e.message}",
-                error=e
-            )
+            return ToolResult(success=False, message=f"Tool execution failed: {e.message}", error=e)
         except Exception as e:
             error = ToolError(
                 f"Unexpected error executing {tool_name}.{method}: {e}",
                 ErrorSeverity.ERROR,
-                {"error_type": type(e).__name__, "error_message": str(e)}
+                {"error_type": type(e).__name__, "error_message": str(e)},
             )
             error.log()
-            return ToolResult(
-                success=False,
-                message=f"Unexpected error: {e}",
-                error=error
-            )
+            return ToolResult(success=False, message=f"Unexpected error: {e}", error=error)
 
     def _cleanup_tool(self, tool_name: str):
         """Clean up resources for a tool."""
@@ -292,7 +282,7 @@ class PracticalVideoAnalysisTool:
     - Format validation
     """
 
-    def __init__(self, base_dir: Path, config: Dict[str, Any]):
+    def __init__(self, base_dir: Path, config: dict[str, Any]):
         self.base_dir = base_dir
         self.config = config
         self.video_dir = base_dir / "videos"
@@ -304,12 +294,9 @@ class PracticalVideoAnalysisTool:
             self.video_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"Video directory ensured: {self.video_dir}")
         except Exception as e:
-            raise ResourceError(
-                f"Failed to create video directory: {e}",
-                str(self.video_dir)
-            )
+            raise ResourceError(f"Failed to create video directory: {e}", str(self.video_dir))
 
-    def analyze_video(self, video_path: str, output_format: str = "json") -> Dict[str, Any]:
+    def analyze_video(self, video_path: str, output_format: str = "json") -> dict[str, Any]:
         """Analyze video file for speaker detection and scene segmentation."""
         try:
             # Validate input
@@ -321,11 +308,7 @@ class PracticalVideoAnalysisTool:
                 raise ResourceError(f"Video file not found: {video_path}", str(video_path))
 
             if not video_file.is_file():
-                raise ValidationError(
-                    f"Path is not a file: {video_path}",
-                    "video_path",
-                    video_path
-                )
+                raise ValidationError(f"Path is not a file: {video_path}", "video_path", video_path)
 
             # Simulate video analysis (in real implementation, use FFmpeg/OpenCV)
             logger.info(f"Analyzing video: {video_path}")
@@ -344,18 +327,14 @@ class PracticalVideoAnalysisTool:
                 "fps": 30.0,
                 "speakers_detected": [
                     {"id": 1, "name": "Host", "appearances": 120},
-                    {"id": 2, "name": "Guest", "appearances": 95}
+                    {"id": 2, "name": "Guest", "appearances": 95},
                 ],
                 "scenes": [
                     {"start": 0, "end": 300, "type": "intro"},
                     {"start": 300, "end": 1800, "type": "interview"},
-                    {"start": 1800, "end": 3600, "type": "qa"}
+                    {"start": 1800, "end": 3600, "type": "qa"},
                 ],
-                "quality_metrics": {
-                    "brightness": 0.75,
-                    "contrast": 0.82,
-                    "sharpness": 0.68
-                }
+                "quality_metrics": {"brightness": 0.75, "contrast": 0.82, "sharpness": 0.68},
             }
 
             logger.info(f"Video analysis completed for {video_path}")
@@ -365,10 +344,10 @@ class PracticalVideoAnalysisTool:
             raise ToolError(
                 f"Video analysis failed: {e}",
                 ErrorSeverity.ERROR,
-                {"video_path": video_path, "error": str(e)}
+                {"video_path": video_path, "error": str(e)},
             )
 
-    def validate_video_format(self, video_path: str) -> Dict[str, Any]:
+    def validate_video_format(self, video_path: str) -> dict[str, Any]:
         """Validate video file format and specifications."""
         try:
             video_file = Path(video_path)
@@ -383,7 +362,7 @@ class PracticalVideoAnalysisTool:
                 "codec": "h264",
                 "audio_codec": "aac",
                 "compliance": "standards_compliant",
-                "issues": []
+                "issues": [],
             }
 
             logger.info(f"Video format validation completed for {video_path}")
@@ -393,7 +372,7 @@ class PracticalVideoAnalysisTool:
             raise ToolError(
                 f"Video format validation failed: {e}",
                 ErrorSeverity.ERROR,
-                {"video_path": video_path}
+                {"video_path": video_path},
             )
 
 
@@ -408,7 +387,7 @@ class PracticalAudioProcessingTool:
     - Quality assessment
     """
 
-    def __init__(self, base_dir: Path, config: Dict[str, Any]):
+    def __init__(self, base_dir: Path, config: dict[str, Any]):
         self.base_dir = base_dir
         self.config = config
         self.audio_dir = base_dir / "audio"
@@ -420,12 +399,9 @@ class PracticalAudioProcessingTool:
             self.audio_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"Audio directory ensured: {self.audio_dir}")
         except Exception as e:
-            raise ResourceError(
-                f"Failed to create audio directory: {e}",
-                str(self.audio_dir)
-            )
+            raise ResourceError(f"Failed to create audio directory: {e}", str(self.audio_dir))
 
-    def process_audio(self, audio_path: str, output_format: str = "wav") -> Dict[str, Any]:
+    def process_audio(self, audio_path: str, output_format: str = "wav") -> dict[str, Any]:
         """Process audio file with noise reduction and normalization."""
         try:
             audio_file = Path(audio_path)
@@ -440,16 +416,28 @@ class PracticalAudioProcessingTool:
                 "input_file": str(audio_file),
                 "output_format": output_format,
                 "processing_steps": [
-                    {"name": "noise_reduction", "status": "completed", "parameters": {"level": "medium"}},
-                    {"name": "normalization", "status": "completed", "parameters": {"target_lufs": -16}},
-                    {"name": "eq_adjustment", "status": "completed", "parameters": {"preset": "podcast"}}
+                    {
+                        "name": "noise_reduction",
+                        "status": "completed",
+                        "parameters": {"level": "medium"},
+                    },
+                    {
+                        "name": "normalization",
+                        "status": "completed",
+                        "parameters": {"target_lufs": -16},
+                    },
+                    {
+                        "name": "eq_adjustment",
+                        "status": "completed",
+                        "parameters": {"preset": "podcast"},
+                    },
                 ],
                 "quality_metrics": {
                     "signal_to_noise_ratio": 45.2,
                     "peak_level": -3.0,
-                    "loudness_lufs": -16.1
+                    "loudness_lufs": -16.1,
                 },
-                "output_file": f"{audio_file.stem}_processed.{output_format}"
+                "output_file": f"{audio_file.stem}_processed.{output_format}",
             }
 
             logger.info(f"Audio processing completed for {audio_path}")
@@ -457,12 +445,10 @@ class PracticalAudioProcessingTool:
 
         except Exception as e:
             raise ToolError(
-                f"Audio processing failed: {e}",
-                ErrorSeverity.ERROR,
-                {"audio_path": audio_path}
+                f"Audio processing failed: {e}", ErrorSeverity.ERROR, {"audio_path": audio_path}
             )
 
-    def validate_audio_quality(self, audio_path: str) -> Dict[str, Any]:
+    def validate_audio_quality(self, audio_path: str) -> dict[str, Any]:
         """Validate audio file quality metrics."""
         try:
             audio_file = Path(audio_path)
@@ -479,11 +465,15 @@ class PracticalAudioProcessingTool:
                     "peak_level": -2.3,
                     "loudness_lufs": -15.8,
                     "clipping_detected": False,
-                    "distortion_level": 0.012
+                    "distortion_level": 0.012,
                 },
                 "issues": [
-                    {"type": "warning", "message": "Slight background hiss detected", "severity": "low"}
-                ]
+                    {
+                        "type": "warning",
+                        "message": "Slight background hiss detected",
+                        "severity": "low",
+                    }
+                ],
             }
 
             logger.info(f"Audio quality validation completed for {audio_path}")
@@ -493,7 +483,7 @@ class PracticalAudioProcessingTool:
             raise ToolError(
                 f"Audio quality validation failed: {e}",
                 ErrorSeverity.ERROR,
-                {"audio_path": audio_path}
+                {"audio_path": audio_path},
             )
 
 
@@ -508,7 +498,7 @@ class PracticalContentSchedulingTool:
     - Optimization suggestions
     """
 
-    def __init__(self, base_dir: Path, config: Dict[str, Any]):
+    def __init__(self, base_dir: Path, config: dict[str, Any]):
         self.base_dir = base_dir
         self.config = config
         self.scheduling_dir = base_dir / "scheduling"
@@ -521,11 +511,12 @@ class PracticalContentSchedulingTool:
             logger.info(f"Scheduling directory ensured: {self.scheduling_dir}")
         except Exception as e:
             raise ResourceError(
-                f"Failed to create scheduling directory: {e}",
-                str(self.scheduling_dir)
+                f"Failed to create scheduling directory: {e}", str(self.scheduling_dir)
             )
 
-    def schedule_content(self, content_data: Dict[str, Any], platforms: List[str]) -> Dict[str, Any]:
+    def schedule_content(
+        self, content_data: dict[str, Any], platforms: list[str]
+    ) -> dict[str, Any]:
         """Schedule content across multiple platforms."""
         try:
             # Validate input
@@ -545,12 +536,12 @@ class PracticalContentSchedulingTool:
                 "schedule_status": {
                     "twitter": {"status": "scheduled", "time": "2026-01-08T15:00:00Z"},
                     "instagram": {"status": "scheduled", "time": "2026-01-08T16:00:00Z"},
-                    "youtube": {"status": "scheduled", "time": "2026-01-08T14:00:00Z"}
+                    "youtube": {"status": "scheduled", "time": "2026-01-08T14:00:00Z"},
                 },
                 "optimization_suggestions": [
                     {"platform": "twitter", "suggestion": "Add hashtags for better reach"},
-                    {"platform": "instagram", "suggestion": "Consider adding video thumbnail"}
-                ]
+                    {"platform": "instagram", "suggestion": "Consider adding video thumbnail"},
+                ],
             }
 
             logger.info(f"Content scheduling completed for {len(platforms)} platforms")
@@ -560,14 +551,16 @@ class PracticalContentSchedulingTool:
             raise ToolError(
                 f"Content scheduling failed: {e}",
                 ErrorSeverity.ERROR,
-                {"platforms": platforms, "error": str(e)}
+                {"platforms": platforms, "error": str(e)},
             )
 
-    def validate_schedule(self, schedule_data: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_schedule(self, schedule_data: dict[str, Any]) -> dict[str, Any]:
         """Validate content schedule for conflicts and issues."""
         try:
             if not schedule_data:
-                raise ValidationError("Schedule data cannot be empty", "schedule_data", schedule_data)
+                raise ValidationError(
+                    "Schedule data cannot be empty", "schedule_data", schedule_data
+                )
 
             # Simulate schedule validation
             validation_result = {
@@ -576,9 +569,15 @@ class PracticalContentSchedulingTool:
                 "issues": [],
                 "optimization_score": 92.4,
                 "suggestions": [
-                    {"type": "timing", "message": "Consider spacing posts by 2 hours for better engagement"},
-                    {"type": "platform", "message": "Instagram posts perform better in evening hours"}
-                ]
+                    {
+                        "type": "timing",
+                        "message": "Consider spacing posts by 2 hours for better engagement",
+                    },
+                    {
+                        "type": "platform",
+                        "message": "Instagram posts perform better in evening hours",
+                    },
+                ],
             }
 
             logger.info("Schedule validation completed")
@@ -586,9 +585,7 @@ class PracticalContentSchedulingTool:
 
         except Exception as e:
             raise ToolError(
-                f"Schedule validation failed: {e}",
-                ErrorSeverity.ERROR,
-                {"error": str(e)}
+                f"Schedule validation failed: {e}", ErrorSeverity.ERROR, {"error": str(e)}
             )
 
 
@@ -600,8 +597,8 @@ if __name__ == "__main__":
         config={
             "video": {"enabled": True},
             "audio": {"enabled": True},
-            "scheduling": {"enabled": True}
-        }
+            "scheduling": {"enabled": True},
+        },
     )
 
     try:
@@ -610,17 +607,13 @@ if __name__ == "__main__":
 
         # Test video analysis
         video_result = manager.execute_tool(
-            "video_analysis",
-            "analyze_video",
-            video_path="./sample.mp4"
+            "video_analysis", "analyze_video", video_path="./sample.mp4"
         )
         video_result.log()
 
         # Test audio processing
         audio_result = manager.execute_tool(
-            "audio_processing",
-            "process_audio",
-            audio_path="./sample.wav"
+            "audio_processing", "process_audio", audio_path="./sample.wav"
         )
         audio_result.log()
 
@@ -629,7 +622,7 @@ if __name__ == "__main__":
             "content_scheduling",
             "schedule_content",
             content_data={"id": "ep123", "title": "Test Episode"},
-            platforms=["twitter", "instagram"]
+            platforms=["twitter", "instagram"],
         )
         schedule_result.log()
 
