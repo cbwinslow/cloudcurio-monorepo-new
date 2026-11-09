@@ -1,8 +1,11 @@
 from __future__ import annotations
+
 from pathlib import Path
-from .models import AgentSpec
-from .io import load_yaml, dump_json
+
 from ..observability.otel import maybe_otel_span
+from .io import dump_json, load_yaml
+from .models import AgentSpec
+
 
 def compile_agent(yaml_path: Path, out_dir: Path) -> Path:
     with maybe_otel_span("compile_agent"):
