@@ -6,12 +6,11 @@ suitable for YouTube Shorts creation.
 
 import os
 import re
-import time
-from typing import Dict, List, Any, Optional
 from pathlib import Path
+from typing import Any
 
-from agents.base_agent import BaseAgent, AgentTool
-from agents.robust_tool import RobustTool, ToolResult
+from agents.base_agent import AgentTool, BaseAgent
+from agents.robust_tool import RobustTool
 
 # Import telemetry
 try:
@@ -24,6 +23,7 @@ except ImportError:
     def trace_tool_method(agent_name, tool_name):
         def decorator(method):
             return method
+
         return decorator
 
 
@@ -47,7 +47,7 @@ class FunnyMomentAgent(BaseAgent):
         """Initialize the funny moment agent."""
         super().__init__(agent_name)
 
-    def _initialize_tools(self) -> Dict[str, AgentTool]:
+    def _initialize_tools(self) -> dict[str, AgentTool]:
         """Initialize funny moment detection tools."""
         return {
             "analyze_transcript": FunnyMomentAgentTool(
@@ -74,10 +74,10 @@ class TranscriptAnalysisTool(RobustTool):
     def __init__(self):
         super().__init__(
             name="analyze_transcript",
-            description="Analyze video transcript for funny moments and segments"
+            description="Analyze video transcript for funny moments and segments",
         )
 
-    def _define_validation_schema(self) -> Dict[str, Any]:
+    def _define_validation_schema(self) -> dict[str, Any]:
         """Define validation schema for transcript analysis."""
         return {
             "type": "object",
@@ -85,26 +85,26 @@ class TranscriptAnalysisTool(RobustTool):
             "properties": {
                 "transcript_text": {
                     "type": "string",
-                    "description": "Transcript text to analyze for funny moments"
+                    "description": "Transcript text to analyze for funny moments",
                 },
                 "min_duration": {
                     "type": "number",
                     "default": 5.0,
-                    "description": "Minimum duration for funny segments in seconds"
+                    "description": "Minimum duration for funny segments in seconds",
                 },
                 "max_duration": {
                     "type": "number",
                     "default": 60.0,
-                    "description": "Maximum duration for funny segments in seconds"
-                }
-            }
+                    "description": "Maximum duration for funny segments in seconds",
+                },
+            },
         }
 
-    def _define_fallback_strategies(self) -> List[Dict[str, Any]]:
+    def _define_fallback_strategies(self) -> list[dict[str, Any]]:
         """Define fallback strategies."""
         return []
 
-    def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
+    def _execute_core(self, parameters: dict[str, Any], execution_id: str) -> Any:
         """Analyze transcript for funny moments."""
         transcript_text = parameters["transcript_text"]
         min_duration = parameters.get("min_duration", 5.0)
@@ -112,19 +112,29 @@ class TranscriptAnalysisTool(RobustTool):
 
         # Basic funny moment detection using keywords and patterns
         funny_keywords = [
-            "laugh", "funny", "joke", "hilarious", "comedy", "humor",
-            "ridiculous", "absurd", "silly", "goofy", "prank", "meme"
+            "laugh",
+            "funny",
+            "joke",
+            "hilarious",
+            "comedy",
+            "humor",
+            "ridiculous",
+            "absurd",
+            "silly",
+            "goofy",
+            "prank",
+            "meme",
         ]
 
         funny_patterns = [
             r"\b(lol|LOL|lmao|LMFAO|rofl|ROFL)\b",
             r"\b(ha+|hehe|haha)\b",
-            r"\b(that's funny|that was funny|that's hilarious)\b"
+            r"\b(that's funny|that was funny|that's hilarious)\b",
         ]
 
         # Find segments containing funny content
         segments = []
-        lines = transcript_text.split('\n')
+        lines = transcript_text.split("\n")
 
         for i, line in enumerate(lines):
             if self._contains_funny_content(line, funny_keywords, funny_patterns):
@@ -140,20 +150,24 @@ class TranscriptAnalysisTool(RobustTool):
                 elif duration > max_duration:
                     end_time = start_time + max_duration
 
-                segments.append({
-                    "start_time": start_time,
-                    "end_time": end_time,
-                    "text": line.strip(),
-                    "funny_score": self._calculate_funny_score(line, funny_keywords, funny_patterns)
-                })
+                segments.append(
+                    {
+                        "start_time": start_time,
+                        "end_time": end_time,
+                        "text": line.strip(),
+                        "funny_score": self._calculate_funny_score(
+                            line, funny_keywords, funny_patterns
+                        ),
+                    }
+                )
 
         return {
             "funny_segments": segments,
             "total_segments": len(segments),
-            "analysis_method": "keyword_and_pattern_based"
+            "analysis_method": "keyword_and_pattern_based",
         }
 
-    def _contains_funny_content(self, text: str, keywords: List[str], patterns: List[str]) -> bool:
+    def _contains_funny_content(self, text: str, keywords: list[str], patterns: list[str]) -> bool:
         """Check if text contains funny content."""
         text_lower = text.lower()
 
@@ -169,7 +183,7 @@ class TranscriptAnalysisTool(RobustTool):
 
         return False
 
-    def _calculate_funny_score(self, text: str, keywords: List[str], patterns: List[str]) -> float:
+    def _calculate_funny_score(self, text: str, keywords: list[str], patterns: list[str]) -> float:
         """Calculate a funny score for the text."""
         score = 0.0
         text_lower = text.lower()
@@ -192,11 +206,10 @@ class LaughterDetectionTool(RobustTool):
 
     def __init__(self):
         super().__init__(
-            name="detect_laughter",
-            description="Detect laughter and audience reactions in audio"
+            name="detect_laughter", description="Detect laughter and audience reactions in audio"
         )
 
-    def _define_validation_schema(self) -> Dict[str, Any]:
+    def _define_validation_schema(self) -> dict[str, Any]:
         """Define validation schema for laughter detection."""
         return {
             "type": "object",
@@ -204,20 +217,20 @@ class LaughterDetectionTool(RobustTool):
             "properties": {
                 "audio_file": {
                     "type": "string",
-                    "description": "Path to audio file to analyze for laughter"
+                    "description": "Path to audio file to analyze for laughter",
                 },
                 "output_file": {
                     "type": "string",
-                    "description": "Path to save laughter detection results"
-                }
-            }
+                    "description": "Path to save laughter detection results",
+                },
+            },
         }
 
-    def _define_fallback_strategies(self) -> List[Dict[str, Any]]:
+    def _define_fallback_strategies(self) -> list[dict[str, Any]]:
         """Define fallback strategies."""
         return []
 
-    def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
+    def _execute_core(self, parameters: dict[str, Any], execution_id: str) -> Any:
         """Detect laughter in audio file."""
         audio_file = parameters["audio_file"]
         output_file = parameters.get("output_file")
@@ -234,7 +247,7 @@ class LaughterDetectionTool(RobustTool):
         laughter_segments = [
             {"start_time": 15.2, "end_time": 18.5, "confidence": 0.87},
             {"start_time": 42.1, "end_time": 45.3, "confidence": 0.92},
-            {"start_time": 120.8, "end_time": 124.1, "confidence": 0.78}
+            {"start_time": 120.8, "end_time": 124.1, "confidence": 0.78},
         ]
 
         if output_file:
@@ -244,19 +257,23 @@ class LaughterDetectionTool(RobustTool):
             "audio_file": audio_file,
             "laughter_segments": laughter_segments,
             "total_laughter": len(laughter_segments),
-            "detection_method": "basic_audio_analysis"
+            "detection_method": "basic_audio_analysis",
         }
 
-    def _save_laughter_results(self, segments: List[Dict[str, Any]], output_path: str) -> None:
+    def _save_laughter_results(self, segments: list[dict[str, Any]], output_path: str) -> None:
         """Save laughter detection results to file."""
         import json
 
-        with open(output_path, 'w') as f:
-            json.dump({
-                "laughter_segments": segments,
-                "total_segments": len(segments),
-                "analysis_type": "laughter_detection"
-            }, f, indent=2)
+        with open(output_path, "w") as f:
+            json.dump(
+                {
+                    "laughter_segments": segments,
+                    "total_segments": len(segments),
+                    "analysis_type": "laughter_detection",
+                },
+                f,
+                indent=2,
+            )
 
 
 class FunnyClipIdentificationTool(RobustTool):
@@ -265,45 +282,42 @@ class FunnyClipIdentificationTool(RobustTool):
     def __init__(self):
         super().__init__(
             name="identify_funny_clips",
-            description="Identify specific funny segments for clip creation"
+            description="Identify specific funny segments for clip creation",
         )
 
-    def _define_validation_schema(self) -> Dict[str, Any]:
+    def _define_validation_schema(self) -> dict[str, Any]:
         """Define validation schema for funny clip identification."""
         return {
             "type": "object",
             "required": ["video_path", "transcript_path"],
             "properties": {
-                "video_path": {
-                    "type": "string",
-                    "description": "Path to video file"
-                },
+                "video_path": {"type": "string", "description": "Path to video file"},
                 "transcript_path": {
                     "type": "string",
-                    "description": "Path to transcript file (VTT or JSON)"
+                    "description": "Path to transcript file (VTT or JSON)",
                 },
                 "output_dir": {
                     "type": "string",
-                    "description": "Directory to save funny clip information"
+                    "description": "Directory to save funny clip information",
                 },
                 "min_clip_duration": {
                     "type": "number",
                     "default": 8.0,
-                    "description": "Minimum duration for clips in seconds"
+                    "description": "Minimum duration for clips in seconds",
                 },
                 "max_clip_duration": {
                     "type": "number",
                     "default": 60.0,
-                    "description": "Maximum duration for clips in seconds"
-                }
-            }
+                    "description": "Maximum duration for clips in seconds",
+                },
+            },
         }
 
-    def _define_fallback_strategies(self) -> List[Dict[str, Any]]:
+    def _define_fallback_strategies(self) -> list[dict[str, Any]]:
         """Define fallback strategies."""
         return []
 
-    def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
+    def _execute_core(self, parameters: dict[str, Any], execution_id: str) -> Any:
         """Identify funny clips from video and transcript."""
         video_path = parameters["video_path"]
         transcript_path = parameters["transcript_path"]
@@ -342,16 +356,18 @@ class FunnyClipIdentificationTool(RobustTool):
                     segment["end"] = segment["start"] + max_duration
                     duration = max_duration
 
-                funny_clips.append({
-                    "clip_id": clip_id,
-                    "video_path": video_path,
-                    "start_time": segment["start"],
-                    "end_time": segment["end"],
-                    "duration": duration,
-                    "text": segment["text"],
-                    "funny_score": self._calculate_funny_score(segment["text"]),
-                    "output_path": os.path.join(output_dir, f"clip_{clip_id:03d}.mp4")
-                })
+                funny_clips.append(
+                    {
+                        "clip_id": clip_id,
+                        "video_path": video_path,
+                        "start_time": segment["start"],
+                        "end_time": segment["end"],
+                        "duration": duration,
+                        "text": segment["text"],
+                        "funny_score": self._calculate_funny_score(segment["text"]),
+                        "output_path": os.path.join(output_dir, f"clip_{clip_id:03d}.mp4"),
+                    }
+                )
 
                 clip_id += 1
 
@@ -365,48 +381,50 @@ class FunnyClipIdentificationTool(RobustTool):
             "funny_clips": funny_clips,
             "total_clips": len(funny_clips),
             "output_dir": output_dir,
-            "clips_info_file": clips_info_path
+            "clips_info_file": clips_info_path,
         }
 
-    def _parse_transcript(self, transcript_path: str) -> List[Dict[str, Any]]:
+    def _parse_transcript(self, transcript_path: str) -> list[dict[str, Any]]:
         """Parse transcript file (VTT or JSON) into segments."""
         segments = []
 
-        if transcript_path.endswith('.vtt'):
+        if transcript_path.endswith(".vtt"):
             return self._parse_vtt(transcript_path)
-        elif transcript_path.endswith('.json'):
+        elif transcript_path.endswith(".json"):
             return self._parse_json_transcript(transcript_path)
         else:
             raise ValueError(f"Unsupported transcript format: {transcript_path}")
 
-    def _parse_vtt(self, vtt_path: str) -> List[Dict[str, Any]]:
+    def _parse_vtt(self, vtt_path: str) -> list[dict[str, Any]]:
         """Parse VTT file into segments."""
         segments = []
 
-        with open(vtt_path, 'r') as f:
+        with open(vtt_path, "r") as f:
             content = f.read()
 
         blocks = re.split(r"\n\n+", content.strip())
         for block in blocks:
-            if '-->' in block:
+            if "-->" in block:
                 lines = block.splitlines()
                 times = lines[0]
-                text = ' '.join(lines[1:]).strip()
-                start, arrow, end = times.partition('-->')
+                text = " ".join(lines[1:]).strip()
+                start, arrow, end = times.partition("-->")
 
-                segments.append({
-                    "start": self._parse_time(start.strip()),
-                    "end": self._parse_time(end.strip()),
-                    "text": text
-                })
+                segments.append(
+                    {
+                        "start": self._parse_time(start.strip()),
+                        "end": self._parse_time(end.strip()),
+                        "text": text,
+                    }
+                )
 
         return segments
 
-    def _parse_json_transcript(self, json_path: str) -> List[Dict[str, Any]]:
+    def _parse_json_transcript(self, json_path: str) -> list[dict[str, Any]]:
         """Parse JSON transcript into segments."""
         import json
 
-        with open(json_path, 'r') as f:
+        with open(json_path, "r") as f:
             data = json.load(f)
 
         segments = []
@@ -414,11 +432,13 @@ class FunnyClipIdentificationTool(RobustTool):
         # Handle different JSON structures
         if "segments" in data:
             for seg in data["segments"]:
-                segments.append({
-                    "start": seg.get("start", 0),
-                    "end": seg.get("end", 0),
-                    "text": seg.get("text", "")
-                })
+                segments.append(
+                    {
+                        "start": seg.get("start", 0),
+                        "end": seg.get("end", 0),
+                        "text": seg.get("text", ""),
+                    }
+                )
         elif "words" in data:
             # Group words into segments
             current_segment = {"start": 0, "end": 0, "text": ""}
@@ -442,8 +462,8 @@ class FunnyClipIdentificationTool(RobustTool):
 
     def _parse_time(self, time_str: str) -> float:
         """Convert time string to seconds."""
-        time_str = time_str.replace(',', '.')
-        parts = time_str.split(':')
+        time_str = time_str.replace(",", ".")
+        parts = time_str.split(":")
 
         if len(parts) == 3:
             return float(parts[0]) * 3600 + float(parts[1]) * 60 + float(parts[2])
@@ -455,14 +475,24 @@ class FunnyClipIdentificationTool(RobustTool):
     def _is_funny_segment(self, text: str) -> bool:
         """Determine if a segment contains funny content."""
         funny_keywords = [
-            "laugh", "funny", "joke", "hilarious", "comedy", "humor",
-            "ridiculous", "absurd", "silly", "goofy", "prank", "meme"
+            "laugh",
+            "funny",
+            "joke",
+            "hilarious",
+            "comedy",
+            "humor",
+            "ridiculous",
+            "absurd",
+            "silly",
+            "goofy",
+            "prank",
+            "meme",
         ]
 
         funny_patterns = [
             r"\b(lol|LOL|lmao|LMFAO|rofl|ROFL)\b",
             r"\b(ha+|hehe|haha)\b",
-            r"\b(that's funny|that was funny|that's hilarious)\b"
+            r"\b(that's funny|that was funny|that's hilarious)\b",
         ]
 
         text_lower = text.lower()
@@ -485,14 +515,24 @@ class FunnyClipIdentificationTool(RobustTool):
         text_lower = text.lower()
 
         funny_keywords = [
-            "laugh", "funny", "joke", "hilarious", "comedy", "humor",
-            "ridiculous", "absurd", "silly", "goofy", "prank", "meme"
+            "laugh",
+            "funny",
+            "joke",
+            "hilarious",
+            "comedy",
+            "humor",
+            "ridiculous",
+            "absurd",
+            "silly",
+            "goofy",
+            "prank",
+            "meme",
         ]
 
         funny_patterns = [
             r"\b(lol|LOL|lmao|LMFAO|rofl|ROFL)\b",
             r"\b(ha+|hehe|haha)\b",
-            r"\b(that's funny|that was funny|that's hilarious)\b"
+            r"\b(that's funny|that was funny|that's hilarious)\b",
         ]
 
         # Score based on keywords
@@ -507,7 +547,7 @@ class FunnyClipIdentificationTool(RobustTool):
 
         return min(score, 10.0)
 
-    def _save_clips_info(self, clips: List[Dict[str, Any]], output_path: str) -> None:
+    def _save_clips_info(self, clips: list[dict[str, Any]], output_path: str) -> None:
         """Save funny clips information to JSON file."""
         import json
 
@@ -515,8 +555,8 @@ class FunnyClipIdentificationTool(RobustTool):
             "funny_clips": clips,
             "total_clips": len(clips),
             "analysis_type": "funny_moment_detection",
-            "timestamp": "2024-01-01T00:00:00Z"  # Would use actual timestamp in real implementation
+            "timestamp": "2024-01-01T00:00:00Z",  # Would use actual timestamp in real implementation
         }
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(clips_data, f, indent=2)

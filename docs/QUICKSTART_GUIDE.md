@@ -44,23 +44,23 @@ spec:
     preferred:
       provider: ollama
       model: qwen2.5-coder
-  
+
   prompts:
     system: |
       You are a helpful assistant that can search the web and process data.
       Be concise and accurate in your responses.
-  
+
   tools:
     - id: web_search
       type: python
       entrypoint: agents/tools/web_tools.py:search_engine_tool
-    
+
     - id: llm_completion
       type: python
       entrypoint: agents/tools/llm_tools.py:llm_completion_tool
       config:
         temperature: 0.7
-  
+
   runtime:
     supported: [local]
     timeout: 300
@@ -94,33 +94,17 @@ from cbw_foundry.swarm import Swarm, SwarmAgent, SwarmConfig, CoordinationMode
 
 # Create agents
 agents = [
-    SwarmAgent(
-        name="researcher",
-        role="worker",
-        capabilities=["research"],
-        confidence=0.9
-    ),
-    SwarmAgent(
-        name="summarizer",
-        role="worker",
-        capabilities=["summarization"],
-        confidence=0.85
-    )
+    SwarmAgent(name="researcher", role="worker", capabilities=["research"], confidence=0.9),
+    SwarmAgent(name="summarizer", role="worker", capabilities=["summarization"], confidence=0.85),
 ]
 
 # Configure swarm for sequential execution
-config = SwarmConfig(
-    coordination_mode=CoordinationMode.SEQUENTIAL,
-    max_iterations=2,
-    timeout=300
-)
+config = SwarmConfig(coordination_mode=CoordinationMode.SEQUENTIAL, max_iterations=2, timeout=300)
 
 # Create and run swarm
 swarm = Swarm(name="research_swarm", agents=agents, config=config)
 
-result = swarm.execute({
-    "task": "Research Python best practices and summarize"
-})
+result = swarm.execute({"task": "Research Python best practices and summarize"})
 
 print(f"Success: {result.success}")
 print(f"Time: {result.execution_time:.2f}s")
@@ -150,7 +134,7 @@ metadata:
 
 spec:
   coordination: sequential
-  
+
   steps:
     - id: research
       name: "Research Topic"
@@ -159,7 +143,7 @@ spec:
         task: "Research ${topic}"
       output_var: research_results
       timeout: 180
-    
+
     - id: summarize
       name: "Summarize Findings"
       agent: summarizer
@@ -169,7 +153,7 @@ spec:
       output_var: summary
       depends_on: [research]
       timeout: 120
-    
+
     - id: save
       name: "Save Report"
       action: file_write
@@ -197,16 +181,10 @@ spec:
 from agents.tools.llm_tools import llm_completion_tool
 
 # Create tool
-llm = llm_completion_tool({
-    "provider": "ollama",
-    "model": "qwen2.5-coder"
-})
+llm = llm_completion_tool({"provider": "ollama", "model": "qwen2.5-coder"})
 
 # Use tool
-result = llm.execute(
-    prompt="Explain what is a closure in Python",
-    temperature=0.5
-)
+result = llm.execute(prompt="Explain what is a closure in Python", temperature=0.5)
 
 print(result["text"])
 ```
@@ -222,7 +200,7 @@ scraper = web_scraper_tool()
 # Scrape page
 result = scraper.execute(
     url="https://example.com",
-    selector="article h2"  # Get all h2 tags
+    selector="article h2",  # Get all h2 tags
 )
 
 print(result["content"])
@@ -240,14 +218,10 @@ transformer = data_transform_tool()
 data = [
     {"name": "Alice", "score": 95},
     {"name": "Bob", "score": 87},
-    {"name": "Charlie", "score": 92}
+    {"name": "Charlie", "score": 92},
 ]
 
-result = transformer.execute(
-    data=data,
-    operation="filter",
-    condition={"score": 90}
-)
+result = transformer.execute(data=data, operation="filter", condition={"score": 90})
 
 print(result["result"])  # Only scores >= 90
 ```
@@ -274,23 +248,21 @@ print(f"Memory: {result['memory']['percent']}%")
 ```python
 # 1. Search web for topic
 from agents.tools.web_tools import search_engine_tool
+
 search = search_engine_tool()
 results = search.execute(query="AI agents", num_results=5)
 
 # 2. Process and analyze
 from agents.tools.llm_tools import llm_completion_tool
+
 llm = llm_completion_tool()
-analysis = llm.execute(
-    prompt=f"Analyze these search results: {results['results']}"
-)
+analysis = llm.execute(prompt=f"Analyze these search results: {results['results']}")
 
 # 3. Save report
 from agents.tools.file_tools import file_writer_tool
+
 writer = file_writer_tool()
-writer.execute(
-    filepath="research_report.md",
-    content=analysis["text"]
-)
+writer.execute(filepath="research_report.md", content=analysis["text"])
 ```
 
 ### Use Case 2: Data Pipeline
@@ -298,30 +270,27 @@ writer.execute(
 ```python
 # 1. Read data file
 from agents.tools.file_tools import file_reader_tool
+
 reader = file_reader_tool()
 data = reader.execute(filepath="data.csv")
 
 # 2. Process CSV
 from agents.tools.data_tools import csv_processor_tool
+
 csv = csv_processor_tool()
 parsed = csv.execute(data=data["content"], action="parse")
 
 # 3. Transform data
 from agents.tools.data_tools import data_transform_tool
+
 transformer = data_transform_tool()
 transformed = transformer.execute(
-    data=parsed["records"],
-    operation="sort",
-    key="score",
-    reverse=True
+    data=parsed["records"], operation="sort", key="score", reverse=True
 )
 
 # 4. Generate statistics
 stats = transformer.execute(
-    data=transformed["result"],
-    operation="aggregate",
-    field="score",
-    function="avg"
+    data=transformed["result"], operation="aggregate", field="score", function="avg"
 )
 
 print(f"Average score: {stats['result']}")
@@ -330,11 +299,7 @@ print(f"Average score: {stats['result']}")
 ### Use Case 3: System Health Dashboard
 
 ```python
-from agents.tools.system_tools import (
-    system_info_tool,
-    health_check_tool,
-    process_monitor_tool
-)
+from agents.tools.system_tools import system_info_tool, health_check_tool, process_monitor_tool
 
 # Get system info
 sysinfo = system_info_tool()
@@ -355,7 +320,7 @@ print(f"CPU: {info['cpu']['cpu_percent']}%")
 print(f"Memory: {info['memory']['percent']}%")
 print(f"Healthy: {health_status['healthy']}")
 print(f"\nTop Processes:")
-for proc in top_procs['processes'][:5]:
+for proc in top_procs["processes"][:5]:
     print(f"  {proc['name']}: {proc['cpu_percent']}%")
 ```
 
