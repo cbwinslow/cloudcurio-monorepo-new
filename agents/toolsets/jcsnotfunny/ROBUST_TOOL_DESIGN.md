@@ -74,7 +74,7 @@ class RobustTool:
     def _load_config(self) -> dict:
         """Load tool configuration"""
         try:
-            with open(f"configs/{self.name}_config.json", 'r') as f:
+            with open(f"configs/{self.name}_config.json", "r") as f:
                 return json.load(f)
         except FileNotFoundError:
             self.logger.warning(f"Configuration file not found, using defaults")
@@ -89,10 +89,7 @@ class RobustTool:
             "timeout": 300,
             "max_retries": 3,
             "retry_delay": 5,
-            "resource_limits": {
-                "memory": "2GB",
-                "cpu": "1 core"
-            }
+            "resource_limits": {"memory": "2GB", "cpu": "1 core"},
         }
 
     def validate_input(self, input_data: dict) -> tuple:
@@ -106,7 +103,9 @@ class RobustTool:
             # Validate parameter types
             for param, param_type in self.param_types.items():
                 if param in input_data and not isinstance(input_data[param], param_type):
-                    raise ValidationError(f"Invalid type for {param}: expected {param_type}, got {type(input_data[param])}")
+                    raise ValidationError(
+                        f"Invalid type for {param}: expected {param_type}, got {type(input_data[param])}"
+                    )
 
             # Validate parameter values
             for param, validator in self.param_validators.items():
@@ -145,7 +144,9 @@ class RobustTool:
                 # Post-execution validation
                 post_check_result = self.post_execution_validation(result)
                 if not post_check_result.success:
-                    return self._create_error_response("POST_CHECK_ERROR", post_check_result.message)
+                    return self._create_error_response(
+                        "POST_CHECK_ERROR", post_check_result.message
+                    )
 
                 self.metrics.increment("successes")
                 return self._create_success_response(result)
@@ -206,7 +207,7 @@ class RobustTool:
             "version": self.version,
             "timestamp": datetime.now().isoformat(),
             "result": result,
-            "metrics": self.metrics.get_current()
+            "metrics": self.metrics.get_current(),
         }
 
     def _create_error_response(self, error_type: str, message: str) -> dict:
@@ -219,7 +220,7 @@ class RobustTool:
             "error_type": error_type,
             "message": message,
             "suggestions": self._get_error_suggestions(error_type),
-            "metrics": self.metrics.get_current()
+            "metrics": self.metrics.get_current(),
         }
 
     def _get_error_suggestions(self, error_type: str) -> list:
@@ -231,31 +232,32 @@ class RobustTool:
                 "Check all required parameters are provided",
                 "Verify parameter types match expected types",
                 "Review parameter value constraints",
-                "Consult tool documentation for parameter specifications"
+                "Consult tool documentation for parameter specifications",
             ]
         elif error_type == "PRE_CHECK_ERROR":
             suggestions = [
                 "Check system resource availability",
                 "Verify input file paths and permissions",
                 "Ensure output directory is writable",
-                "Review tool resource requirements"
+                "Review tool resource requirements",
             ]
         elif error_type == "EXECUTION_ERROR":
             suggestions = [
                 "Check tool logs for detailed error information",
                 "Verify input data format and content",
                 "Review system resource usage",
-                "Try reducing input complexity or size"
+                "Try reducing input complexity or size",
             ]
         elif error_type == "POST_CHECK_ERROR":
             suggestions = [
                 "Review result quality requirements",
                 "Check input data quality",
                 "Consider adjusting quality thresholds",
-                "Consult tool documentation for quality assessment"
+                "Consult tool documentation for quality assessment",
             ]
 
         return suggestions
+
 
 class CheckResult:
     """Result of validation checks"""
@@ -264,8 +266,10 @@ class CheckResult:
         self.success = success
         self.message = message
 
+
 class ValidationError(Exception):
     """Input validation error"""
+
     pass
 ```
 
@@ -291,7 +295,7 @@ class ComprehensiveErrorHandler:
             "ValidationError": self._handle_validation_error,
             "ResourceUnavailableError": self._handle_resource_unavailable,
             "ProcessingError": self._handle_processing_error,
-            "DefaultError": self._handle_default_error
+            "DefaultError": self._handle_default_error,
         }
 
     def _load_fallback_strategies(self) -> dict:
@@ -300,18 +304,18 @@ class ComprehensiveErrorHandler:
             "video_analysis": [
                 self._fallback_reduce_quality,
                 self._fallback_partial_analysis,
-                self._fallback_alternative_format
+                self._fallback_alternative_format,
             ],
             "audio_cleanup": [
                 self._fallback_alternative_algorithm,
                 self._fallback_reduce_complexity,
-                self._fallback_partial_cleanup
+                self._fallback_partial_cleanup,
             ],
             "content_scheduling": [
                 self._fallback_retry_with_delay,
                 self._fallback_alternative_platform,
-                self._fallback_manual_review
-            ]
+                self._fallback_manual_review,
+            ],
         }
 
     def handle_error(self, error: Exception, context: dict) -> dict:
@@ -359,8 +363,8 @@ class ComprehensiveErrorHandler:
                 "suggestions": [
                     f"Update file path to {alternative_paths[0]}",
                     "Verify file permissions",
-                    "Check file system connectivity"
-                ]
+                    "Check file system connectivity",
+                ],
             }
         else:
             return {
@@ -371,8 +375,8 @@ class ComprehensiveErrorHandler:
                     "Verify file path is correct",
                     "Check file permissions",
                     "Ensure file exists at specified location",
-                    "Check file system connectivity"
-                ]
+                    "Check file system connectivity",
+                ],
             }
 
     def _handle_memory_error(self, error: Exception, context: dict) -> dict:
@@ -390,8 +394,8 @@ class ComprehensiveErrorHandler:
                     "Increase available memory",
                     "Reduce input data size",
                     "Optimize memory usage",
-                    "Process data in smaller batches"
-                ]
+                    "Process data in smaller batches",
+                ],
             }
         else:
             return {
@@ -402,8 +406,8 @@ class ComprehensiveErrorHandler:
                     "Increase system memory",
                     "Close other applications",
                     "Reduce input data size",
-                    "Process data in smaller batches"
-                ]
+                    "Process data in smaller batches",
+                ],
             }
 
     def _handle_timeout(self, error: Exception, context: dict) -> dict:
@@ -421,8 +425,8 @@ class ComprehensiveErrorHandler:
                     "Increase timeout setting",
                     "Optimize processing speed",
                     "Reduce input complexity",
-                    "Process in smaller batches"
-                ]
+                    "Process in smaller batches",
+                ],
             }
         else:
             return {
@@ -433,8 +437,8 @@ class ComprehensiveErrorHandler:
                     "Increase timeout setting",
                     "Optimize processing speed",
                     "Reduce input complexity",
-                    "Process in smaller batches"
-                ]
+                    "Process in smaller batches",
+                ],
             }
 
     def _create_comprehensive_error(self, error: Exception, context: dict) -> dict:
@@ -449,7 +453,7 @@ class ComprehensiveErrorHandler:
             "timestamp": datetime.now().isoformat(),
             "suggestions": self._get_general_suggestions(error_type),
             "documentation": self._get_relevant_documentation(error_type),
-            "support": self._get_support_information()
+            "support": self._get_support_information(),
         }
 
     def _get_general_suggestions(self, error_type: str) -> list:
@@ -459,29 +463,35 @@ class ComprehensiveErrorHandler:
             "Review input parameters and data",
             "Verify system resource availability",
             "Consult tool documentation",
-            "Contact support if issue persists"
+            "Contact support if issue persists",
         ]
 
         if "FILE" in error_type.upper():
-            suggestions.extend([
-                "Verify file paths and permissions",
-                "Check file system connectivity",
-                "Ensure files exist at specified locations"
-            ])
+            suggestions.extend(
+                [
+                    "Verify file paths and permissions",
+                    "Check file system connectivity",
+                    "Ensure files exist at specified locations",
+                ]
+            )
         elif "MEMORY" in error_type.upper():
-            suggestions.extend([
-                "Increase available memory",
-                "Reduce input data size",
-                "Process data in smaller batches",
-                "Optimize memory usage"
-            ])
+            suggestions.extend(
+                [
+                    "Increase available memory",
+                    "Reduce input data size",
+                    "Process data in smaller batches",
+                    "Optimize memory usage",
+                ]
+            )
         elif "TIMEOUT" in error_type.upper():
-            suggestions.extend([
-                "Increase timeout settings",
-                "Optimize processing speed",
-                "Reduce input complexity",
-                "Process in smaller batches"
-            ])
+            suggestions.extend(
+                [
+                    "Increase timeout settings",
+                    "Optimize processing speed",
+                    "Reduce input complexity",
+                    "Process in smaller batches",
+                ]
+            )
 
         return suggestions
 
@@ -490,20 +500,26 @@ class ComprehensiveErrorHandler:
         docs = []
 
         if "FILE" in error_type.upper():
-            docs.extend([
-                "docs/troubleshooting/TOOLS.md#file-errors",
-                "docs/agents/OVERVIEW.md#file-handling"
-            ])
+            docs.extend(
+                [
+                    "docs/troubleshooting/TOOLS.md#file-errors",
+                    "docs/agents/OVERVIEW.md#file-handling",
+                ]
+            )
         elif "MEMORY" in error_type.upper():
-            docs.extend([
-                "docs/troubleshooting/TOOLS.md#memory-errors",
-                "docs/best_practices/RESOURCE_MANAGEMENT.md"
-            ])
+            docs.extend(
+                [
+                    "docs/troubleshooting/TOOLS.md#memory-errors",
+                    "docs/best_practices/RESOURCE_MANAGEMENT.md",
+                ]
+            )
         elif "TIMEOUT" in error_type.upper():
-            docs.extend([
-                "docs/troubleshooting/TOOLS.md#timeout-errors",
-                "docs/best_practices/PERFORMANCE.md"
-            ])
+            docs.extend(
+                [
+                    "docs/troubleshooting/TOOLS.md#timeout-errors",
+                    "docs/best_practices/PERFORMANCE.md",
+                ]
+            )
 
         return docs
 ```
@@ -526,20 +542,11 @@ class QualityAssuranceFramework:
         return {
             "completeness": {
                 "weight": 0.3,
-                "description": "Percentage of expected results produced"
+                "description": "Percentage of expected results produced",
             },
-            "accuracy": {
-                "weight": 0.4,
-                "description": "Correctness of produced results"
-            },
-            "consistency": {
-                "weight": 0.2,
-                "description": "Consistency across multiple runs"
-            },
-            "performance": {
-                "weight": 0.1,
-                "description": "Execution speed and resource usage"
-            }
+            "accuracy": {"weight": 0.4, "description": "Correctness of produced results"},
+            "consistency": {"weight": 0.2, "description": "Consistency across multiple runs"},
+            "performance": {"weight": 0.1, "description": "Execution speed and resource usage"},
         }
 
     def _load_validation_rules(self) -> dict:
@@ -549,20 +556,20 @@ class QualityAssuranceFramework:
                 "min_completeness": 0.9,
                 "min_accuracy": 0.85,
                 "max_error_rate": 0.05,
-                "required_fields": ["speakers", "engagement_score", "cut_points"]
+                "required_fields": ["speakers", "engagement_score", "cut_points"],
             },
             "audio_cleanup": {
                 "min_completeness": 0.95,
                 "min_accuracy": 0.9,
                 "max_error_rate": 0.02,
-                "required_fields": ["noise_reduction_score", "clean_audio_path"]
+                "required_fields": ["noise_reduction_score", "clean_audio_path"],
             },
             "content_scheduling": {
                 "min_completeness": 0.98,
                 "min_accuracy": 0.95,
                 "max_error_rate": 0.01,
-                "required_fields": ["scheduled_posts", "platform_status"]
-            }
+                "required_fields": ["scheduled_posts", "platform_status"],
+            },
         }
 
     def assess_quality(self, result: dict, tool_type: str) -> dict:
@@ -577,10 +584,10 @@ class QualityAssuranceFramework:
 
         # Calculate weighted overall score
         overall_score = (
-            completeness_score * self.quality_metrics["completeness"]["weight"] +
-            accuracy_score * self.quality_metrics["accuracy"]["weight"] +
-            consistency_score * self.quality_metrics["consistency"]["weight"] +
-            performance_score * self.quality_metrics["performance"]["weight"]
+            completeness_score * self.quality_metrics["completeness"]["weight"]
+            + accuracy_score * self.quality_metrics["accuracy"]["weight"]
+            + consistency_score * self.quality_metrics["consistency"]["weight"]
+            + performance_score * self.quality_metrics["performance"]["weight"]
         )
 
         # Determine quality level
@@ -594,7 +601,7 @@ class QualityAssuranceFramework:
             "performance": performance_score,
             "quality_level": quality_level,
             "passes_validation": overall_score >= rules.get("min_quality", 0.7),
-            "validation_details": self._get_validation_details(result, rules)
+            "validation_details": self._get_validation_details(result, rules),
         }
 
     def _calculate_completeness(self, result: dict, rules: dict) -> float:
@@ -657,7 +664,7 @@ class QualityAssuranceFramework:
             "missing_fields": [],
             "invalid_fields": [],
             "quality_issues": [],
-            "suggestions": []
+            "suggestions": [],
         }
 
         # Check for missing required fields
@@ -706,7 +713,9 @@ class QualityAssuranceFramework:
         # This would be more sophisticated in real implementation
         # For example, use validation algorithms or compare with expected values
 
-        valid_fields = sum(1 for field, value in result.items() if self._is_valid_field(field, value))
+        valid_fields = sum(
+            1 for field, value in result.items() if self._is_valid_field(field, value)
+        )
         total_fields = len(result)
 
         if total_fields == 0:
@@ -735,53 +744,53 @@ class FallbackStrategyFramework:
                 "file_corrupt": [
                     self._fallback_file_repair,
                     self._fallback_partial_analysis,
-                    self._fallback_alternative_format
+                    self._fallback_alternative_format,
                 ],
                 "memory_error": [
                     self._fallback_reduce_quality,
                     self._fallback_process_batch,
-                    self._fallback_use_alternative_algorithm
+                    self._fallback_use_alternative_algorithm,
                 ],
                 "timeout": [
                     self._fallback_partial_analysis,
                     self._fallback_extend_timeout,
-                    self._fallback_reduce_scope
-                ]
+                    self._fallback_reduce_scope,
+                ],
             },
             "audio_cleanup": {
                 "file_corrupt": [
                     self._fallback_file_repair,
                     self._fallback_alternative_algorithm,
-                    self._fallback_partial_cleanup
+                    self._fallback_partial_cleanup,
                 ],
                 "memory_error": [
                     self._fallback_reduce_complexity,
                     self._fallback_process_batch,
-                    self._fallback_use_alternative_algorithm
+                    self._fallback_use_alternative_algorithm,
                 ],
                 "validation_error": [
                     self._fallback_adjust_parameters,
                     self._fallback_use_defaults,
-                    self._fallback_manual_review
-                ]
+                    self._fallback_manual_review,
+                ],
             },
             "content_scheduling": {
                 "api_error": [
                     self._fallback_retry_with_delay,
                     self._fallback_use_alternative_api,
-                    self._fallback_queue_for_review
+                    self._fallback_queue_for_review,
                 ],
                 "validation_error": [
                     self._fallback_adjust_content,
                     self._fallback_use_template,
-                    self._fallback_manual_approval
+                    self._fallback_manual_approval,
                 ],
                 "rate_limit": [
                     self._fallback_retry_later,
                     self._fallback_use_alternative_platform,
-                    self._fallback_reduce_frequency
-                ]
-            }
+                    self._fallback_reduce_frequency,
+                ],
+            },
         }
 
     def execute_fallback(self, error: Exception, context: dict) -> dict:
@@ -827,24 +836,30 @@ class FallbackStrategyFramework:
 
     def _record_fallback_usage(self, strategy_name: str, error_type: str, tool_type: str):
         """Record successful fallback usage"""
-        self.fallback_history.append({
-            "timestamp": datetime.now().isoformat(),
-            "strategy": strategy_name,
-            "error_type": error_type,
-            "tool_type": tool_type,
-            "success": True
-        })
+        self.fallback_history.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "strategy": strategy_name,
+                "error_type": error_type,
+                "tool_type": tool_type,
+                "success": True,
+            }
+        )
 
-    def _record_fallback_failure(self, strategy_name: str, error_type: str, tool_type: str, reason: str):
+    def _record_fallback_failure(
+        self, strategy_name: str, error_type: str, tool_type: str, reason: str
+    ):
         """Record failed fallback attempt"""
-        self.fallback_history.append({
-            "timestamp": datetime.now().isoformat(),
-            "strategy": strategy_name,
-            "error_type": error_type,
-            "tool_type": tool_type,
-            "success": False,
-            "reason": reason
-        })
+        self.fallback_history.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "strategy": strategy_name,
+                "error_type": error_type,
+                "tool_type": tool_type,
+                "success": False,
+                "reason": reason,
+            }
+        )
 
     def _create_fallback_exhausted_response(self, error: Exception, context: dict) -> dict:
         """Create response when all fallback strategies exhausted"""
@@ -860,8 +875,8 @@ class FallbackStrategyFramework:
                 "Check system resource availability",
                 "Consult tool documentation",
                 "Contact support for assistance",
-                "Consider manual intervention"
-            ]
+                "Consider manual intervention",
+            ],
         }
 
     def _get_attempted_strategies(self, context: dict) -> list:
@@ -888,8 +903,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Use repaired file for processing",
                     "Check original file for corruption issues",
-                    "Consider file format conversion"
-                ]
+                    "Consider file format conversion",
+                ],
             }
         except Exception as e:
             return {
@@ -898,8 +913,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Try alternative file repair tools",
                     "Use backup file if available",
-                    "Consider re-recording if critical"
-                ]
+                    "Consider re-recording if critical",
+                ],
             }
 
     def _fallback_partial_analysis(self, error: Exception, context: dict) -> dict:
@@ -918,8 +933,8 @@ class FallbackStrategyFramework:
                     "Use partial results for critical analysis",
                     "Attempt full analysis later",
                     "Check file integrity",
-                    "Consider file repair or conversion"
-                ]
+                    "Consider file repair or conversion",
+                ],
             }
         except Exception as e:
             return {
@@ -928,8 +943,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Check file accessibility",
                     "Verify file format compatibility",
-                    "Attempt manual analysis"
-                ]
+                    "Attempt manual analysis",
+                ],
             }
 
     def _fallback_reduce_quality(self, error: Exception, context: dict) -> dict:
@@ -949,8 +964,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Use results with quality caveats",
                     "Attempt high-quality analysis with more resources",
-                    "Consider processing on more powerful hardware"
-                ]
+                    "Consider processing on more powerful hardware",
+                ],
             }
         except Exception as e:
             return {
@@ -959,8 +974,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Check available memory",
                     "Try smaller quality reduction",
-                    "Process in smaller batches"
-                ]
+                    "Process in smaller batches",
+                ],
             }
 
     # Audio Cleanup Fallback Strategies
@@ -981,8 +996,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Use results with quality caveats",
                     "Attempt advanced cleaning with more resources",
-                    "Consider manual cleanup for critical sections"
-                ]
+                    "Consider manual cleanup for critical sections",
+                ],
             }
         except Exception as e:
             return {
@@ -991,8 +1006,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Check audio file integrity",
                     "Try different file format",
-                    "Attempt manual cleanup"
-                ]
+                    "Attempt manual cleanup",
+                ],
             }
 
     def _fallback_reduce_complexity(self, error: Exception, context: dict) -> dict:
@@ -1011,8 +1026,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Use results with quality caveats",
                     "Attempt full complexity cleaning with more resources",
-                    "Consider processing in smaller segments"
-                ]
+                    "Consider processing in smaller segments",
+                ],
             }
         except Exception as e:
             return {
@@ -1021,8 +1036,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Check system resources",
                     "Try smaller complexity reduction",
-                    "Process audio in segments"
-                ]
+                    "Process audio in segments",
+                ],
             }
 
     # Content Scheduling Fallback Strategies
@@ -1042,8 +1057,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Monitor for recurring issues",
                     "Check API status",
-                    "Review rate limits"
-                ]
+                    "Review rate limits",
+                ],
             }
         except Exception as e:
             return {
@@ -1052,8 +1067,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Check API availability",
                     "Review authentication credentials",
-                    "Contact API support"
-                ]
+                    "Contact API support",
+                ],
             }
 
     def _fallback_use_alternative_api(self, error: Exception, context: dict) -> dict:
@@ -1070,8 +1085,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Monitor primary API status",
                     "Review API failover configuration",
-                    "Consider load balancing"
-                ]
+                    "Consider load balancing",
+                ],
             }
         except Exception as e:
             return {
@@ -1080,8 +1095,8 @@ class FallbackStrategyFramework:
                 "suggestions": [
                     "Check all API endpoints",
                     "Review network connectivity",
-                    "Contact support"
-                ]
+                    "Contact support",
+                ],
             }
 ```
 

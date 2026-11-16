@@ -83,19 +83,20 @@ class AgentRegistry:
         self.dependencies = {}
         self.agent_health = {}
 
-    def register_agent(self, agent_name: str, agent_class: type,
-                      config: dict, toolsets: list) -> bool:
+    def register_agent(
+        self, agent_name: str, agent_class: type, config: dict, toolsets: list
+    ) -> bool:
         """Register a new agent type"""
         if agent_name in self.agents:
             raise AgentAlreadyRegistered(f"Agent {agent_name} already registered")
 
         self.agents[agent_name] = {
-            'class': agent_class,
-            'config': config,
-            'toolsets': toolsets,
-            'status': 'available',
-            'instances': 0,
-            'last_used': None
+            "class": agent_class,
+            "config": config,
+            "toolsets": toolsets,
+            "status": "available",
+            "instances": 0,
+            "last_used": None,
         }
 
         # Register toolsets
@@ -109,24 +110,24 @@ class AgentRegistry:
 
     def _register_toolset(self, toolset: dict):
         """Register a toolset"""
-        toolset_name = toolset['name']
+        toolset_name = toolset["name"]
 
         if toolset_name not in self.toolsets:
             self.toolsets[toolset_name] = {
-                'tools': toolset['tools'],
-                'dependencies': toolset.get('dependencies', []),
-                'agents_using': []
+                "tools": toolset["tools"],
+                "dependencies": toolset.get("dependencies", []),
+                "agents_using": [],
             }
 
-        self.toolsets[toolset_name]['agents_using'].append(toolset_name)
+        self.toolsets[toolset_name]["agents_using"].append(toolset_name)
 
     def _map_dependencies(self, agent_name: str, config: dict):
         """Map agent dependencies"""
-        dependencies = config.get('dependencies', [])
+        dependencies = config.get("dependencies", [])
 
         self.dependencies[agent_name] = {
-            'required_agents': dependencies,
-            'required_toolsets': [t['name'] for t in config.get('toolsets', [])]
+            "required_agents": dependencies,
+            "required_toolsets": [t["name"] for t in config.get("toolsets", [])],
         }
 
     def get_agent_info(self, agent_name: str) -> dict:
@@ -138,8 +139,7 @@ class AgentRegistry:
 
     def get_available_agents(self) -> list:
         """Get list of available agents"""
-        return [name for name, info in self.agents.items()
-                if info['status'] == 'available']
+        return [name for name, info in self.agents.items() if info["status"] == "available"]
 
     def update_agent_health(self, agent_name: str, health_status: dict):
         """Update health status for an agent"""
@@ -151,26 +151,23 @@ class AgentRegistry:
     def check_dependencies(self, agent_name: str) -> dict:
         """Check if agent dependencies are satisfied"""
         if agent_name not in self.dependencies:
-            return {'satisfied': True, 'missing': []}
+            return {"satisfied": True, "missing": []}
 
         missing = []
 
         # Check required agents
-        for required_agent in self.dependencies[agent_name]['required_agents']:
+        for required_agent in self.dependencies[agent_name]["required_agents"]:
             if required_agent not in self.agents:
                 missing.append(f"agent:{required_agent}")
-            elif self.agents[required_agent]['status'] != 'available':
+            elif self.agents[required_agent]["status"] != "available":
                 missing.append(f"agent:{required_agent} (unavailable)")
 
         # Check required toolsets
-        for required_toolset in self.dependencies[agent_name]['required_toolsets']:
+        for required_toolset in self.dependencies[agent_name]["required_toolsets"]:
             if required_toolset not in self.toolsets:
                 missing.append(f"toolset:{required_toolset}")
 
-        return {
-            'satisfied': len(missing) == 0,
-            'missing': missing
-        }
+        return {"satisfied": len(missing) == 0, "missing": missing}
 ```
 
 ### 2. Configuration Manager
@@ -196,7 +193,7 @@ class ConfigurationManager:
         load_dotenv()
 
         # Also load from specific environment files
-        env_files = ['.env', '.env.production', '.env.development']
+        env_files = [".env", ".env.production", ".env.development"]
 
         env_vars = {}
         for env_file in env_files:
@@ -234,7 +231,7 @@ class ConfigurationManager:
         config_path = f"{self.config_store_path}{agent_name}_config.json"
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 return json.load(f)
         except FileNotFoundError:
             raise ConfigurationNotFound(f"Base config not found for {agent_name}")
@@ -247,7 +244,7 @@ class ConfigurationManager:
 
         try:
             if os.path.exists(config_path):
-                with open(config_path, 'r') as f:
+                with open(config_path, "r") as f:
                     return json.load(f)
             return {}
         except json.JSONDecodeError as e:
@@ -271,7 +268,7 @@ class ConfigurationManager:
         resolved = {}
 
         for key, value in config.items():
-            if isinstance(value, str) and value.startswith('${') and value.endswith('}'):
+            if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
                 # Environment variable reference
                 var_name = value[2:-1]
                 env_value = self.environment_vars.get(var_name)
@@ -283,8 +280,10 @@ class ConfigurationManager:
             elif isinstance(value, dict):
                 resolved[key] = self._resolve_env_vars(value)
             elif isinstance(value, list):
-                resolved[key] = [self._resolve_env_vars(item) if isinstance(item, dict) else item
-                               for item in value]
+                resolved[key] = [
+                    self._resolve_env_vars(item) if isinstance(item, dict) else item
+                    for item in value
+                ]
             else:
                 resolved[key] = value
 
@@ -294,8 +293,9 @@ class ConfigurationManager:
         """Get secret value from secrets manager"""
         return self.secrets_manager.get_secret(secret_name)
 
-    def update_configuration(self, agent_name: str, updates: dict,
-                           environment: str = "production") -> bool:
+    def update_configuration(
+        self, agent_name: str, updates: dict, environment: str = "production"
+    ) -> bool:
         """Update agent configuration"""
         try:
             # Load current config
@@ -307,7 +307,7 @@ class ConfigurationManager:
             # Save updated config
             config_path = f"{self.config_store_path}{agent_name}_config.{environment}.json"
 
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 json.dump(updated_config, f, indent=2)
 
             # Clear cache
@@ -319,6 +319,7 @@ class ConfigurationManager:
 
         except Exception as e:
             raise ConfigurationUpdateError(f"Failed to update config: {str(e)}")
+
 
 class SecretsManager:
     """
@@ -334,7 +335,7 @@ class SecretsManager:
         # For this example, we'll use a simple approach
 
         try:
-            with open('.secrets.json', 'r') as f:
+            with open(".secrets.json", "r") as f:
                 return json.load(f)
         except FileNotFoundError:
             return {}
@@ -351,30 +352,40 @@ class SecretsManager:
         self.secrets_store[secret_name] = secret_value
 
         try:
-            with open('.secrets.json', 'w') as f:
+            with open(".secrets.json", "w") as f:
                 json.dump(self.secrets_store, f, indent=2)
             return True
         except Exception as e:
             raise SecretStorageError(f"Failed to store secret: {str(e)}")
 
+
 class ConfigurationError(Exception):
     """Configuration-related errors"""
+
     pass
+
 
 class ConfigurationNotFound(Exception):
     """Configuration not found"""
+
     pass
+
 
 class ConfigurationUpdateError(Exception):
     """Configuration update failed"""
+
     pass
+
 
 class SecretNotFound(Exception):
     """Secret not found"""
+
     pass
+
 
 class SecretStorageError(Exception):
     """Secret storage failed"""
+
     pass
 ```
 
@@ -390,26 +401,23 @@ class ResourceMonitor:
         self.system_metrics = {}
         self.agent_metrics = {}
         self.resource_limits = {
-            'cpu': {'warning': 80, 'critical': 90},
-            'memory': {'warning': 75, 'critical': 85},
-            'disk': {'warning': 85, 'critical': 95},
-            'network': {'warning': 70, 'critical': 80}
+            "cpu": {"warning": 80, "critical": 90},
+            "memory": {"warning": 75, "critical": 85},
+            "disk": {"warning": 85, "critical": 95},
+            "network": {"warning": 70, "critical": 80},
         }
         self.monitoring_interval = 5  # seconds
 
     def start_monitoring(self):
         """Start continuous resource monitoring"""
         self.monitoring_active = True
-        self.monitoring_thread = threading.Thread(
-            target=self._monitor_loop,
-            daemon=True
-        )
+        self.monitoring_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self.monitoring_thread.start()
 
     def stop_monitoring(self):
         """Stop resource monitoring"""
         self.monitoring_active = False
-        if hasattr(self, 'monitoring_thread'):
+        if hasattr(self, "monitoring_thread"):
             self.monitoring_thread.join()
 
     def _monitor_loop(self):
@@ -444,21 +452,18 @@ class ResourceMonitor:
         memory_usage = memory.percent
 
         # Disk usage
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
         disk_usage = disk.percent
 
         # Network usage
         net_io = psutil.net_io_counters()
 
         self.system_metrics = {
-            'timestamp': datetime.now().isoformat(),
-            'cpu': cpu_usage,
-            'memory': memory_usage,
-            'disk': disk_usage,
-            'network': {
-                'bytes_sent': net_io.bytes_sent,
-                'bytes_recv': net_io.bytes_recv
-            }
+            "timestamp": datetime.now().isoformat(),
+            "cpu": cpu_usage,
+            "memory": memory_usage,
+            "disk": disk_usage,
+            "network": {"bytes_sent": net_io.bytes_sent, "bytes_recv": net_io.bytes_recv},
         }
 
     def _update_agent_metrics(self):
@@ -466,23 +471,23 @@ class ResourceMonitor:
         # This would be populated by agent reporting
         # For now, we'll simulate some data
 
-        if not hasattr(self, '_simulated_agent_data'):
+        if not hasattr(self, "_simulated_agent_data"):
             self._simulated_agent_data = {}
 
         # Simulate agent resource usage
-        for agent_name in ['video_editor', 'audio_engineer', 'social_media_manager']:
+        for agent_name in ["video_editor", "audio_engineer", "social_media_manager"]:
             if agent_name not in self._simulated_agent_data:
                 self._simulated_agent_data[agent_name] = {
-                    'cpu': random.uniform(5, 25),
-                    'memory': random.uniform(100, 500),  # MB
-                    'active_tasks': random.randint(0, 3)
+                    "cpu": random.uniform(5, 25),
+                    "memory": random.uniform(100, 500),  # MB
+                    "active_tasks": random.randint(0, 3),
                 }
             else:
                 # Simulate fluctuations
                 data = self._simulated_agent_data[agent_name]
-                data['cpu'] = max(0, data['cpu'] + random.uniform(-5, 5))
-                data['memory'] = max(50, data['memory'] + random.uniform(-50, 50))
-                data['active_tasks'] = max(0, data['active_tasks'] + random.randint(-1, 1))
+                data["cpu"] = max(0, data["cpu"] + random.uniform(-5, 5))
+                data["memory"] = max(50, data["memory"] + random.uniform(-50, 50))
+                data["active_tasks"] = max(0, data["active_tasks"] + random.randint(-1, 1))
 
         self.agent_metrics = self._simulated_agent_data
 
@@ -495,42 +500,50 @@ class ResourceMonitor:
             current_value = self.system_metrics.get(resource)
 
             if current_value is not None:
-                if current_value > metrics['critical']:
-                    alerts.append({
-                        'severity': 'critical',
-                        'resource': resource,
-                        'value': current_value,
-                        'threshold': metrics['critical'],
-                        'message': f"{resource.upper()} usage critical: {current_value}% > {metrics['critical']}%"
-                    })
-                elif current_value > metrics['warning']:
-                    alerts.append({
-                        'severity': 'warning',
-                        'resource': resource,
-                        'value': current_value,
-                        'threshold': metrics['warning'],
-                        'message': f"{resource.upper()} usage high: {current_value}% > {metrics['warning']}%"
-                    })
+                if current_value > metrics["critical"]:
+                    alerts.append(
+                        {
+                            "severity": "critical",
+                            "resource": resource,
+                            "value": current_value,
+                            "threshold": metrics["critical"],
+                            "message": f"{resource.upper()} usage critical: {current_value}% > {metrics['critical']}%",
+                        }
+                    )
+                elif current_value > metrics["warning"]:
+                    alerts.append(
+                        {
+                            "severity": "warning",
+                            "resource": resource,
+                            "value": current_value,
+                            "threshold": metrics["warning"],
+                            "message": f"{resource.upper()} usage high: {current_value}% > {metrics['warning']}%",
+                        }
+                    )
 
         # Check agent resources
         for agent_name, metrics in self.agent_metrics.items():
-            if metrics['cpu'] > 80:
-                alerts.append({
-                    'severity': 'warning',
-                    'agent': agent_name,
-                    'resource': 'cpu',
-                    'value': metrics['cpu'],
-                    'message': f"Agent {agent_name} high CPU: {metrics['cpu']}%"
-                })
+            if metrics["cpu"] > 80:
+                alerts.append(
+                    {
+                        "severity": "warning",
+                        "agent": agent_name,
+                        "resource": "cpu",
+                        "value": metrics["cpu"],
+                        "message": f"Agent {agent_name} high CPU: {metrics['cpu']}%",
+                    }
+                )
 
-            if metrics['memory'] > 1000:  # 1GB
-                alerts.append({
-                    'severity': 'warning',
-                    'agent': agent_name,
-                    'resource': 'memory',
-                    'value': metrics['memory'],
-                    'message': f"Agent {agent_name} high memory: {metrics['memory']}MB"
-                })
+            if metrics["memory"] > 1000:  # 1GB
+                alerts.append(
+                    {
+                        "severity": "warning",
+                        "agent": agent_name,
+                        "resource": "memory",
+                        "value": metrics["memory"],
+                        "message": f"Agent {agent_name} high memory: {metrics['memory']}MB",
+                    }
+                )
 
         # Send alerts if any
         if alerts:
@@ -545,26 +558,26 @@ class ResourceMonitor:
     def get_resource_status(self) -> dict:
         """Get current resource status"""
         return {
-            'system': self.system_metrics,
-            'agents': self.agent_metrics,
-            'limits': self.resource_limits
+            "system": self.system_metrics,
+            "agents": self.agent_metrics,
+            "limits": self.resource_limits,
         }
 
     def can_allocate_resources(self, resource_requirements: dict) -> bool:
         """Check if resources can be allocated"""
         # Check CPU
-        available_cpu = 100 - self.system_metrics.get('cpu', 0)
-        if resource_requirements.get('cpu', 0) > available_cpu * 0.8:  # Keep 20% buffer
+        available_cpu = 100 - self.system_metrics.get("cpu", 0)
+        if resource_requirements.get("cpu", 0) > available_cpu * 0.8:  # Keep 20% buffer
             return False
 
         # Check memory
-        available_memory = 100 - self.system_metrics.get('memory', 0)
-        if resource_requirements.get('memory', 0) > available_memory * 0.8:
+        available_memory = 100 - self.system_metrics.get("memory", 0)
+        if resource_requirements.get("memory", 0) > available_memory * 0.8:
             return False
 
         # Check disk
-        available_disk = 100 - self.system_metrics.get('disk', 0)
-        if resource_requirements.get('disk', 0) > available_disk * 0.8:
+        available_disk = 100 - self.system_metrics.get("disk", 0)
+        if resource_requirements.get("disk", 0) > available_disk * 0.8:
             return False
 
         return True
@@ -599,21 +612,20 @@ class WorkflowEngine:
 
     def _validate_workflow_definition(self, definition: dict):
         """Validate workflow definition structure"""
-        required_fields = ['description', 'agents', 'steps']
+        required_fields = ["description", "agents", "steps"]
 
         for field in required_fields:
             if field not in definition:
                 raise WorkflowValidationError(f"Missing required field: {field}")
 
         # Validate steps
-        for i, step in enumerate(definition['steps']):
-            if 'agent' not in step:
+        for i, step in enumerate(definition["steps"]):
+            if "agent" not in step:
                 raise WorkflowValidationError(f"Step {i} missing 'agent' field")
-            if 'action' not in step:
+            if "action" not in step:
                 raise WorkflowValidationError(f"Step {i} missing 'action' field")
 
-    def submit_workflow(self, workflow_name: str, parameters: dict,
-                       priority: int = 1) -> str:
+    def submit_workflow(self, workflow_name: str, parameters: dict, priority: int = 1) -> str:
         """Submit a workflow for execution"""
         if workflow_name not in self.workflow_definitions:
             raise WorkflowNotFound(f"Workflow {workflow_name} not found")
@@ -621,14 +633,14 @@ class WorkflowEngine:
         workflow_id = self._generate_workflow_id()
 
         workflow_request = {
-            'workflow_id': workflow_id,
-            'workflow_name': workflow_name,
-            'parameters': parameters,
-            'priority': priority,
-            'status': 'queued',
-            'submitted_at': datetime.now().isoformat(),
-            'started_at': None,
-            'completed_at': None
+            "workflow_id": workflow_id,
+            "workflow_name": workflow_name,
+            "parameters": parameters,
+            "priority": priority,
+            "status": "queued",
+            "submitted_at": datetime.now().isoformat(),
+            "started_at": None,
+            "completed_at": None,
         }
 
         self.workflow_queue.put((priority, workflow_request))
@@ -662,36 +674,37 @@ class WorkflowEngine:
     def _has_available_resources(self) -> bool:
         """Check if resources are available for workflow execution"""
         # Simple check - in real implementation would be more sophisticated
-        active_workflows = sum(1 for wf in self.active_workflows.values()
-                              if wf['status'] in ['running', 'starting'])
+        active_workflows = sum(
+            1 for wf in self.active_workflows.values() if wf["status"] in ["running", "starting"]
+        )
 
         return active_workflows < 3  # Limit concurrent workflows
 
     def _execute_workflow(self, workflow_request: dict):
         """Execute a workflow"""
         try:
-            workflow_id = workflow_request['workflow_id']
-            workflow_name = workflow_request['workflow_name']
+            workflow_id = workflow_request["workflow_id"]
+            workflow_name = workflow_request["workflow_name"]
 
             # Update status
-            workflow_request['status'] = 'starting'
-            workflow_request['started_at'] = datetime.now().isoformat()
+            workflow_request["status"] = "starting"
+            workflow_request["started_at"] = datetime.now().isoformat()
 
             # Get workflow definition
             workflow_def = self.workflow_definitions[workflow_name]
 
             # Initialize workflow context
             context = {
-                'workflow_id': workflow_id,
-                'workflow_name': workflow_name,
-                'parameters': workflow_request['parameters'],
-                'results': {},
-                'step_results': {},
-                'start_time': datetime.now()
+                "workflow_id": workflow_id,
+                "workflow_name": workflow_name,
+                "parameters": workflow_request["parameters"],
+                "results": {},
+                "step_results": {},
+                "start_time": datetime.now(),
             }
 
             # Execute each step
-            for step_index, step in enumerate(workflow_def['steps']):
+            for step_index, step in enumerate(workflow_def["steps"]):
                 step_name = f"step_{step_index + 1}"
 
                 try:
@@ -699,17 +712,17 @@ class WorkflowEngine:
                     step_result = self._execute_workflow_step(step, context)
 
                     # Store step result
-                    context['step_results'][step_name] = step_result
+                    context["step_results"][step_name] = step_result
 
                     # Check if workflow should continue
                     if not self._should_continue_workflow(step, step_result):
-                        workflow_request['status'] = 'partial_completion'
+                        workflow_request["status"] = "partial_completion"
                         break
 
                 except Exception as step_error:
-                    workflow_request['status'] = 'step_failed'
-                    workflow_request['failed_step'] = step_name
-                    workflow_request['error'] = str(step_error)
+                    workflow_request["status"] = "step_failed"
+                    workflow_request["failed_step"] = step_name
+                    workflow_request["error"] = str(step_error)
 
                     # Attempt workflow-level recovery
                     recovery_result = self._attempt_workflow_recovery(
@@ -717,33 +730,33 @@ class WorkflowEngine:
                     )
 
                     if recovery_result:
-                        workflow_request['status'] = 'recovered'
-                        workflow_request['recovery_action'] = recovery_result['action']
+                        workflow_request["status"] = "recovered"
+                        workflow_request["recovery_action"] = recovery_result["action"]
                         break
                     else:
-                        workflow_request['status'] = 'failed'
+                        workflow_request["status"] = "failed"
                         break
 
             # Finalize workflow
-            if workflow_request['status'] not in ['failed', 'step_failed']:
-                workflow_request['status'] = 'completed'
+            if workflow_request["status"] not in ["failed", "step_failed"]:
+                workflow_request["status"] = "completed"
 
-            workflow_request['completed_at'] = datetime.now().isoformat()
-            workflow_request['execution_time'] = str(datetime.now() - context['start_time'])
+            workflow_request["completed_at"] = datetime.now().isoformat()
+            workflow_request["execution_time"] = str(datetime.now() - context["start_time"])
 
             # Generate final report
             final_report = self._generate_workflow_report(context)
-            workflow_request['report'] = final_report
+            workflow_request["report"] = final_report
 
         except Exception as e:
-            workflow_request['status'] = 'error'
-            workflow_request['error'] = str(e)
-            workflow_request['completed_at'] = datetime.now().isoformat()
+            workflow_request["status"] = "error"
+            workflow_request["error"] = str(e)
+            workflow_request["completed_at"] = datetime.now().isoformat()
 
     def _execute_workflow_step(self, step: dict, context: dict) -> dict:
         """Execute a single workflow step"""
-        agent_name = step['agent']
-        action = step['action']
+        agent_name = step["agent"]
+        action = step["action"]
 
         # Get agent instance
         agent_instance = self._get_agent_instance(agent_name)
@@ -755,11 +768,11 @@ class WorkflowEngine:
         result = agent_instance.execute_action(action, step_parameters)
 
         return {
-            'agent': agent_name,
-            'action': action,
-            'parameters': step_parameters,
-            'result': result,
-            'timestamp': datetime.now().isoformat()
+            "agent": agent_name,
+            "action": action,
+            "parameters": step_parameters,
+            "result": result,
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _get_agent_instance(self, agent_name: str):
@@ -776,61 +789,59 @@ class WorkflowEngine:
 
         # Create agent instance
         config = self.config_manager.get_agent_config(agent_name)
-        agent_instance = agent_info['class'](config)
+        agent_instance = agent_info["class"](config)
 
         return agent_instance
 
     def _prepare_step_parameters(self, step: dict, context: dict) -> dict:
         """Prepare parameters for workflow step"""
-        parameters = context['parameters'].copy()
+        parameters = context["parameters"].copy()
 
         # Add step-specific parameters
-        if 'parameters' in step:
-            parameters.update(step['parameters'])
+        if "parameters" in step:
+            parameters.update(step["parameters"])
 
         # Add context from previous steps
-        if 'input' in step:
-            input_mapping = step['input']
+        if "input" in step:
+            input_mapping = step["input"]
 
             for context_key, param_key in input_mapping.items():
-                if context_key in context['results']:
-                    parameters[param_key] = context['results'][context_key]
+                if context_key in context["results"]:
+                    parameters[param_key] = context["results"][context_key]
 
         return parameters
 
     def _should_continue_workflow(self, step: dict, step_result: dict) -> bool:
         """Determine if workflow should continue after this step"""
         # Check step result status
-        if step_result['result']['status'] in ['failed', 'error']:
+        if step_result["result"]["status"] in ["failed", "error"]:
             return False
 
         # Check continuation conditions
-        if 'continue_on' in step:
-            condition = step['continue_on']
+        if "continue_on" in step:
+            condition = step["continue_on"]
 
-            if condition == 'success' and step_result['result']['status'] != 'success':
+            if condition == "success" and step_result["result"]["status"] != "success":
                 return False
-            elif condition == 'any' and step_result['result']['status'] in ['failed', 'error']:
+            elif condition == "any" and step_result["result"]["status"] in ["failed", "error"]:
                 return False
 
         return True
 
-    def _attempt_workflow_recovery(self, workflow_request: dict,
-                                   context: dict, error: Exception) -> Optional[dict]:
+    def _attempt_workflow_recovery(
+        self, workflow_request: dict, context: dict, error: Exception
+    ) -> Optional[dict]:
         """Attempt workflow-level recovery from errors"""
-        workflow_name = workflow_request['workflow_name']
+        workflow_name = workflow_request["workflow_name"]
         workflow_def = self.workflow_definitions[workflow_name]
 
         # Check for workflow-specific recovery strategies
-        if 'recovery_strategies' in workflow_def:
-            for strategy in workflow_def['recovery_strategies']:
-                if strategy['condition'](error, context):
+        if "recovery_strategies" in workflow_def:
+            for strategy in workflow_def["recovery_strategies"]:
+                if strategy["condition"](error, context):
                     try:
-                        recovery_result = strategy['action'](error, context)
-                        return {
-                            'action': strategy['name'],
-                            'result': recovery_result
-                        }
+                        recovery_result = strategy["action"](error, context)
+                        return {"action": strategy["name"], "result": recovery_result}
                     except Exception as recovery_error:
                         print(f"Recovery strategy failed: {str(recovery_error)}")
                         continue
@@ -839,17 +850,14 @@ class WorkflowEngine:
         generic_strategies = [
             self._retry_failed_step,
             self._skip_failed_step,
-            self._use_fallback_data
+            self._use_fallback_data,
         ]
 
         for strategy in generic_strategies:
             try:
                 recovery_result = strategy(error, context)
                 if recovery_result:
-                    return {
-                        'action': strategy.__name__,
-                        'result': recovery_result
-                    }
+                    return {"action": strategy.__name__, "result": recovery_result}
             except Exception as recovery_error:
                 continue
 
@@ -860,67 +868,64 @@ class WorkflowEngine:
         # In real implementation, this would be more sophisticated
         # For now, we'll just return a simple recovery result
 
-        return {
-            'status': 'recovered',
-            'method': 'retry',
-            'message': 'Step will be retried'
-        }
+        return {"status": "recovered", "method": "retry", "message": "Step will be retried"}
 
     def _skip_failed_step(self, error: Exception, context: dict) -> Optional[dict]:
         """Skip the failed step and continue"""
         return {
-            'status': 'recovered',
-            'method': 'skip',
-            'message': 'Step skipped, workflow continued'
+            "status": "recovered",
+            "method": "skip",
+            "message": "Step skipped, workflow continued",
         }
 
     def _use_fallback_data(self, error: Exception, context: dict) -> Optional[dict]:
         """Use fallback data for failed step"""
-        return {
-            'status': 'recovered',
-            'method': 'fallback',
-            'message': 'Using fallback data'
-        }
+        return {"status": "recovered", "method": "fallback", "message": "Using fallback data"}
 
     def _generate_workflow_report(self, context: dict) -> dict:
         """Generate comprehensive workflow report"""
         report = {
-            'workflow_id': context['workflow_id'],
-            'workflow_name': context['workflow_name'],
-            'status': 'completed',
-            'start_time': context['start_time'].isoformat(),
-            'end_time': datetime.now().isoformat(),
-            'execution_time': str(datetime.now() - context['start_time']),
-            'steps': {},
-            'metrics': {}
+            "workflow_id": context["workflow_id"],
+            "workflow_name": context["workflow_name"],
+            "status": "completed",
+            "start_time": context["start_time"].isoformat(),
+            "end_time": datetime.now().isoformat(),
+            "execution_time": str(datetime.now() - context["start_time"]),
+            "steps": {},
+            "metrics": {},
         }
 
         # Analyze each step
-        for step_name, step_result in context['step_results'].items():
-            report['steps'][step_name] = {
-                'agent': step_result['agent'],
-                'action': step_result['action'],
-                'status': step_result['result']['status'],
-                'warnings': step_result['result'].get('warnings', []),
-                'metrics': step_result['result'].get('metrics', {})
+        for step_name, step_result in context["step_results"].items():
+            report["steps"][step_name] = {
+                "agent": step_result["agent"],
+                "action": step_result["action"],
+                "status": step_result["result"]["status"],
+                "warnings": step_result["result"].get("warnings", []),
+                "metrics": step_result["result"].get("metrics", {}),
             }
 
-            if step_result['result']['status'] != 'success':
-                report['status'] = 'partial_completion'
+            if step_result["result"]["status"] != "success":
+                report["status"] = "partial_completion"
 
         # Calculate overall metrics
-        report['metrics'] = {
-            'total_steps': len(context['step_results']),
-            'successful_steps': sum(1 for s in context['step_results'].values()
-                                   if s['result']['status'] == 'success'),
-            'failed_steps': sum(1 for s in context['step_results'].values()
-                               if s['result']['status'] in ['failed', 'error']),
-            'warnings': sum(len(s['result'].get('warnings', []))
-                          for s in context['step_results'].values())
+        report["metrics"] = {
+            "total_steps": len(context["step_results"]),
+            "successful_steps": sum(
+                1 for s in context["step_results"].values() if s["result"]["status"] == "success"
+            ),
+            "failed_steps": sum(
+                1
+                for s in context["step_results"].values()
+                if s["result"]["status"] in ["failed", "error"]
+            ),
+            "warnings": sum(
+                len(s["result"].get("warnings", [])) for s in context["step_results"].values()
+            ),
         }
 
         # Generate recommendations
-        report['recommendations'] = self._generate_recommendations(context)
+        report["recommendations"] = self._generate_recommendations(context)
 
         return report
 
@@ -929,8 +934,11 @@ class WorkflowEngine:
         recommendations = []
 
         # Check for failed steps
-        failed_steps = [s for s in context['step_results'].values()
-                       if s['result']['status'] in ['failed', 'error']]
+        failed_steps = [
+            s
+            for s in context["step_results"].values()
+            if s["result"]["status"] in ["failed", "error"]
+        ]
 
         if failed_steps:
             recommendations.append(
@@ -938,8 +946,9 @@ class WorkflowEngine:
             )
 
         # Check for warnings
-        total_warnings = sum(len(s['result'].get('warnings', []))
-                           for s in context['step_results'].values())
+        total_warnings = sum(
+            len(s["result"].get("warnings", [])) for s in context["step_results"].values()
+        )
 
         if total_warnings > 5:
             recommendations.append(
@@ -947,11 +956,9 @@ class WorkflowEngine:
             )
 
         # Check execution time
-        execution_time = datetime.now() - context['start_time']
+        execution_time = datetime.now() - context["start_time"]
         if execution_time.total_seconds() > 300:  # 5 minutes
-            recommendations.append(
-                "Consider optimizing workflow for better performance"
-            )
+            recommendations.append("Consider optimizing workflow for better performance")
 
         return recommendations
 
@@ -969,33 +976,44 @@ class WorkflowEngine:
 
         workflow = self.active_workflows[workflow_id]
 
-        if workflow['status'] not in ['queued', 'starting', 'running']:
+        if workflow["status"] not in ["queued", "starting", "running"]:
             raise WorkflowStateError(f"Cannot cancel workflow in {workflow['status']} state")
 
-        workflow['status'] = 'cancelled'
-        workflow['completed_at'] = datetime.now().isoformat()
+        workflow["status"] = "cancelled"
+        workflow["completed_at"] = datetime.now().isoformat()
 
         return True
 
+
 class WorkflowAlreadyExists(Exception):
     """Workflow already exists"""
+
     pass
+
 
 class WorkflowNotFound(Exception):
     """Workflow not found"""
+
     pass
+
 
 class WorkflowValidationError(Exception):
     """Workflow validation error"""
+
     pass
+
 
 class WorkflowStateError(Exception):
     """Workflow state error"""
+
     pass
+
 
 class AgentNotAvailable(Exception):
     """Agent not available"""
+
     pass
+
 
 class PriorityQueue:
     """Simple priority queue implementation"""
@@ -1031,8 +1049,8 @@ class HealthMonitor:
     def __init__(self, resource_monitor: ResourceMonitor):
         self.resource_monitor = resource_monitor
         self.health_status = {
-            'orchestrator': {'status': 'healthy', 'last_check': None},
-            'agents': {}
+            "orchestrator": {"status": "healthy", "last_check": None},
+            "agents": {},
         }
         self.monitoring_interval = 30  # seconds
         self.monitoring_active = False
@@ -1040,16 +1058,13 @@ class HealthMonitor:
     def start_monitoring(self):
         """Start health monitoring"""
         self.monitoring_active = True
-        self.monitor_thread = threading.Thread(
-            target=self._health_monitor_loop,
-            daemon=True
-        )
+        self.monitor_thread = threading.Thread(target=self._health_monitor_loop, daemon=True)
         self.monitor_thread.start()
 
     def stop_monitoring(self):
         """Stop health monitoring"""
         self.monitoring_active = False
-        if hasattr(self, 'monitor_thread'):
+        if hasattr(self, "monitor_thread"):
             self.monitor_thread.join()
 
     def _health_monitor_loop(self):
@@ -1072,36 +1087,40 @@ class HealthMonitor:
     def _check_orchestrator_health(self):
         """Check orchestrator health"""
         health_checks = {
-            'resource_usage': self._check_resource_usage(),
-            'queue_status': self._check_queue_status(),
-            'memory_usage': self._check_memory_usage(),
-            'response_time': self._check_response_time()
+            "resource_usage": self._check_resource_usage(),
+            "queue_status": self._check_queue_status(),
+            "memory_usage": self._check_memory_usage(),
+            "response_time": self._check_response_time(),
         }
 
         # Determine overall health
-        critical_issues = sum(1 for check in health_checks.values() if check['severity'] == 'critical')
-        warning_issues = sum(1 for check in health_checks.values() if check['severity'] == 'warning')
+        critical_issues = sum(
+            1 for check in health_checks.values() if check["severity"] == "critical"
+        )
+        warning_issues = sum(
+            1 for check in health_checks.values() if check["severity"] == "warning"
+        )
 
         if critical_issues > 0:
-            status = 'critical'
+            status = "critical"
         elif warning_issues > 2:
-            status = 'degraded'
+            status = "degraded"
         else:
-            status = 'healthy'
+            status = "healthy"
 
-        self.health_status['orchestrator'] = {
-            'status': status,
-            'last_check': datetime.now().isoformat(),
-            'checks': health_checks,
-            'critical_issues': critical_issues,
-            'warning_issues': warning_issues
+        self.health_status["orchestrator"] = {
+            "status": status,
+            "last_check": datetime.now().isoformat(),
+            "checks": health_checks,
+            "critical_issues": critical_issues,
+            "warning_issues": warning_issues,
         }
 
         # Trigger alerts if needed
         if critical_issues > 0:
-            self._trigger_health_alert('critical', 'Orchestrator health critical')
-        elif status == 'degraded':
-            self._trigger_health_alert('warning', 'Orchestrator health degraded')
+            self._trigger_health_alert("critical", "Orchestrator health critical")
+        elif status == "degraded":
+            self._trigger_health_alert("warning", "Orchestrator health degraded")
 
     def _check_resource_usage(self) -> dict:
         """Check resource usage health"""
@@ -1110,27 +1129,27 @@ class HealthMonitor:
         critical_resources = []
         warning_resources = []
 
-        for resource, metrics in resource_status['system'].items():
-            if resource in ['cpu', 'memory', 'disk']:
-                if metrics > self.resource_monitor.resource_limits[resource]['critical']:
+        for resource, metrics in resource_status["system"].items():
+            if resource in ["cpu", "memory", "disk"]:
+                if metrics > self.resource_monitor.resource_limits[resource]["critical"]:
                     critical_resources.append(resource)
-                elif metrics > self.resource_monitor.resource_limits[resource]['warning']:
+                elif metrics > self.resource_monitor.resource_limits[resource]["warning"]:
                     warning_resources.append(resource)
 
         if critical_resources:
             return {
-                'severity': 'critical',
-                'message': f"Critical resource usage: {', '.join(critical_resources)}",
-                'details': {r: resource_status['system'][r] for r in critical_resources}
+                "severity": "critical",
+                "message": f"Critical resource usage: {', '.join(critical_resources)}",
+                "details": {r: resource_status["system"][r] for r in critical_resources},
             }
         elif warning_resources:
             return {
-                'severity': 'warning',
-                'message': f"High resource usage: {', '.join(warning_resources)}",
-                'details': {r: resource_status['system'][r] for r in warning_resources}
+                "severity": "warning",
+                "message": f"High resource usage: {', '.join(warning_resources)}",
+                "details": {r: resource_status["system"][r] for r in warning_resources},
             }
         else:
-            return {'severity': 'normal', 'message': 'Resource usage normal'}
+            return {"severity": "normal", "message": "Resource usage normal"}
 
     def _check_queue_status(self) -> dict:
         """Check workflow queue status"""
@@ -1141,12 +1160,12 @@ class HealthMonitor:
 
         if queue_length > 8:
             return {
-                'severity': 'warning',
-                'message': f"High queue length: {queue_length}",
-                'details': {'queue_length': queue_length}
+                "severity": "warning",
+                "message": f"High queue length: {queue_length}",
+                "details": {"queue_length": queue_length},
             }
         else:
-            return {'severity': 'normal', 'message': f"Queue length normal: {queue_length}"}
+            return {"severity": "normal", "message": f"Queue length normal: {queue_length}"}
 
     def _check_memory_usage(self) -> dict:
         """Check memory usage"""
@@ -1158,12 +1177,12 @@ class HealthMonitor:
 
         if memory_mb > 500:  # 500MB
             return {
-                'severity': 'warning',
-                'message': f"High memory usage: {memory_mb:.1f}MB",
-                'details': {'memory_mb': memory_mb}
+                "severity": "warning",
+                "message": f"High memory usage: {memory_mb:.1f}MB",
+                "details": {"memory_mb": memory_mb},
             }
         else:
-            return {'severity': 'normal', 'message': f"Memory usage normal: {memory_mb:.1f}MB"}
+            return {"severity": "normal", "message": f"Memory usage normal: {memory_mb:.1f}MB"}
 
     def _check_response_time(self) -> dict:
         """Check system response time"""
@@ -1172,44 +1191,44 @@ class HealthMonitor:
 
         if response_time > 1.0:
             return {
-                'severity': 'warning',
-                'message': f"Slow response time: {response_time:.2f}s",
-                'details': {'response_time': response_time}
+                "severity": "warning",
+                "message": f"Slow response time: {response_time:.2f}s",
+                "details": {"response_time": response_time},
             }
         else:
-            return {'severity': 'normal', 'message': f"Response time normal: {response_time:.2f}s"}
+            return {"severity": "normal", "message": f"Response time normal: {response_time:.2f}s"}
 
     def _check_agent_health(self):
         """Check health of all agents"""
         # This would check actual agents in real implementation
         # For simulation, we'll use some sample data
 
-        sample_agents = ['video_editor', 'audio_engineer', 'social_media_manager']
+        sample_agents = ["video_editor", "audio_engineer", "social_media_manager"]
 
         for agent_name in sample_agents:
             # Simulate health status
-            status_options = ['healthy', 'healthy', 'healthy', 'degraded', 'unresponsive']
+            status_options = ["healthy", "healthy", "healthy", "degraded", "unresponsive"]
             status = random.choice(status_options)
 
-            self.health_status['agents'][agent_name] = {
-                'status': status,
-                'last_check': datetime.now().isoformat(),
-                'response_time': random.uniform(0.1, 2.0),
-                'error_rate': random.uniform(0, 0.1)
+            self.health_status["agents"][agent_name] = {
+                "status": status,
+                "last_check": datetime.now().isoformat(),
+                "response_time": random.uniform(0.1, 2.0),
+                "error_rate": random.uniform(0, 0.1),
             }
 
-            if status == 'unresponsive':
-                self._trigger_health_alert('critical', f"Agent {agent_name} unresponsive")
-            elif status == 'degraded':
-                self._trigger_health_alert('warning', f"Agent {agent_name} performance degraded")
+            if status == "unresponsive":
+                self._trigger_health_alert("critical", f"Agent {agent_name} unresponsive")
+            elif status == "degraded":
+                self._trigger_health_alert("warning", f"Agent {agent_name} performance degraded")
 
     def _trigger_health_alert(self, severity: str, message: str):
         """Trigger health alert"""
         alert = {
-            'severity': severity,
-            'message': message,
-            'timestamp': datetime.now().isoformat(),
-            'source': 'health_monitor'
+            "severity": severity,
+            "message": message,
+            "timestamp": datetime.now().isoformat(),
+            "source": "health_monitor",
         }
 
         print(f"HEALTH ALERT [{severity.upper()}]: {message}")
@@ -1224,28 +1243,28 @@ class HealthMonitor:
         healing_actions = []
 
         # Check orchestrator health
-        if self.health_status['orchestrator']['status'] != 'healthy':
+        if self.health_status["orchestrator"]["status"] != "healthy":
             # Attempt to free resources
             if self._free_unused_resources():
-                healing_actions.append('freed_unused_resources')
+                healing_actions.append("freed_unused_resources")
 
             # Restart problematic components
             if self._restart_problematic_components():
-                healing_actions.append('restarted_problematic_components')
+                healing_actions.append("restarted_problematic_components")
 
         # Check agent health
-        for agent_name, agent_health in self.health_status['agents'].items():
-            if agent_health['status'] == 'unresponsive':
+        for agent_name, agent_health in self.health_status["agents"].items():
+            if agent_health["status"] == "unresponsive":
                 if self._restart_agent(agent_name):
-                    healing_actions.append(f'restarted_agent_{agent_name}')
-            elif agent_health['status'] == 'degraded':
+                    healing_actions.append(f"restarted_agent_{agent_name}")
+            elif agent_health["status"] == "degraded":
                 if self._optimize_agent(agent_name):
-                    healing_actions.append(f'optimized_agent_{agent_name}')
+                    healing_actions.append(f"optimized_agent_{agent_name}")
 
         return {
-            'healing_actions': healing_actions,
-            'timestamp': datetime.now().isoformat(),
-            'status': 'completed' if healing_actions else 'no_action_needed'
+            "healing_actions": healing_actions,
+            "timestamp": datetime.now().isoformat(),
+            "status": "completed" if healing_actions else "no_action_needed",
         }
 
     def _free_unused_resources(self) -> bool:
@@ -1328,9 +1347,7 @@ class AIOrchestrationAgent:
         file_handler.setLevel(logging.DEBUG)
 
         # Formatter
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
         console_handler.setFormatter(formatter)
         file_handler.setFormatter(formatter)
@@ -1355,24 +1372,21 @@ class AIOrchestrationAgent:
             agent_name="video_editor",
             agent_class=VideoEditorAgent,
             config={
-                'description': 'Podcast video editing and production',
-                'toolsets': ['video_analysis', 'auto_cut', 'short_form_creation'],
-                'resource_requirements': {'cpu': 2, 'memory': 4096}
+                "description": "Podcast video editing and production",
+                "toolsets": ["video_analysis", "auto_cut", "short_form_creation"],
+                "resource_requirements": {"cpu": 2, "memory": 4096},
             },
             toolsets=[
                 {
-                    'name': 'video_analysis',
-                    'tools': ['speaker_detection', 'engagement_scoring', 'cut_point_analysis']
+                    "name": "video_analysis",
+                    "tools": ["speaker_detection", "engagement_scoring", "cut_point_analysis"],
                 },
+                {"name": "auto_cut", "tools": ["multi_camera_cutting", "transition_effects"]},
                 {
-                    'name': 'auto_cut',
-                    'tools': ['multi_camera_cutting', 'transition_effects']
+                    "name": "short_form_creation",
+                    "tools": ["clip_extraction", "platform_optimization"],
                 },
-                {
-                    'name': 'short_form_creation',
-                    'tools': ['clip_extraction', 'platform_optimization']
-                }
-            ]
+            ],
         )
 
         # Audio Engineer Agent
@@ -1380,24 +1394,18 @@ class AIOrchestrationAgent:
             agent_name="audio_engineer",
             agent_class=AudioEngineerAgent,
             config={
-                'description': 'Audio processing and enhancement',
-                'toolsets': ['audio_cleanup', 'voice_enhancement', 'sponsor_insertion'],
-                'resource_requirements': {'cpu': 1, 'memory': 2048}
+                "description": "Audio processing and enhancement",
+                "toolsets": ["audio_cleanup", "voice_enhancement", "sponsor_insertion"],
+                "resource_requirements": {"cpu": 1, "memory": 2048},
             },
             toolsets=[
                 {
-                    'name': 'audio_cleanup',
-                    'tools': ['noise_reduction', 'hum_removal', 'artifact_removal']
+                    "name": "audio_cleanup",
+                    "tools": ["noise_reduction", "hum_removal", "artifact_removal"],
                 },
-                {
-                    'name': 'voice_enhancement',
-                    'tools': ['clarity_enhancement', 'presence_boost']
-                },
-                {
-                    'name': 'sponsor_insertion',
-                    'tools': ['ad_placement', 'volume_normalization']
-                }
-            ]
+                {"name": "voice_enhancement", "tools": ["clarity_enhancement", "presence_boost"]},
+                {"name": "sponsor_insertion", "tools": ["ad_placement", "volume_normalization"]},
+            ],
         )
 
         # Social Media Agent
@@ -1405,20 +1413,20 @@ class AIOrchestrationAgent:
             agent_name="social_media_manager",
             agent_class=SocialMediaAgent,
             config={
-                'description': 'Social media content management',
-                'toolsets': ['content_scheduling', 'performance_analysis'],
-                'resource_requirements': {'cpu': 1, 'memory': 1024}
+                "description": "Social media content management",
+                "toolsets": ["content_scheduling", "performance_analysis"],
+                "resource_requirements": {"cpu": 1, "memory": 1024},
             },
             toolsets=[
                 {
-                    'name': 'content_scheduling',
-                    'tools': ['platform_adaptation', 'post_scheduling', 'content_optimization']
+                    "name": "content_scheduling",
+                    "tools": ["platform_adaptation", "post_scheduling", "content_optimization"],
                 },
                 {
-                    'name': 'performance_analysis',
-                    'tools': ['metrics_collection', 'trend_analysis', 'report_generation']
-                }
-            ]
+                    "name": "performance_analysis",
+                    "tools": ["metrics_collection", "trend_analysis", "report_generation"],
+                },
+            ],
         )
 
         # Content Distributor Agent
@@ -1426,20 +1434,20 @@ class AIOrchestrationAgent:
             agent_name="content_distributor",
             agent_class=ContentDistributorAgent,
             config={
-                'description': 'Content distribution and publishing',
-                'toolsets': ['episode_publishing', 'cdn_management'],
-                'resource_requirements': {'cpu': 1, 'memory': 1024}
+                "description": "Content distribution and publishing",
+                "toolsets": ["episode_publishing", "cdn_management"],
+                "resource_requirements": {"cpu": 1, "memory": 1024},
             },
             toolsets=[
                 {
-                    'name': 'episode_publishing',
-                    'tools': ['multi_platform_publishing', 'metadata_optimization']
+                    "name": "episode_publishing",
+                    "tools": ["multi_platform_publishing", "metadata_optimization"],
                 },
                 {
-                    'name': 'cdn_management',
-                    'tools': ['cache_invalidation', 'performance_monitoring']
-                }
-            ]
+                    "name": "cdn_management",
+                    "tools": ["cache_invalidation", "performance_monitoring"],
+                },
+            ],
         )
 
     def _register_built_in_workflows(self):
@@ -1449,108 +1457,123 @@ class AIOrchestrationAgent:
         self.workflow_engine.register_workflow(
             workflow_name="episode_production",
             workflow_definition={
-                'description': 'Complete episode production from raw footage to distribution',
-                'agents': ['video_editor', 'audio_engineer', 'content_distributor', 'social_media_manager'],
-                'steps': [
-                    {
-                        'agent': 'video_editor',
-                        'action': 'video_analysis',
-                        'input': {'raw_footage': 'video_files'},
-                        'continue_on': 'success'
-                    },
-                    {
-                        'agent': 'audio_engineer',
-                        'action': 'audio_cleanup',
-                        'input': {'raw_audio': 'audio_files'},
-                        'continue_on': 'success'
-                    },
-                    {
-                        'agent': 'video_editor',
-                        'action': 'auto_cut',
-                        'input': {'analyzed_footage': 'video_analysis_results'},
-                        'continue_on': 'success'
-                    },
-                    {
-                        'agent': 'audio_engineer',
-                        'action': 'sponsor_insertion',
-                        'input': {'clean_audio': 'audio_cleanup_results', 'sponsor_info': 'sponsors'},
-                        'continue_on': 'success'
-                    },
-                    {
-                        'agent': 'content_distributor',
-                        'action': 'publish_episode',
-                        'input': {'final_video': 'auto_cut_results', 'final_audio': 'sponsor_insertion_results'},
-                        'continue_on': 'success'
-                    },
-                    {
-                        'agent': 'social_media_manager',
-                        'action': 'schedule_post',
-                        'input': {'episode_data': 'publish_episode_results'},
-                        'continue_on': 'any'
-                    }
+                "description": "Complete episode production from raw footage to distribution",
+                "agents": [
+                    "video_editor",
+                    "audio_engineer",
+                    "content_distributor",
+                    "social_media_manager",
                 ],
-                'recovery_strategies': [
+                "steps": [
                     {
-                        'name': 'fallback_to_manual_review',
-                        'condition': lambda e, ctx: 'video_editor' in str(e),
-                        'action': self._fallback_to_manual_review
+                        "agent": "video_editor",
+                        "action": "video_analysis",
+                        "input": {"raw_footage": "video_files"},
+                        "continue_on": "success",
                     },
                     {
-                        'name': 'use_alternative_publishing',
-                        'condition': lambda e, ctx: 'content_distributor' in str(e),
-                        'action': self._use_alternative_publishing
-                    }
-                ]
-            }
+                        "agent": "audio_engineer",
+                        "action": "audio_cleanup",
+                        "input": {"raw_audio": "audio_files"},
+                        "continue_on": "success",
+                    },
+                    {
+                        "agent": "video_editor",
+                        "action": "auto_cut",
+                        "input": {"analyzed_footage": "video_analysis_results"},
+                        "continue_on": "success",
+                    },
+                    {
+                        "agent": "audio_engineer",
+                        "action": "sponsor_insertion",
+                        "input": {
+                            "clean_audio": "audio_cleanup_results",
+                            "sponsor_info": "sponsors",
+                        },
+                        "continue_on": "success",
+                    },
+                    {
+                        "agent": "content_distributor",
+                        "action": "publish_episode",
+                        "input": {
+                            "final_video": "auto_cut_results",
+                            "final_audio": "sponsor_insertion_results",
+                        },
+                        "continue_on": "success",
+                    },
+                    {
+                        "agent": "social_media_manager",
+                        "action": "schedule_post",
+                        "input": {"episode_data": "publish_episode_results"},
+                        "continue_on": "any",
+                    },
+                ],
+                "recovery_strategies": [
+                    {
+                        "name": "fallback_to_manual_review",
+                        "condition": lambda e, ctx: "video_editor" in str(e),
+                        "action": self._fallback_to_manual_review,
+                    },
+                    {
+                        "name": "use_alternative_publishing",
+                        "condition": lambda e, ctx: "content_distributor" in str(e),
+                        "action": self._use_alternative_publishing,
+                    },
+                ],
+            },
         )
 
         # Short Form Creation Workflow
         self.workflow_engine.register_workflow(
             workflow_name="short_form_creation",
             workflow_definition={
-                'description': 'Create short-form content from long-form episodes',
-                'agents': ['video_editor', 'social_media_manager'],
-                'steps': [
+                "description": "Create short-form content from long-form episodes",
+                "agents": ["video_editor", "social_media_manager"],
+                "steps": [
                     {
-                        'agent': 'video_editor',
-                        'action': 'video_analysis',
-                        'input': {'source_video': 'episode_video'},
-                        'parameters': {'analysis_type': 'engagement_scoring'}
+                        "agent": "video_editor",
+                        "action": "video_analysis",
+                        "input": {"source_video": "episode_video"},
+                        "parameters": {"analysis_type": "engagement_scoring"},
                     },
                     {
-                        'agent': 'video_editor',
-                        'action': 'create_short',
-                        'input': {'analysis_results': 'video_analysis_results', 'source_video': 'episode_video'},
-                        'parameters': {'duration': 60, 'platform': 'tiktok'}
+                        "agent": "video_editor",
+                        "action": "create_short",
+                        "input": {
+                            "analysis_results": "video_analysis_results",
+                            "source_video": "episode_video",
+                        },
+                        "parameters": {"duration": 60, "platform": "tiktok"},
                     },
                     {
-                        'agent': 'social_media_manager',
-                        'action': 'schedule_post',
-                        'input': {'short_video': 'create_short_results'},
-                        'parameters': {'platforms': ['tiktok', 'instagram', 'youtube_shorts']}
-                    }
-                ]
-            }
+                        "agent": "social_media_manager",
+                        "action": "schedule_post",
+                        "input": {"short_video": "create_short_results"},
+                        "parameters": {"platforms": ["tiktok", "instagram", "youtube_shorts"]},
+                    },
+                ],
+            },
         )
 
     def _fallback_to_manual_review(self, error: Exception, context: dict) -> dict:
         """Fallback strategy for video editing issues"""
         return {
-            'action': 'manual_review',
-            'message': 'Video editing requires manual review',
-            'severity': 'warning'
+            "action": "manual_review",
+            "message": "Video editing requires manual review",
+            "severity": "warning",
         }
 
     def _use_alternative_publishing(self, error: Exception, context: dict) -> dict:
         """Fallback strategy for publishing issues"""
         return {
-            'action': 'alternative_publishing',
-            'message': 'Using alternative publishing method',
-            'severity': 'info'
+            "action": "alternative_publishing",
+            "message": "Using alternative publishing method",
+            "severity": "info",
         }
 
-    def deploy_agent(self, agent_name: str, config: dict = None,
-                    environment: str = "production") -> dict:
+    def deploy_agent(
+        self, agent_name: str, config: dict = None, environment: str = "production"
+    ) -> dict:
         """Deploy an agent with specified configuration"""
         try:
             # Check if agent is registered
@@ -1560,7 +1583,7 @@ class AIOrchestrationAgent:
             # Check dependencies
             dependency_check = self.agent_registry.check_dependencies(agent_name)
 
-            if not dependency_check['satisfied']:
+            if not dependency_check["satisfied"]:
                 raise DependencyError(
                     f"Agent {agent_name} has unsatisfied dependencies: {dependency_check['missing']}"
                 )
@@ -1570,50 +1593,48 @@ class AIOrchestrationAgent:
                 config = self.config_manager.get_agent_config(agent_name, environment)
 
             # Check resource availability
-            resource_requirements = config.get('resource_requirements', {})
+            resource_requirements = config.get("resource_requirements", {})
 
             if not self.resource_monitor.can_allocate_resources(resource_requirements):
-                raise ResourceUnavailable(
-                    f"Insufficient resources to deploy {agent_name}"
-                )
+                raise ResourceUnavailable(f"Insufficient resources to deploy {agent_name}")
 
             # Create agent instance
             agent_info = self.agent_registry.agents[agent_name]
-            agent_instance = agent_info['class'](config)
+            agent_instance = agent_info["class"](config)
 
             # Register active agent
             agent_id = self._generate_agent_id(agent_name)
 
             self.active_agents[agent_id] = {
-                'agent_name': agent_name,
-                'instance': agent_instance,
-                'config': config,
-                'status': 'running',
-                'start_time': datetime.now().isoformat(),
-                'resource_usage': {}
+                "agent_name": agent_name,
+                "instance": agent_instance,
+                "config": config,
+                "status": "running",
+                "start_time": datetime.now().isoformat(),
+                "resource_usage": {},
             }
 
             # Update agent registry
-            self.agent_registry.agents[agent_name]['instances'] += 1
+            self.agent_registry.agents[agent_name]["instances"] += 1
 
             # Log deployment
             self.logger.info(f"Deployed agent {agent_name} with ID {agent_id}")
 
             return {
-                'status': 'success',
-                'agent_id': agent_id,
-                'agent_name': agent_name,
-                'config': config,
-                'timestamp': datetime.now().isoformat()
+                "status": "success",
+                "agent_id": agent_id,
+                "agent_name": agent_name,
+                "config": config,
+                "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
             self.logger.error(f"Failed to deploy agent {agent_name}: {str(e)}")
             return {
-                'status': 'failed',
-                'agent_name': agent_name,
-                'error': str(e),
-                'timestamp': datetime.now().isoformat()
+                "status": "failed",
+                "agent_name": agent_name,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat(),
             }
 
     def _generate_agent_id(self, agent_name: str) -> str:
@@ -1627,7 +1648,7 @@ class AIOrchestrationAgent:
                 raise AgentNotFound(f"Agent {agent_id} not found")
 
             agent_info = self.active_agents[agent_id]
-            agent_name = agent_info['agent_name']
+            agent_name = agent_info["agent_name"]
 
             # Clean up agent resources
             self._cleanup_agent_resources(agent_info)
@@ -1636,25 +1657,25 @@ class AIOrchestrationAgent:
             del self.active_agents[agent_id]
 
             # Update agent registry
-            self.agent_registry.agents[agent_name]['instances'] -= 1
+            self.agent_registry.agents[agent_name]["instances"] -= 1
 
             # Log termination
             self.logger.info(f"Terminated agent {agent_id}")
 
             return {
-                'status': 'success',
-                'agent_id': agent_id,
-                'agent_name': agent_name,
-                'timestamp': datetime.now().isoformat()
+                "status": "success",
+                "agent_id": agent_id,
+                "agent_name": agent_name,
+                "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
             self.logger.error(f"Failed to terminate agent {agent_id}: {str(e)}")
             return {
-                'status': 'failed',
-                'agent_id': agent_id,
-                'error': str(e),
-                'timestamp': datetime.now().isoformat()
+                "status": "failed",
+                "agent_id": agent_id,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat(),
             }
 
     def _cleanup_agent_resources(self, agent_info: dict):
@@ -1663,13 +1684,10 @@ class AIOrchestrationAgent:
         # For this example, we'll just log it
         self.logger.info(f"Cleaning up resources for agent {agent_info['agent_id']}")
 
-    def execute_workflow(self, workflow_name: str, parameters: dict,
-                        priority: int = 1) -> str:
+    def execute_workflow(self, workflow_name: str, parameters: dict, priority: int = 1) -> str:
         """Execute a workflow"""
         try:
-            workflow_id = self.workflow_engine.submit_workflow(
-                workflow_name, parameters, priority
-            )
+            workflow_id = self.workflow_engine.submit_workflow(workflow_name, parameters, priority)
 
             self.logger.info(f"Submitted workflow {workflow_name} with ID {workflow_id}")
 
@@ -1696,18 +1714,18 @@ class AIOrchestrationAgent:
                 raise AgentNotFound(f"Agent {agent_id} not found")
         else:
             return {
-                'active_agents': {k: v.copy() for k, v in self.active_agents.items()},
-                'registered_agents': self.agent_registry.get_available_agents(),
-                'timestamp': datetime.now().isoformat()
+                "active_agents": {k: v.copy() for k, v in self.active_agents.items()},
+                "registered_agents": self.agent_registry.get_available_agents(),
+                "timestamp": datetime.now().isoformat(),
             }
 
     def get_system_health(self) -> dict:
         """Get overall system health"""
         return {
-            'orchestrator': self.health_monitor.get_health_status()['orchestrator'],
-            'agents': self.health_monitor.get_health_status()['agents'],
-            'resources': self.resource_monitor.get_resource_status(),
-            'timestamp': datetime.now().isoformat()
+            "orchestrator": self.health_monitor.get_health_status()["orchestrator"],
+            "agents": self.health_monitor.get_health_status()["agents"],
+            "resources": self.resource_monitor.get_resource_status(),
+            "timestamp": datetime.now().isoformat(),
         }
 
     def perform_self_healing(self) -> dict:
@@ -1739,10 +1757,10 @@ class AIOrchestrationAgent:
         """Get list of active workflows"""
         return [
             {
-                'workflow_id': wf_id,
-                'status': wf_info['status'],
-                'workflow_name': wf_info['workflow_name'],
-                'submitted_at': wf_info['submitted_at']
+                "workflow_id": wf_id,
+                "status": wf_info["status"],
+                "workflow_name": wf_info["workflow_name"],
+                "submitted_at": wf_info["submitted_at"],
             }
             for wf_id, wf_info in self.workflow_engine.active_workflows.items()
         ]
@@ -1750,14 +1768,14 @@ class AIOrchestrationAgent:
     def get_system_status(self) -> dict:
         """Get overall system status"""
         return {
-            'orchestrator_status': self.status,
-            'uptime': str(datetime.now() - self.start_time),
-            'active_agents': len(self.active_agents),
-            'active_workflows': len(self.workflow_engine.active_workflows),
-            'registered_agents': len(self.agent_registry.agents),
-            'registered_workflows': len(self.workflow_engine.workflow_definitions),
-            'system_health': self.get_system_health(),
-            'timestamp': datetime.now().isoformat()
+            "orchestrator_status": self.status,
+            "uptime": str(datetime.now() - self.start_time),
+            "active_agents": len(self.active_agents),
+            "active_workflows": len(self.workflow_engine.active_workflows),
+            "registered_agents": len(self.agent_registry.agents),
+            "registered_workflows": len(self.workflow_engine.workflow_definitions),
+            "system_health": self.get_system_health(),
+            "timestamp": datetime.now().isoformat(),
         }
 
     def shutdown(self):
@@ -1788,20 +1806,28 @@ class AIOrchestrationAgent:
         self.status = "shutdown"
         self.logger.info("Shutdown complete")
 
+
 class AgentNotRegistered(Exception):
     """Agent not registered"""
+
     pass
+
 
 class DependencyError(Exception):
     """Dependency error"""
+
     pass
+
 
 class ResourceUnavailable(Exception):
     """Resource unavailable"""
+
     pass
+
 
 class AgentNotFound(Exception):
     """Agent not found"""
+
     pass
 ```
 
@@ -1859,10 +1885,7 @@ class OrchestrationService:
         self.running = True
 
         # Start service thread
-        self.service_thread = threading.Thread(
-            target=self._service_loop,
-            daemon=True
-        )
+        self.service_thread = threading.Thread(target=self._service_loop, daemon=True)
         self.service_thread.start()
 
         return True
@@ -1898,7 +1921,7 @@ class OrchestrationService:
             health_status = self.agent.get_system_health()
 
             # Perform self-healing if needed
-            if health_status['orchestrator']['status'] != 'healthy':
+            if health_status["orchestrator"]["status"] != "healthy":
                 self.agent.perform_self_healing()
 
             # Log maintenance
@@ -1958,10 +1981,7 @@ class OrchestrationService:
     def get_status(self) -> dict:
         """Get service status"""
         if not self.agent:
-            return {
-                'status': 'initializing',
-                'timestamp': datetime.now().isoformat()
-            }
+            return {"status": "initializing", "timestamp": datetime.now().isoformat()}
 
         return self.agent.get_system_status()
 ```
@@ -1982,96 +2002,98 @@ class OrchestrationAPI:
     def _setup_routes(self):
         """Setup API routes"""
 
-        @self.app.route('/api/status', methods=['GET'])
+        @self.app.route("/api/status", methods=["GET"])
         def get_status():
             return jsonify(self.agent.get_system_status())
 
-        @self.app.route('/api/agents', methods=['GET'])
+        @self.app.route("/api/agents", methods=["GET"])
         def get_agents():
             return jsonify(self.agent.get_agent_status())
 
-        @self.app.route('/api/agents/<agent_name>/deploy', methods=['POST'])
+        @self.app.route("/api/agents/<agent_name>/deploy", methods=["POST"])
         def deploy_agent(agent_name):
-            config = request.json.get('config', {})
-            environment = request.json.get('environment', 'production')
+            config = request.json.get("config", {})
+            environment = request.json.get("environment", "production")
 
             result = self.agent.deploy_agent(agent_name, config, environment)
 
-            if result['status'] == 'success':
+            if result["status"] == "success":
                 return jsonify(result), 201
             else:
                 return jsonify(result), 400
 
-        @self.app.route('/api/agents/<agent_id>/terminate', methods=['POST'])
+        @self.app.route("/api/agents/<agent_id>/terminate", methods=["POST"])
         def terminate_agent(agent_id):
             result = self.agent.terminate_agent(agent_id)
 
-            if result['status'] == 'success':
+            if result["status"] == "success":
                 return jsonify(result), 200
             else:
                 return jsonify(result), 400
 
-        @self.app.route('/api/workflows', methods=['GET'])
+        @self.app.route("/api/workflows", methods=["GET"])
         def get_workflows():
-            return jsonify({
-                'available_workflows': self.agent.get_available_workflows(),
-                'active_workflows': self.agent.get_active_workflows()
-            })
+            return jsonify(
+                {
+                    "available_workflows": self.agent.get_available_workflows(),
+                    "active_workflows": self.agent.get_active_workflows(),
+                }
+            )
 
-        @self.app.route('/api/workflows/<workflow_name>', methods=['POST'])
+        @self.app.route("/api/workflows/<workflow_name>", methods=["POST"])
         def execute_workflow(workflow_name):
-            parameters = request.json.get('parameters', {})
-            priority = request.json.get('priority', 1)
+            parameters = request.json.get("parameters", {})
+            priority = request.json.get("priority", 1)
 
             try:
                 workflow_id = self.agent.execute_workflow(workflow_name, parameters, priority)
-                return jsonify({'workflow_id': workflow_id, 'status': 'submitted'}), 201
+                return jsonify({"workflow_id": workflow_id, "status": "submitted"}), 201
             except Exception as e:
-                return jsonify({'error': str(e)}), 400
+                return jsonify({"error": str(e)}), 400
 
-        @self.app.route('/api/workflows/<workflow_id>/status', methods=['GET'])
+        @self.app.route("/api/workflows/<workflow_id>/status", methods=["GET"])
         def get_workflow_status(workflow_id):
             try:
                 status = self.agent.get_workflow_status(workflow_id)
                 return jsonify(status), 200
             except Exception as e:
-                return jsonify({'error': str(e)}), 404
+                return jsonify({"error": str(e)}), 404
 
-        @self.app.route('/api/workflows/<workflow_id>/cancel', methods=['POST'])
+        @self.app.route("/api/workflows/<workflow_id>/cancel", methods=["POST"])
         def cancel_workflow(workflow_id):
             try:
                 result = self.agent.cancel_workflow(workflow_id)
-                return jsonify({'success': result}), 200
+                return jsonify({"success": result}), 200
             except Exception as e:
-                return jsonify({'error': str(e)}), 400
+                return jsonify({"error": str(e)}), 400
 
-        @self.app.route('/api/health', methods=['GET'])
+        @self.app.route("/api/health", methods=["GET"])
         def get_health():
             return jsonify(self.agent.get_system_health())
 
-        @self.app.route('/api/health/heal', methods=['POST'])
+        @self.app.route("/api/health/heal", methods=["POST"])
         def perform_healing():
             result = self.agent.perform_self_healing()
             return jsonify(result)
 
-        @self.app.route('/api/workflows/custom', methods=['POST'])
+        @self.app.route("/api/workflows/custom", methods=["POST"])
         def register_custom_workflow():
-            workflow_name = request.json.get('workflow_name')
-            workflow_definition = request.json.get('workflow_definition')
+            workflow_name = request.json.get("workflow_name")
+            workflow_definition = request.json.get("workflow_definition")
 
             if not workflow_name or not workflow_definition:
-                return jsonify({'error': 'Missing workflow_name or workflow_definition'}), 400
+                return jsonify({"error": "Missing workflow_name or workflow_definition"}), 400
 
             try:
                 success = self.agent.register_custom_workflow(workflow_name, workflow_definition)
                 if success:
-                    return jsonify({'success': True, 'workflow_name': workflow_name}), 201
+                    return jsonify({"success": True, "workflow_name": workflow_name}), 201
                 else:
-                    return jsonify({'error': 'Failed to register workflow'}), 400
+                    return jsonify({"error": "Failed to register workflow"}), 400
             except Exception as e:
-                return jsonify({'error': str(e)}), 400
+                return jsonify({"error": str(e)}), 400
 
-    def run(self, host: str = '0.0.0.0', port: int = 5000):
+    def run(self, host: str = "0.0.0.0", port: int = 5000):
         """Run the API server"""
         self.app.run(host=host, port=port, debug=False)
 ```
@@ -2173,11 +2195,7 @@ class AlertManager:
 
     def add_notification_channel(self, channel_type: str, config: dict):
         """Add notification channel"""
-        self.notification_channels.append({
-            'type': channel_type,
-            'config': config,
-            'enabled': True
-        })
+        self.notification_channels.append({"type": channel_type, "config": config, "enabled": True})
 
     def set_escalation_policy(self, alert_type: str, policy: dict):
         """Set escalation policy for alert type"""
@@ -2186,8 +2204,8 @@ class AlertManager:
     def trigger_alert(self, alert: dict):
         """Trigger a new alert"""
         # Add timestamp if not present
-        if 'timestamp' not in alert:
-            alert['timestamp'] = datetime.now().isoformat()
+        if "timestamp" not in alert:
+            alert["timestamp"] = datetime.now().isoformat()
 
         # Add to active alerts
         self.alerts.append(alert)
@@ -2203,7 +2221,7 @@ class AlertManager:
 
     def _apply_escalation_policy(self, alert: dict):
         """Apply escalation policy based on alert type"""
-        alert_type = alert.get('type', alert.get('severity', 'unknown'))
+        alert_type = alert.get("type", alert.get("severity", "unknown"))
 
         if alert_type in self.escalation_policies:
             policy = self.escalation_policies[alert_type]
@@ -2215,20 +2233,19 @@ class AlertManager:
     def _meets_escalation_criteria(self, alert: dict, policy: dict) -> bool:
         """Check if alert meets escalation criteria"""
         # Check severity threshold
-        if 'min_severity' in policy:
-            severity_order = {'info': 0, 'warning': 1, 'critical': 2, 'emergency': 3}
-            alert_severity = severity_order.get(alert.get('severity', 'info'), 0)
-            min_severity = severity_order.get(policy['min_severity'], 0)
+        if "min_severity" in policy:
+            severity_order = {"info": 0, "warning": 1, "critical": 2, "emergency": 3}
+            alert_severity = severity_order.get(alert.get("severity", "info"), 0)
+            min_severity = severity_order.get(policy["min_severity"], 0)
 
             if alert_severity < min_severity:
                 return False
 
         # Check occurrence threshold
-        if 'min_occurrences' in policy:
-            recent_alerts = [a for a in self.alerts
-                           if a.get('type') == alert.get('type')]
+        if "min_occurrences" in policy:
+            recent_alerts = [a for a in self.alerts if a.get("type") == alert.get("type")]
 
-            if len(recent_alerts) < policy['min_occurrences']:
+            if len(recent_alerts) < policy["min_occurrences"]:
                 return False
 
         return True
@@ -2236,9 +2253,9 @@ class AlertManager:
     def _escalate_alert(self, alert: dict, policy: dict):
         """Escalate alert according to policy"""
         # Add escalation information
-        alert['escalated'] = True
-        alert['escalation_level'] = policy.get('level', 1)
-        alert['escalation_time'] = datetime.now().isoformat()
+        alert["escalated"] = True
+        alert["escalation_level"] = policy.get("level", 1)
+        alert["escalation_time"] = datetime.now().isoformat()
 
         # Send escalated notifications
         self._send_notifications(alert, escalated=True)
@@ -2249,29 +2266,29 @@ class AlertManager:
     def _send_notifications(self, alert: dict, escalated: bool = False):
         """Send alert notifications through all channels"""
         for channel in self.notification_channels:
-            if not channel['enabled']:
+            if not channel["enabled"]:
                 continue
 
             try:
-                if channel['type'] == 'console':
+                if channel["type"] == "console":
                     self._notify_console(alert, escalated)
-                elif channel['type'] == 'email':
-                    self._notify_email(alert, channel['config'], escalated)
-                elif channel['type'] == 'slack':
-                    self._notify_slack(alert, channel['config'], escalated)
-                elif channel['type'] == 'webhook':
-                    self._notify_webhook(alert, channel['config'], escalated)
+                elif channel["type"] == "email":
+                    self._notify_email(alert, channel["config"], escalated)
+                elif channel["type"] == "slack":
+                    self._notify_slack(alert, channel["config"], escalated)
+                elif channel["type"] == "webhook":
+                    self._notify_webhook(alert, channel["config"], escalated)
             except Exception as e:
                 print(f"Notification failed for {channel['type']}: {str(e)}")
 
     def _notify_console(self, alert: dict, escalated: bool):
         """Send alert to console"""
         prefix = "ESCALATED " if escalated else ""
-        severity = alert.get('severity', 'info').upper()
+        severity = alert.get("severity", "info").upper()
 
         print(f"{prefix}ALERT [{severity}]: {alert.get('message')}")
 
-        if 'details' in alert:
+        if "details" in alert:
             print(f"Details: {alert['details']}")
 
     def _notify_email(self, alert: dict, config: dict, escalated: bool):
@@ -2292,11 +2309,11 @@ class AlertManager:
     def acknowledge_alert(self, alert_id: str, user: str, notes: str = "") -> bool:
         """Acknowledge an alert"""
         for alert in self.alerts:
-            if alert.get('id') == alert_id:
-                alert['acknowledged'] = True
-                alert['acknowledged_by'] = user
-                alert['acknowledged_at'] = datetime.now().isoformat()
-                alert['acknowledgement_notes'] = notes
+            if alert.get("id") == alert_id:
+                alert["acknowledged"] = True
+                alert["acknowledged_by"] = user
+                alert["acknowledged_at"] = datetime.now().isoformat()
+                alert["acknowledgement_notes"] = notes
                 return True
 
         return False
@@ -2304,11 +2321,11 @@ class AlertManager:
     def resolve_alert(self, alert_id: str, user: str, resolution: str = "") -> bool:
         """Resolve an alert"""
         for i, alert in enumerate(self.alerts):
-            if alert.get('id') == alert_id:
-                alert['resolved'] = True
-                alert['resolved_by'] = user
-                alert['resolved_at'] = datetime.now().isoformat()
-                alert['resolution'] = resolution
+            if alert.get("id") == alert_id:
+                alert["resolved"] = True
+                alert["resolved_by"] = user
+                alert["resolved_at"] = datetime.now().isoformat()
+                alert["resolution"] = resolution
 
                 # Remove from active alerts
                 self.alerts.pop(i)
@@ -2326,8 +2343,9 @@ class AlertManager:
 
     def clear_resolved_alerts(self):
         """Clear resolved alerts from history"""
-        self.alert_history = [alert for alert in self.alert_history
-                           if not alert.get('resolved', False)]
+        self.alert_history = [
+            alert for alert in self.alert_history if not alert.get("resolved", False)
+        ]
 ```
 
 ## Deployment and Scaling
@@ -2475,42 +2493,24 @@ class ScalingManager:
     def __init__(self, orchestration_agent: AIOrchestrationAgent):
         self.agent = orchestration_agent
         self.scaling_policies = {
-            'cpu_based': {
-                'metric': 'cpu_usage',
-                'thresholds': {
-                    'scale_up': 70,
-                    'scale_down': 30
-                },
-                'adjustment': {
-                    'up': 1,
-                    'down': -1
-                },
-                'cooldown': 300  # 5 minutes
+            "cpu_based": {
+                "metric": "cpu_usage",
+                "thresholds": {"scale_up": 70, "scale_down": 30},
+                "adjustment": {"up": 1, "down": -1},
+                "cooldown": 300,  # 5 minutes
             },
-            'queue_based': {
-                'metric': 'queue_length',
-                'thresholds': {
-                    'scale_up': 5,
-                    'scale_down': 2
-                },
-                'adjustment': {
-                    'up': 1,
-                    'down': -1
-                },
-                'cooldown': 180  # 3 minutes
+            "queue_based": {
+                "metric": "queue_length",
+                "thresholds": {"scale_up": 5, "scale_down": 2},
+                "adjustment": {"up": 1, "down": -1},
+                "cooldown": 180,  # 3 minutes
             },
-            'time_based': {
-                'schedule': {
-                    'weekdays': {
-                        '08:00': {'replicas': 3},
-                        '18:00': {'replicas': 2}
-                    },
-                    'weekends': {
-                        '09:00': {'replicas': 2},
-                        '17:00': {'replicas': 1}
-                    }
+            "time_based": {
+                "schedule": {
+                    "weekdays": {"08:00": {"replicas": 3}, "18:00": {"replicas": 2}},
+                    "weekends": {"09:00": {"replicas": 2}, "17:00": {"replicas": 1}},
                 }
-            }
+            },
         }
         self.last_scale_operations = {}
 
@@ -2521,7 +2521,7 @@ class ScalingManager:
 
         # Check each scaling policy
         for policy_name, policy in self.scaling_policies.items():
-            if policy_name == 'time_based':
+            if policy_name == "time_based":
                 action = self._check_time_based_scaling(policy)
             else:
                 action = self._check_metric_based_scaling(policy, current_metrics)
@@ -2534,9 +2534,9 @@ class ScalingManager:
             self._execute_scaling_action(action)
 
         return {
-            'scaling_actions': scaling_actions,
-            'current_metrics': current_metrics,
-            'timestamp': datetime.now().isoformat()
+            "scaling_actions": scaling_actions,
+            "current_metrics": current_metrics,
+            "timestamp": datetime.now().isoformat(),
         }
 
     def _get_current_metrics(self) -> dict:
@@ -2545,16 +2545,16 @@ class ScalingManager:
         resource_status = self.agent.resource_monitor.get_resource_status()
 
         return {
-            'cpu_usage': resource_status['system']['cpu'],
-            'memory_usage': resource_status['system']['memory'],
-            'queue_length': len(self.agent.workflow_engine.active_workflows),
-            'active_agents': len(self.agent.active_agents),
-            'active_workflows': system_status['active_workflows']
+            "cpu_usage": resource_status["system"]["cpu"],
+            "memory_usage": resource_status["system"]["memory"],
+            "queue_length": len(self.agent.workflow_engine.active_workflows),
+            "active_agents": len(self.agent.active_agents),
+            "active_workflows": system_status["active_workflows"],
         }
 
     def _check_metric_based_scaling(self, policy: dict, metrics: dict) -> Optional[dict]:
         """Check metric-based scaling"""
-        metric_name = policy['metric']
+        metric_name = policy["metric"]
         current_value = metrics.get(metric_name)
 
         if current_value is None:
@@ -2565,23 +2565,23 @@ class ScalingManager:
             return None
 
         # Check scale-up threshold
-        if current_value > policy['thresholds']['scale_up']:
+        if current_value > policy["thresholds"]["scale_up"]:
             return {
-                'policy': policy_name,
-                'action': 'scale_up',
-                'current_value': current_value,
-                'threshold': policy['thresholds']['scale_up'],
-                'adjustment': policy['adjustment']['up']
+                "policy": policy_name,
+                "action": "scale_up",
+                "current_value": current_value,
+                "threshold": policy["thresholds"]["scale_up"],
+                "adjustment": policy["adjustment"]["up"],
             }
 
         # Check scale-down threshold
-        elif current_value < policy['thresholds']['scale_down']:
+        elif current_value < policy["thresholds"]["scale_down"]:
             return {
-                'policy': policy_name,
-                'action': 'scale_down',
-                'current_value': current_value,
-                'threshold': policy['thresholds']['scale_down'],
-                'adjustment': policy['adjustment']['down']
+                "policy": policy_name,
+                "action": "scale_down",
+                "current_value": current_value,
+                "threshold": policy["thresholds"]["scale_down"],
+                "adjustment": policy["adjustment"]["down"],
             }
 
         return None
@@ -2589,23 +2589,23 @@ class ScalingManager:
     def _check_time_based_scaling(self, policy: dict) -> Optional[dict]:
         """Check time-based scaling"""
         now = datetime.now()
-        day_type = 'weekdays' if now.weekday() < 5 else 'weekends'
-        time_str = now.strftime('%H:%M')
+        day_type = "weekdays" if now.weekday() < 5 else "weekends"
+        time_str = now.strftime("%H:%M")
 
-        if day_type in policy['schedule']:
-            day_schedule = policy['schedule'][day_type]
+        if day_type in policy["schedule"]:
+            day_schedule = policy["schedule"][day_type]
 
             if time_str in day_schedule:
-                target_replicas = day_schedule[time_str]['replicas']
+                target_replicas = day_schedule[time_str]["replicas"]
 
                 # In real implementation, this would check current replicas
                 # For this example, we'll just return the action
                 return {
-                    'policy': 'time_based',
-                    'action': 'set_replicas',
-                    'target_replicas': target_replicas,
-                    'time': time_str,
-                    'day_type': day_type
+                    "policy": "time_based",
+                    "action": "set_replicas",
+                    "target_replicas": target_replicas,
+                    "time": time_str,
+                    "day_type": day_type,
                 }
 
         return None
@@ -2616,7 +2616,7 @@ class ScalingManager:
             return False
 
         last_operation = self.last_scale_operations[policy_name]
-        cooldown = self.scaling_policies[policy_name]['cooldown']
+        cooldown = self.scaling_policies[policy_name]["cooldown"]
 
         time_since = (datetime.now() - last_operation).total_seconds()
 
@@ -2624,7 +2624,7 @@ class ScalingManager:
 
     def _execute_scaling_action(self, action: dict):
         """Execute scaling action"""
-        policy_name = action['policy']
+        policy_name = action["policy"]
 
         # Record the operation
         self.last_scale_operations[policy_name] = datetime.now()
@@ -2635,21 +2635,17 @@ class ScalingManager:
         # In real implementation, this would actually scale the system
         # For this example, we'll just log it
 
-        if action['action'] == 'scale_up':
+        if action["action"] == "scale_up":
             print(f"Scaling up by {action['adjustment']} due to {policy_name} policy")
-        elif action['action'] == 'scale_down':
+        elif action["action"] == "scale_down":
             print(f"Scaling down by {abs(action['adjustment'])} due to {policy_name} policy")
-        elif action['action'] == 'set_replicas':
+        elif action["action"] == "set_replicas":
             print(f"Setting replicas to {action['target_replicas']} due to time-based policy")
 
     def get_scaling_history(self) -> list:
         """Get scaling operation history"""
         return [
-            {
-                'policy': policy,
-                'action': action,
-                'timestamp': timestamp.isoformat()
-            }
+            {"policy": policy, "action": action, "timestamp": timestamp.isoformat()}
             for policy, timestamp in self.last_scale_operations.items()
         ]
 ```

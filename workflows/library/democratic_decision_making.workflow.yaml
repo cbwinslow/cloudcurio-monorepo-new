@@ -8,7 +8,7 @@ metadata:
 
 spec:
   coordination: democratic
-  
+
   steps:
     - id: define_problem
       name: "Define Problem"
@@ -18,7 +18,7 @@ spec:
         context: "${problem_context}"
       output_var: problem_definition
       timeout: 120
-    
+
     # All agents propose solutions in parallel
     - id: propose_solution_1
       name: "Senior Architect Proposal"
@@ -31,7 +31,7 @@ spec:
       timeout: 180
       parallel_group: proposals
       voting_weight: 0.95
-    
+
     - id: propose_solution_2
       name: "Backend Lead Proposal"
       agent: backend_lead
@@ -43,7 +43,7 @@ spec:
       timeout: 180
       parallel_group: proposals
       voting_weight: 0.85
-    
+
     - id: propose_solution_3
       name: "Frontend Lead Proposal"
       agent: frontend_lead
@@ -55,7 +55,7 @@ spec:
       timeout: 180
       parallel_group: proposals
       voting_weight: 0.85
-    
+
     - id: propose_solution_4
       name: "DevOps Engineer Proposal"
       agent: devops_engineer
@@ -67,7 +67,7 @@ spec:
       timeout: 180
       parallel_group: proposals
       voting_weight: 0.80
-    
+
     # Democratic voting phase
     - id: voting_phase
       name: "Democratic Vote"
@@ -90,7 +90,7 @@ spec:
       output_var: winning_proposal
       depends_on: [propose_solution_1, propose_solution_2, propose_solution_3, propose_solution_4]
       timeout: 60
-    
+
     # Implementation planning based on winning proposal
     - id: create_implementation_plan
       name: "Create Implementation Plan"
@@ -103,7 +103,7 @@ spec:
       output_var: implementation_plan
       depends_on: [voting_phase]
       timeout: 240
-    
+
     # Code review of the plan
     - id: review_plan
       name: "Review Implementation Plan"
@@ -115,7 +115,7 @@ spec:
       output_var: review_feedback
       depends_on: [create_implementation_plan]
       timeout: 180
-    
+
     # Final approval vote
     - id: final_approval
       name: "Final Approval Vote"
@@ -132,12 +132,12 @@ spec:
     method: "confidence_weighted"
     quorum: 0.5  # Need at least 50% participation
     approval_threshold: 0.75
-    
+
   error_handling:
     retry_failed_steps: true
     max_retries: 2
     continue_on_error: false
-    
+
   outputs:
     problem: "${problem_definition}"
     winning_solution: "${winning_proposal}"

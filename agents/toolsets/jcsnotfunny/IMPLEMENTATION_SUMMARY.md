@@ -46,6 +46,7 @@ The foundation of all tools is the `BaseTool` class that provides:
 ```python
 # tools/base_tool.py
 
+
 class BaseTool:
     def __init__(self, name: str, description: str, config: Dict[str, Any] = None):
         # Comprehensive initialization
@@ -64,6 +65,7 @@ class BaseTool:
 
 ```python
 # tools/error_handling.py
+
 
 class ComprehensiveErrorHandler:
     def handle_error(self, error: Exception, context: Dict[str, Any]) -> ErrorHandlingResult:
@@ -89,6 +91,7 @@ class ComprehensiveErrorHandler:
 ```python
 # tools/quality_assessment.py
 
+
 class QualityAssessmentFramework:
     def assess_quality(self, result: Dict[str, Any], tool_type: str) -> QualityAssessment:
         # Calculate quality scores
@@ -106,8 +109,13 @@ class QualityAssessmentFramework:
         quality_level = self._determine_quality_level(overall_score)
 
         return QualityAssessment(
-            completeness_score, accuracy_score, consistency_score, performance_score,
-            overall_score, quality_level, self._get_quality_suggestions(quality_level)
+            completeness_score,
+            accuracy_score,
+            consistency_score,
+            performance_score,
+            overall_score,
+            quality_level,
+            self._get_quality_suggestions(quality_level),
         )
 ```
 
@@ -115,6 +123,7 @@ class QualityAssessmentFramework:
 
 ```python
 # tools/fallback_strategies.py
+
 
 class FallbackStrategyFramework:
     def execute_fallback(self, error: Exception, context: Dict[str, Any]) -> FallbackResult:
@@ -126,7 +135,11 @@ class FallbackStrategyFramework:
                 result = strategy.execute(error, context)
 
                 if result.success:
-                    return FallbackResult(True, data=result.data, suggestions=attempted_strategies + [strategy.name] + result.suggestions)
+                    return FallbackResult(
+                        True,
+                        data=result.data,
+                        suggestions=attempted_strategies + [strategy.name] + result.suggestions,
+                    )
                 else:
                     attempted_strategies.append(strategy.name)
                     suggestions.extend(result.suggestions)
@@ -145,20 +158,34 @@ class FallbackStrategyFramework:
 ```python
 # tools/video_analysis.py
 
+
 class VideoAnalysisTool(BaseTool):
     def __init__(self, config: Dict[str, Any] = None):
         # Define tool specifications
         required_params = ["video_path", "analysis_type"]
-        param_types = {"video_path": str, "analysis_type": str, "output_format": str, "quality": str, "min_confidence": float}
+        param_types = {
+            "video_path": str,
+            "analysis_type": str,
+            "output_format": str,
+            "quality": str,
+            "min_confidence": float,
+        }
         param_validators = {
             "analysis_type": EnumValidator(["speaker", "engagement", "cuts", "full"]),
             "output_format": EnumValidator(["json", "xml", "csv"]),
             "quality": EnumValidator(["low", "medium", "high"]),
-            "min_confidence": RangeValidator(0.0, 1.0)
+            "min_confidence": RangeValidator(0.0, 1.0),
         }
 
         # Initialize base tool
-        super().__init__("video_analysis", "Comprehensive video analysis", config, required_params, param_types, param_validators)
+        super().__init__(
+            "video_analysis",
+            "Comprehensive video analysis",
+            config,
+            required_params,
+            param_types,
+            param_validators,
+        )
 
         # Set default values
         self.defaults = {"output_format": "json", "quality": "medium", "min_confidence": 0.8}
@@ -169,23 +196,44 @@ class VideoAnalysisTool(BaseTool):
 ```python
 # tools/audio_cleanup.py
 
+
 class AudioCleanupTool(BaseTool):
     def __init__(self, config: Dict[str, Any] = None):
         # Define tool specifications
         required_params = ["audio_path"]
-        param_types = {"audio_path": str, "output_path": str, "noise_reduction": float, "de_essing": float, "equalization": str, "quality": str}
+        param_types = {
+            "audio_path": str,
+            "output_path": str,
+            "noise_reduction": float,
+            "de_essing": float,
+            "equalization": str,
+            "quality": str,
+        }
         param_validators = {
             "noise_reduction": RangeValidator(0.0, 1.0),
             "de_essing": RangeValidator(0.0, 1.0),
             "equalization": EnumValidator(["flat", "podcast", "music", "voice"]),
-            "quality": EnumValidator(["low", "medium", "high"])
+            "quality": EnumValidator(["low", "medium", "high"]),
         }
 
         # Initialize base tool
-        super().__init__("audio_cleanup", "Comprehensive audio cleanup", config, required_params, param_types, param_validators)
+        super().__init__(
+            "audio_cleanup",
+            "Comprehensive audio cleanup",
+            config,
+            required_params,
+            param_types,
+            param_validators,
+        )
 
         # Set default values
-        self.defaults = {"output_path": None, "noise_reduction": 0.8, "de_essing": 0.6, "equalization": "podcast", "quality": "medium"}
+        self.defaults = {
+            "output_path": None,
+            "noise_reduction": 0.8,
+            "de_essing": 0.6,
+            "equalization": "podcast",
+            "quality": "medium",
+        }
 ```
 
 ### 3. **Content Scheduling Tool**
@@ -193,19 +241,34 @@ class AudioCleanupTool(BaseTool):
 ```python
 # tools/content_scheduling.py
 
+
 class ContentSchedulingTool(BaseTool):
     def __init__(self, config: Dict[str, Any] = None):
         # Define tool specifications
         required_params = ["content", "platforms"]
-        param_types = {"content": str, "platforms": list, "schedule_time": str, "media_path": str, "tags": list, "dry_run": bool}
+        param_types = {
+            "content": str,
+            "platforms": list,
+            "schedule_time": str,
+            "media_path": str,
+            "tags": list,
+            "dry_run": bool,
+        }
         param_validators = {
             "platforms": ListValidator(["twitter", "instagram", "tiktok", "youtube", "linkedin"]),
             "schedule_time": DateTimeValidator(),
-            "tags": ListValidator(str, max_length=10)
+            "tags": ListValidator(str, max_length=10),
         }
 
         # Initialize base tool
-        super().__init__("content_scheduling", "Comprehensive content scheduling", config, required_params, param_types, param_validators)
+        super().__init__(
+            "content_scheduling",
+            "Comprehensive content scheduling",
+            config,
+            required_params,
+            param_types,
+            param_validators,
+        )
 
         # Set default values
         self.defaults = {"schedule_time": None, "media_path": None, "tags": [], "dry_run": False}
@@ -221,12 +284,13 @@ class ContentSchedulingTool(BaseTool):
 ```python
 # agents/video_editor_agent.py
 
+
 class VideoEditorAgent:
     def __init__(self):
         self.tools = {
             "video_analysis": VideoAnalysisTool(),
             "audio_cleanup": AudioCleanupTool(),
-            "content_scheduling": ContentSchedulingTool()
+            "content_scheduling": ContentSchedulingTool(),
         }
 
         self.workflow = self._define_workflow()
@@ -235,7 +299,7 @@ class VideoEditorAgent:
         return [
             {"tool": "video_analysis", "params": {"analysis_type": "full"}},
             {"tool": "audio_cleanup", "params": {"quality": "high"}},
-            {"tool": "content_scheduling", "params": {"platforms": ["twitter", "instagram"]}}
+            {"tool": "content_scheduling", "params": {"platforms": ["twitter", "instagram"]}},
         ]
 
     def process_episode(self, video_path: str, audio_path: str) -> Dict[str, Any]:
@@ -254,7 +318,11 @@ class VideoEditorAgent:
             except Exception as e:
                 return self._handle_workflow_error(step, e)
 
-        return {"status": "SUCCESS", "workflow_results": workflow_results, "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "SUCCESS",
+            "workflow_results": workflow_results,
+            "timestamp": datetime.now().isoformat(),
+        }
 ```
 
 ### 2. **Workflow Integration**
@@ -262,23 +330,40 @@ class VideoEditorAgent:
 ```python
 # workflows/podcast_production_workflow.py
 
+
 class PodcastProductionWorkflow:
     def __init__(self):
         self.agents = {
             "video_editor": VideoEditorAgent(),
             "audio_engineer": AudioEngineerAgent(),
             "social_media_manager": SocialMediaManagerAgent(),
-            "content_distributor": ContentDistributorAgent()
+            "content_distributor": ContentDistributorAgent(),
         }
 
         self.workflow_definition = self._define_workflow()
 
     def _define_workflow(self) -> Dict[str, Dict[str, Any]]:
         return {
-            "video_processing": {"agent": "video_editor", "tools": ["video_analysis"], "dependencies": []},
-            "audio_processing": {"agent": "audio_engineer", "tools": ["audio_cleanup"], "dependencies": []},
-            "content_creation": {"agent": "social_media_manager", "tools": [], "dependencies": ["video_processing", "audio_processing"]},
-            "content_distribution": {"agent": "content_distributor", "tools": ["content_scheduling"], "dependencies": ["content_creation"]}
+            "video_processing": {
+                "agent": "video_editor",
+                "tools": ["video_analysis"],
+                "dependencies": [],
+            },
+            "audio_processing": {
+                "agent": "audio_engineer",
+                "tools": ["audio_cleanup"],
+                "dependencies": [],
+            },
+            "content_creation": {
+                "agent": "social_media_manager",
+                "tools": [],
+                "dependencies": ["video_processing", "audio_processing"],
+            },
+            "content_distribution": {
+                "agent": "content_distributor",
+                "tools": ["content_scheduling"],
+                "dependencies": ["content_creation"],
+            },
         }
 
     def execute_workflow(self, episode_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -295,7 +380,11 @@ class PodcastProductionWorkflow:
             except Exception as e:
                 return self._handle_workflow_error(step_name, e)
 
-        return {"status": "SUCCESS", "workflow_results": workflow_results, "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "SUCCESS",
+            "workflow_results": workflow_results,
+            "timestamp": datetime.now().isoformat(),
+        }
 ```
 
 ## Key Implementation Benefits
