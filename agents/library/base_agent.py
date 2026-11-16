@@ -11,12 +11,10 @@ from __future__ import annotations
 
 import json
 import logging
-import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Callable
-from pathlib import Path
-from collections import defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 from agents.robust_tool import RobustTool, ToolResult
 
@@ -29,13 +27,13 @@ class ConfidenceMetrics:
     overall: float = 0.5
 
     # Domain-specific confidence scores
-    domains: Dict[str, float] = field(default_factory=dict)
+    domains: dict[str, float] = field(default_factory=dict)
 
     # Tool-specific confidence scores
-    tools: Dict[str, float] = field(default_factory=dict)
+    tools: dict[str, float] = field(default_factory=dict)
 
     # Recent performance tracking (last N operations)
-    recent_performance: List[bool] = field(default_factory=list)
+    recent_performance: list[bool] = field(default_factory=list)
     max_recent_history: int = 50
 
     # Voting history
@@ -131,7 +129,7 @@ class ConfidenceMetrics:
 class AgentTool:
     """Wrapper for agent tools that integrates with RobustTool framework."""
 
-    def __init__(self, name: str, description: str, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, name: str, description: str, config: dict[str, Any] | None = None):
         """Initialize agent tool.
 
         Args:
@@ -153,9 +151,8 @@ class AgentTool:
         Returns:
             Configured RobustTool instance
         """
-        pass
 
-    def execute(self, parameters: Dict[str, Any]) -> ToolResult:
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
         """Execute the tool with given parameters.
 
         Args:
@@ -166,7 +163,7 @@ class AgentTool:
         """
         return self.implementation.execute(parameters)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get tool execution statistics.
 
         Returns:
@@ -185,7 +182,7 @@ class BaseAgent(ABC):
     - Workflow participation
     """
 
-    def __init__(self, agent_name: str, config_path: Optional[str] = None):
+    def __init__(self, agent_name: str, config_path: str | None = None):
         """Initialize the agent.
 
         Args:
@@ -218,7 +215,7 @@ class BaseAgent(ABC):
 
         # State management
         self.state = {}
-        self.execution_history: List[Dict[str, Any]] = []
+        self.execution_history: list[dict[str, Any]] = []
 
         # Confidence metrics for democratic decision making
         self.confidence = ConfidenceMetrics()
@@ -233,24 +230,24 @@ class BaseAgent(ABC):
         # Base confidence for different domains
         role_lower = self.role.lower()
 
-        if 'video' in role_lower or 'editing' in role_lower:
-            self.confidence.domains['video_editing'] = 0.8
-            self.confidence.domains['content_creation'] = 0.6
-        elif 'audio' in role_lower or 'sound' in role_lower:
-            self.confidence.domains['audio_production'] = 0.8
-            self.confidence.domains['music'] = 0.6
-        elif 'social' in role_lower or 'media' in role_lower:
-            self.confidence.domains['social_media'] = 0.8
-            self.confidence.domains['marketing'] = 0.6
-        elif 'content' in role_lower or 'distribution' in role_lower:
-            self.confidence.domains['content_distribution'] = 0.8
-            self.confidence.domains['seo'] = 0.6
-        elif 'sponsorship' in role_lower or 'business' in role_lower:
-            self.confidence.domains['sponsorship'] = 0.8
-            self.confidence.domains['business_development'] = 0.6
-        elif 'tour' in role_lower or 'event' in role_lower:
-            self.confidence.domains['event_management'] = 0.8
-            self.confidence.domains['logistics'] = 0.6
+        if "video" in role_lower or "editing" in role_lower:
+            self.confidence.domains["video_editing"] = 0.8
+            self.confidence.domains["content_creation"] = 0.6
+        elif "audio" in role_lower or "sound" in role_lower:
+            self.confidence.domains["audio_production"] = 0.8
+            self.confidence.domains["music"] = 0.6
+        elif "social" in role_lower or "media" in role_lower:
+            self.confidence.domains["social_media"] = 0.8
+            self.confidence.domains["marketing"] = 0.6
+        elif "content" in role_lower or "distribution" in role_lower:
+            self.confidence.domains["content_distribution"] = 0.8
+            self.confidence.domains["seo"] = 0.6
+        elif "sponsorship" in role_lower or "business" in role_lower:
+            self.confidence.domains["sponsorship"] = 0.8
+            self.confidence.domains["business_development"] = 0.6
+        elif "tour" in role_lower or "event" in role_lower:
+            self.confidence.domains["event_management"] = 0.8
+            self.confidence.domains["logistics"] = 0.6
 
         # Initialize tool confidence
         for tool_name in self.get_available_tools():
@@ -277,28 +274,31 @@ class BaseAgent(ABC):
         # Update overall confidence
         self.confidence.update_overall_confidence()
 
-    def get_confidence_report(self) -> Dict[str, Any]:
+    def get_confidence_report(self) -> dict[str, Any]:
         """Get comprehensive confidence report.
 
         Returns:
             Dictionary with confidence metrics
         """
         return {
-            'overall_confidence': self.confidence.overall,
-            'domain_confidence': dict(self.confidence.domains),
-            'tool_confidence': dict(self.confidence.tools),
-            'recent_performance_rate': (
+            "overall_confidence": self.confidence.overall,
+            "domain_confidence": dict(self.confidence.domains),
+            "tool_confidence": dict(self.confidence.tools),
+            "recent_performance_rate": (
                 sum(self.confidence.recent_performance) / len(self.confidence.recent_performance)
-                if self.confidence.recent_performance else 0.0
+                if self.confidence.recent_performance
+                else 0.0
             ),
-            'voting_accuracy': (
+            "voting_accuracy": (
                 self.confidence.successful_votes / self.confidence.total_votes
-                if self.confidence.total_votes > 0 else 0.0
+                if self.confidence.total_votes > 0
+                else 0.0
             ),
-            'communication_effectiveness': (
+            "communication_effectiveness": (
                 self.confidence.effective_communications / self.confidence.total_communications
-                if self.confidence.total_communications > 0 else 0.0
-            )
+                if self.confidence.total_communications > 0
+                else 0.0
+            ),
         }
 
     # Democratic Decision Making Methods
@@ -326,7 +326,7 @@ class BaseAgent(ABC):
         """
         return self.confidence.get_voting_weight(context)
 
-    def cast_vote(self, option: str, context: str = "") -> Dict[str, Any]:
+    def cast_vote(self, option: str, context: str = "") -> dict[str, Any]:
         """Cast a vote on a proposal for a specific option.
 
         Args:
@@ -338,18 +338,18 @@ class BaseAgent(ABC):
         """
         if self.should_abstain_from_vote(context):
             return {
-                'decision': 'abstain',
-                'weight': 0.0,
-                'reason': 'low_confidence',
-                'confidence': self.confidence.overall
+                "decision": "abstain",
+                "weight": 0.0,
+                "reason": "low_confidence",
+                "confidence": self.confidence.overall,
             }
 
         # Use the provided option as the decision
         return {
-            'decision': option,
-            'weight': self.get_voting_weight(context),
-            'confidence': self.confidence.overall,
-            'context_confidence': self.confidence.get_domain_confidence(context)
+            "decision": option,
+            "weight": self.get_voting_weight(context),
+            "confidence": self.confidence.overall,
+            "context_confidence": self.confidence.get_domain_confidence(context),
         }
 
     def record_vote_outcome(self, vote_success: bool) -> None:
@@ -360,7 +360,7 @@ class BaseAgent(ABC):
         """
         self.confidence.record_vote(vote_success)
 
-    def send_message(self, recipient: str, message: Dict[str, Any]) -> bool:
+    def send_message(self, recipient: str, message: dict[str, Any]) -> bool:
         """Send a message to another agent (placeholder for communication system).
 
         Args:
@@ -375,7 +375,7 @@ class BaseAgent(ABC):
         self.confidence.record_communication(True)  # Assume effective for now
         return True
 
-    def receive_message(self, sender: str, message: Dict[str, Any]) -> None:
+    def receive_message(self, sender: str, message: dict[str, Any]) -> None:
         """Receive a message from another agent.
 
         Args:
@@ -384,31 +384,31 @@ class BaseAgent(ABC):
         """
         self.logger.info(f"Received message from {sender}: {message}")
         # Process message based on type
-        message_type = message.get('type', 'unknown')
+        message_type = message.get("type", "unknown")
 
-        if message_type == 'vote_request':
+        if message_type == "vote_request":
             # Handle voting request
-            proposal = message.get('proposal')
-            context = message.get('context', '')
+            proposal = message.get("proposal")
+            context = message.get("context", "")
             vote = self.cast_vote(proposal, context)
             # Send vote back
             response = {
-                'type': 'vote_response',
-                'proposal_id': message.get('proposal_id'),
-                'vote': vote
+                "type": "vote_response",
+                "proposal_id": message.get("proposal_id"),
+                "vote": vote,
             }
             self.send_message(sender, response)
-        elif message_type == 'status_request':
+        elif message_type == "status_request":
             # Send status update
             status = self.get_status()
             response = {
-                'type': 'status_response',
-                'status': status,
-                'confidence': self.get_confidence_report()
+                "type": "status_response",
+                "status": status,
+                "confidence": self.get_confidence_report(),
             }
             self.send_message(sender, response)
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load configuration from agents_config.json.
 
         Returns:
@@ -422,19 +422,18 @@ class BaseAgent(ABC):
         if not config_file.exists():
             raise FileNotFoundError(f"Configuration file not found: {self.config_path}")
 
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             return json.load(f)
 
     @abstractmethod
-    def _initialize_tools(self) -> Dict[str, AgentTool]:
+    def _initialize_tools(self) -> dict[str, AgentTool]:
         """Initialize agent-specific tools.
 
         Returns:
             Dictionary mapping tool names to AgentTool instances
         """
-        pass
 
-    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> ToolResult:
+    def execute_tool(self, tool_name: str, parameters: dict[str, Any]) -> ToolResult:
         """Execute a specific tool.
 
         Args:
@@ -457,11 +456,11 @@ class BaseAgent(ABC):
 
         # Record execution in history
         execution_record = {
-            'timestamp': result.execution_id.split('_')[1],  # Extract timestamp from ID
-            'tool': tool_name,
-            'parameters': parameters,
-            'result': result.to_dict(),
-            'success': result.success
+            "timestamp": result.execution_id.split("_")[1],  # Extract timestamp from ID
+            "tool": tool_name,
+            "parameters": parameters,
+            "result": result.to_dict(),
+            "success": result.success,
         }
         self.execution_history.append(execution_record)
 
@@ -475,7 +474,7 @@ class BaseAgent(ABC):
 
         return result
 
-    def get_available_tools(self) -> List[str]:
+    def get_available_tools(self) -> list[str]:
         """Get list of available tool names.
 
         Returns:
@@ -483,7 +482,7 @@ class BaseAgent(ABC):
         """
         return list(self.tools.keys())
 
-    def get_tool_info(self, tool_name: str) -> Optional[Dict[str, Any]]:
+    def get_tool_info(self, tool_name: str) -> dict[str, Any] | None:
         """Get information about a specific tool.
 
         Args:
@@ -496,13 +495,9 @@ class BaseAgent(ABC):
             return None
 
         tool = self.tools[tool_name]
-        return {
-            'name': tool.name,
-            'description': tool.description,
-            'stats': tool.get_stats()
-        }
+        return {"name": tool.name, "description": tool.description, "stats": tool.get_stats()}
 
-    def execute_workflow(self, workflow_name: str, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_workflow(self, workflow_name: str, inputs: dict[str, Any]) -> dict[str, Any]:
         """Execute a predefined workflow.
 
         Args:
@@ -517,7 +512,9 @@ class BaseAgent(ABC):
         """
         if workflow_name not in self.workflow_configs:
             available_workflows = list(self.workflow_configs.keys())
-            raise ValueError(f"Workflow '{workflow_name}' not found. Available workflows: {available_workflows}")
+            raise ValueError(
+                f"Workflow '{workflow_name}' not found. Available workflows: {available_workflows}"
+            )
 
         workflow_config = self.workflow_configs[workflow_name]
         self.logger.info(f"Executing workflow '{workflow_name}' with inputs: {inputs}")
@@ -527,8 +524,8 @@ class BaseAgent(ABC):
 
         # Execute workflow steps (simplified - assumes sequential execution)
         for step in workflow_config:
-            step_name = step.get('name', f"{step['agent']}.{step['action']}")
-            tool_name = step['action']
+            step_name = step.get("name", f"{step['agent']}.{step['action']}")
+            tool_name = step["action"]
             step_inputs = self._prepare_step_inputs(step, current_inputs, results)
 
             self.logger.debug(f"Executing workflow step: {step_name}")
@@ -537,21 +534,29 @@ class BaseAgent(ABC):
             results[step_name] = step_result
 
             if not step_result.success:
-                self.logger.error(f"Workflow '{workflow_name}' failed at step '{step_name}': {step_result.error}")
+                self.logger.error(
+                    f"Workflow '{workflow_name}' failed at step '{step_name}': {step_result.error}"
+                )
                 break
 
         workflow_result = {
-            'workflow': workflow_name,
-            'success': all(r.success for r in results.values()),
-            'results': {k: v.to_dict() for k, v in results.items()},
-            'inputs': inputs
+            "workflow": workflow_name,
+            "success": all(r.success for r in results.values()),
+            "results": {k: v.to_dict() for k, v in results.items()},
+            "inputs": inputs,
         }
 
-        self.logger.info(f"Workflow '{workflow_name}' completed with success: {workflow_result['success']}")
+        self.logger.info(
+            f"Workflow '{workflow_name}' completed with success: {workflow_result['success']}"
+        )
         return workflow_result
 
-    def _prepare_step_inputs(self, step: Dict[str, Any], workflow_inputs: Dict[str, Any],
-                           previous_results: Dict[str, ToolResult]) -> Dict[str, Any]:
+    def _prepare_step_inputs(
+        self,
+        step: dict[str, Any],
+        workflow_inputs: dict[str, Any],
+        previous_results: dict[str, ToolResult],
+    ) -> dict[str, Any]:
         """Prepare inputs for a workflow step.
 
         Args:
@@ -567,7 +572,7 @@ class BaseAgent(ABC):
         step_inputs = {}
 
         # Map step inputs from workflow inputs and previous results
-        input_mapping = step.get('input', {})
+        input_mapping = step.get("input", {})
         if isinstance(input_mapping, str):
             # Simple string mapping - could be enhanced
             if input_mapping in workflow_inputs:
@@ -584,31 +589,33 @@ class BaseAgent(ABC):
 
         return step_inputs
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get agent status and statistics.
 
         Returns:
             Dictionary with agent status information
         """
         total_executions = len(self.execution_history)
-        successful_executions = sum(1 for r in self.execution_history if r['success'])
-        success_rate = (successful_executions / total_executions * 100) if total_executions > 0 else 0
+        successful_executions = sum(1 for r in self.execution_history if r["success"])
+        success_rate = (
+            (successful_executions / total_executions * 100) if total_executions > 0 else 0
+        )
 
         tool_stats = {}
         for tool_name, tool in self.tools.items():
             tool_stats[tool_name] = tool.get_stats()
 
         return {
-            'name': self.name,
-            'role': self.role,
-            'model': self.model,
-            'total_executions': total_executions,
-            'successful_executions': successful_executions,
-            'success_rate': success_rate,
-            'available_tools': self.get_available_tools(),
-            'workflows': list(self.workflow_configs.keys()),
-            'tool_stats': tool_stats,
-            'state': self.state.copy()
+            "name": self.name,
+            "role": self.role,
+            "model": self.model,
+            "total_executions": total_executions,
+            "successful_executions": successful_executions,
+            "success_rate": success_rate,
+            "available_tools": self.get_available_tools(),
+            "workflows": list(self.workflow_configs.keys()),
+            "tool_stats": tool_stats,
+            "state": self.state.copy(),
         }
 
     def update_state(self, key: str, value: Any) -> None:
@@ -648,7 +655,7 @@ class ToolBasedAgent(BaseAgent):
     from the agent's configuration in agents_config.json.
     """
 
-    def _initialize_tools(self) -> Dict[str, AgentTool]:
+    def _initialize_tools(self) -> dict[str, AgentTool]:
         """Initialize tools from agent configuration.
 
         Returns:
@@ -666,9 +673,7 @@ class ToolBasedAgent(BaseAgent):
 
             # Create agent tool wrapper
             agent_tool = ConfiguredAgentTool(
-                name=tool_name,
-                description=tool_description,
-                config=tool_params_config
+                name=tool_name, description=tool_description, config=tool_params_config
             )
 
             tools[tool_name] = agent_tool
@@ -696,30 +701,26 @@ class ConfiguredAgentTool(AgentTool):
 class PlaceholderRobustTool(RobustTool):
     """Placeholder RobustTool for tools that haven't been implemented yet."""
 
-    def _define_fallback_strategies(self) -> List[Dict[str, Any]]:
+    def _define_fallback_strategies(self) -> list[dict[str, Any]]:
         """Define basic fallback strategies."""
         return [
             {
-                'name': 'log_error',
-                'condition': lambda e, p, eid: True,  # Always apply
-                'action': lambda e, p, eid: ToolResult(
+                "name": "log_error",
+                "condition": lambda e, p, eid: True,  # Always apply
+                "action": lambda e, p, eid: ToolResult(
                     success=False,
-                    error=f"Tool '{self.name}' not yet implemented: {str(e)}",
-                    execution_id=eid
+                    error=f"Tool '{self.name}' not yet implemented: {e!s}",
+                    execution_id=eid,
                 ),
-                'priority': 1
+                "priority": 1,
             }
         ]
 
-    def _define_validation_schema(self) -> Dict[str, Any]:
+    def _define_validation_schema(self) -> dict[str, Any]:
         """Define basic validation schema."""
-        return {
-            'type': 'object',
-            'properties': {},
-            'required': []
-        }
+        return {"type": "object", "properties": {}, "required": []}
 
-    def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
+    def _execute_core(self, parameters: dict[str, Any], execution_id: str) -> Any:
         """Core execution - raise NotImplementedError."""
         raise NotImplementedError(f"Tool '{self.name}' has not been implemented yet")
 
@@ -727,7 +728,7 @@ class PlaceholderRobustTool(RobustTool):
 class WorkflowOrchestrator:
     """Orchestrates multi-agent workflows defined in agents_config.json."""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """Initialize workflow orchestrator.
 
         Args:
@@ -735,18 +736,18 @@ class WorkflowOrchestrator:
         """
         self.config_path = config_path or "agents_config.json"
         self.config = self._load_config()
-        self.agents: Dict[str, BaseAgent] = {}
+        self.agents: dict[str, BaseAgent] = {}
 
         # Load workflow definitions
         self.workflows = self.config.get("workflows", {})
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load configuration from agents_config.json."""
         config_file = Path(self.config_path)
         if not config_file.exists():
             raise FileNotFoundError(f"Configuration file not found: {self.config_path}")
 
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             return json.load(f)
 
     def get_agent(self, agent_name: str) -> BaseAgent:
@@ -768,7 +769,7 @@ class WorkflowOrchestrator:
 
         return self.agents[agent_name]
 
-    def execute_workflow(self, workflow_name: str, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_workflow(self, workflow_name: str, inputs: dict[str, Any]) -> dict[str, Any]:
         """Execute a multi-agent workflow.
 
         Args:
@@ -783,13 +784,17 @@ class WorkflowOrchestrator:
         """
         if workflow_name not in self.workflows:
             available_workflows = list(self.workflows.keys())
-            raise ValueError(f"Workflow '{workflow_name}' not found. Available workflows: {available_workflows}")
+            raise ValueError(
+                f"Workflow '{workflow_name}' not found. Available workflows: {available_workflows}"
+            )
 
         workflow_config = self.workflows[workflow_name]
         workflow_agents = workflow_config.get("agents", [])
         workflow_steps = workflow_config.get("steps", [])
 
-        logging.info(f"Executing multi-agent workflow '{workflow_name}' with {len(workflow_steps)} steps")
+        logging.info(
+            f"Executing multi-agent workflow '{workflow_name}' with {len(workflow_steps)} steps"
+        )
 
         results = {}
         current_context = inputs.copy()
@@ -821,21 +826,24 @@ class WorkflowOrchestrator:
 
             # Stop on failure (could be made configurable)
             if not step_result.success:
-                logging.error(f"Workflow '{workflow_name}' failed at step '{step_key}': {step_result.error}")
+                logging.error(
+                    f"Workflow '{workflow_name}' failed at step '{step_key}': {step_result.error}"
+                )
                 break
 
         workflow_success = all(r.success for r in results.values())
 
         return {
-            'workflow': workflow_name,
-            'success': workflow_success,
-            'steps_executed': len(results),
-            'results': {k: v.to_dict() for k, v in results.items()},
-            'inputs': inputs
+            "workflow": workflow_name,
+            "success": workflow_success,
+            "steps_executed": len(results),
+            "results": {k: v.to_dict() for k, v in results.items()},
+            "inputs": inputs,
         }
 
-    def _resolve_step_inputs(self, input_spec: str, context: Dict[str, Any],
-                           results: Dict[str, ToolResult]) -> Dict[str, Any]:
+    def _resolve_step_inputs(
+        self, input_spec: str, context: dict[str, Any], results: dict[str, ToolResult]
+    ) -> dict[str, Any]:
         """Resolve step inputs from specification.
 
         Args:
@@ -863,7 +871,7 @@ class WorkflowOrchestrator:
         # Default to entire context
         return context
 
-    def get_available_workflows(self) -> List[str]:
+    def get_available_workflows(self) -> list[str]:
         """Get list of available workflows.
 
         Returns:
@@ -871,7 +879,7 @@ class WorkflowOrchestrator:
         """
         return list(self.workflows.keys())
 
-    def get_workflow_info(self, workflow_name: str) -> Optional[Dict[str, Any]]:
+    def get_workflow_info(self, workflow_name: str) -> dict[str, Any] | None:
         """Get information about a workflow.
 
         Args:
@@ -885,8 +893,8 @@ class WorkflowOrchestrator:
 
         workflow = self.workflows[workflow_name]
         return {
-            'name': workflow_name,
-            'description': workflow.get('description', ''),
-            'agents': workflow.get('agents', []),
-            'steps': len(workflow.get('steps', []))
+            "name": workflow_name,
+            "description": workflow.get("description", ""),
+            "agents": workflow.get("agents", []),
+            "steps": len(workflow.get("steps", [])),
         }

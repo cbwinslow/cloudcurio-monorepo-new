@@ -38,10 +38,7 @@ Logs      Events               Protocol      Jaeger
 from cbw_foundry.observability.otel import setup_observability
 
 # Initialize observability
-setup_observability(
-    service_name="cloudcurio-agents",
-    endpoint="http://localhost:4317"
-)
+setup_observability(service_name="cloudcurio-agents", endpoint="http://localhost:4317")
 ```
 
 ### Configuration
@@ -56,36 +53,31 @@ from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExp
 from opentelemetry.sdk.resources import Resource
 
 
-def setup_observability(
-    service_name: str = "cloudcurio",
-    endpoint: str = None
-):
+def setup_observability(service_name: str = "cloudcurio", endpoint: str = None):
     """Setup OpenTelemetry observability."""
-    
+
     # Get configuration
     endpoint = endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
-    
+
     # Create resource
-    resource = Resource.create({
-        "service.name": service_name,
-        "service.version": "0.4.0",
-        "deployment.environment": os.getenv("ENVIRONMENT", "development")
-    })
-    
+    resource = Resource.create(
+        {
+            "service.name": service_name,
+            "service.version": "0.4.0",
+            "deployment.environment": os.getenv("ENVIRONMENT", "development"),
+        }
+    )
+
     # Setup tracing
     trace_provider = TracerProvider(resource=resource)
     trace_exporter = OTLPSpanExporter(endpoint=endpoint)
-    trace_provider.add_span_processor(
-        BatchSpanProcessor(trace_exporter)
-    )
+    trace_provider.add_span_processor(BatchSpanProcessor(trace_exporter))
     trace.set_tracer_provider(trace_provider)
-    
+
     # Setup metrics
     metric_provider = MeterProvider(resource=resource)
     metric_exporter = OTLPMetricExporter(endpoint=endpoint)
-    metric_provider.add_metric_reader(
-        PeriodicExportingMetricReader(metric_exporter)
-    )
+    metric_provider.add_metric_reader(PeriodicExportingMetricReader(metric_exporter))
     metrics.set_meter_provider(metric_provider)
 ```
 
@@ -99,23 +91,23 @@ tracer = trace.get_tracer(__name__)
 
 def execute_agent(agent_spec, user_input):
     """Execute agent with tracing."""
-    
+
     with tracer.start_as_current_span("agent.execute") as span:
         # Add attributes
         span.set_attribute("agent.name", agent_spec.metadata.name)
         span.set_attribute("agent.version", agent_spec.metadata.version)
         span.set_attribute("input.length", len(user_input))
-        
+
         try:
             # Execute
             result = runtime.run(agent_spec, user_input)
-            
+
             # Record success
             span.set_attribute("execution.status", "success")
             span.set_attribute("output.length", len(str(result)))
-            
+
             return result
-            
+
         except Exception as e:
             # Record failure
             span.set_attribute("execution.status", "failure")
@@ -135,53 +127,46 @@ meter = metrics.get_meter(__name__)
 
 # Counter
 agent_executions = meter.create_counter(
-    "agent.executions.total",
-    description="Total number of agent executions"
+    "agent.executions.total", description="Total number of agent executions"
 )
 
 # Histogram
 execution_duration = meter.create_histogram(
-    "agent.execution.duration",
-    description="Agent execution duration in seconds"
+    "agent.execution.duration", description="Agent execution duration in seconds"
 )
 
 # UpDown Counter
 active_agents = meter.create_up_down_counter(
-    "agent.active.count",
-    description="Number of currently active agents"
+    "agent.active.count", description="Number of currently active agents"
 )
 
 
 def execute_with_metrics(agent, input_data):
     """Execute agent with metric collection."""
-    
+
     # Increment counter
     agent_executions.add(1, {"agent": agent.name})
-    
+
     # Track active agents
     active_agents.add(1, {"agent": agent.name})
-    
+
     try:
         # Time execution
         start_time = time.time()
         result = agent.run(input_data)
         duration = time.time() - start_time
-        
+
         # Record duration
-        execution_duration.record(
-            duration,
-            {"agent": agent.name, "status": "success"}
-        )
-        
+        execution_duration.record(duration, {"agent": agent.name, "status": "success"})
+
         return result
-        
+
     except Exception as e:
         execution_duration.record(
-            time.time() - start_time,
-            {"agent": agent.name, "status": "failure"}
+            time.time() - start_time, {"agent": agent.name, "status": "failure"}
         )
         raise
-        
+
     finally:
         active_agents.add(-1, {"agent": agent.name})
 ```
@@ -223,25 +208,25 @@ tracer = trace.get_tracer(__name__)
 
 class TracedAgent:
     """Agent with distributed tracing."""
-    
+
     def execute(self, user_input: str):
         """Execute with tracing."""
-        
+
         with tracer.start_as_current_span("agent.execute") as span:
             span.set_attribute("input", user_input)
-            
+
             # Span for LLM call
             with tracer.start_as_current_span("llm.call") as llm_span:
                 llm_span.set_attribute("model", self.model)
                 response = self._call_llm(user_input)
                 llm_span.set_attribute("tokens", response.tokens)
-            
+
             # Span for tool execution
             if self.has_tools():
                 with tracer.start_as_current_span("tools.execute") as tool_span:
                     result = self._execute_tools(response)
                     tool_span.set_attribute("tools_used", len(result))
-            
+
             return result
 ```
 
@@ -270,21 +255,19 @@ from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapProp
 
 def call_remote_agent(agent_id: str, input_data: str):
     """Call remote agent with trace context."""
-    
+
     # Get current context
     ctx = trace.get_current_span().get_span_context()
-    
+
     # Inject context into headers
     carrier = {}
     TraceContextTextMapPropagator().inject(carrier)
-    
+
     # Make request with context
     response = requests.post(
-        f"http://agent-service/{agent_id}/execute",
-        json={"input": input_data},
-        headers=carrier
+        f"http://agent-service/{agent_id}/execute", json={"input": input_data}, headers=carrier
     )
-    
+
     return response.json()
 ```
 
@@ -300,18 +283,19 @@ from datetime import datetime
 
 class StructuredLogger:
     """Structured JSON logger."""
-    
+
     def __init__(self, name: str):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.INFO)
-        
+
         # JSON formatter
         handler = logging.StreamHandler()
         handler.setFormatter(self._json_formatter())
         self.logger.addHandler(handler)
-    
+
     def _json_formatter(self):
         """Create JSON formatter."""
+
         class JsonFormatter(logging.Formatter):
             def format(self, record):
                 log_data = {
@@ -321,24 +305,24 @@ class StructuredLogger:
                     "message": record.getMessage(),
                     "module": record.module,
                     "function": record.funcName,
-                    "line": record.lineno
+                    "line": record.lineno,
                 }
-                
+
                 # Add extra fields
-                if hasattr(record, 'agent_name'):
-                    log_data['agent_name'] = record.agent_name
-                if hasattr(record, 'trace_id'):
-                    log_data['trace_id'] = record.trace_id
-                
+                if hasattr(record, "agent_name"):
+                    log_data["agent_name"] = record.agent_name
+                if hasattr(record, "trace_id"):
+                    log_data["trace_id"] = record.trace_id
+
                 return json.dumps(log_data)
-        
+
         return JsonFormatter()
-    
+
     def info(self, message: str, **kwargs):
         """Log info with context."""
         extra = {k: v for k, v in kwargs.items()}
         self.logger.info(message, extra=extra)
-    
+
     def error(self, message: str, **kwargs):
         """Log error with context."""
         extra = {k: v for k, v in kwargs.items()}
@@ -348,17 +332,9 @@ class StructuredLogger:
 # Usage
 logger = StructuredLogger(__name__)
 
-logger.info(
-    "Agent execution started",
-    agent_name="content_generator",
-    input_length=150
-)
+logger.info("Agent execution started", agent_name="content_generator", input_length=150)
 
-logger.error(
-    "Agent execution failed",
-    agent_name="content_generator",
-    error_type="TimeoutError"
-)
+logger.error("Agent execution failed", agent_name="content_generator", error_type="TimeoutError")
 ```
 
 ### Log Correlation
@@ -372,18 +348,18 @@ import logging
 
 def log_with_trace_context(logger, level, message, **kwargs):
     """Log with trace context."""
-    
+
     # Get current span
     span = trace.get_current_span()
     span_context = span.get_span_context()
-    
+
     # Add trace IDs to log
     extra = {
-        'trace_id': format(span_context.trace_id, '032x'),
-        'span_id': format(span_context.span_id, '016x'),
-        **kwargs
+        "trace_id": format(span_context.trace_id, "032x"),
+        "span_id": format(span_context.span_id, "016x"),
+        **kwargs,
     }
-    
+
     logger.log(level, message, extra=extra)
 ```
 
@@ -501,7 +477,7 @@ groups:
         for: 5m
         annotations:
           summary: "High agent error rate"
-      
+
       - alert: SlowExecution
         expr: histogram_quantile(0.95, agent_execution_duration_bucket) > 60
         for: 10m
@@ -517,6 +493,6 @@ groups:
 
 ---
 
-**Last Updated:** 2026-01-24  
-**Version:** 1.0.0  
+**Last Updated:** 2026-01-24
+**Version:** 1.0.0
 **Maintained By:** @cbwinslow

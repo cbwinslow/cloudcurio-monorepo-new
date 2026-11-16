@@ -11,41 +11,42 @@ This module implements the RobustTool base class that provides:
 
 from __future__ import annotations
 
-import json
 import logging
-import time
-import psutil
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Callable, Union
-from datetime import datetime, timezone
-from pathlib import Path
 import threading
+import time
+from abc import ABC, abstractmethod
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from typing import Any
+
+import psutil
 
 
 @dataclass
 class ToolResult:
     """Standardized result object for all tools."""
+
     success: bool
     data: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     execution_time: float = 0.0
     execution_id: str = ""
     quality_score: float = 0.0
-    warnings: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    warnings: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'success': self.success,
-            'data': self.data,
-            'error': self.error,
-            'execution_time': self.execution_time,
-            'execution_id': self.execution_id,
-            'quality_score': self.quality_score,
-            'warnings': self.warnings,
-            'metadata': self.metadata
+            "success": self.success,
+            "data": self.data,
+            "error": self.error,
+            "execution_time": self.execution_time,
+            "execution_id": self.execution_id,
+            "quality_score": self.quality_score,
+            "warnings": self.warnings,
+            "metadata": self.metadata,
         }
 
     def __contains__(self, key: object) -> bool:
@@ -65,16 +66,20 @@ class ToolResult:
 @dataclass
 class RetryPolicy:
     """Configuration for retry behavior."""
+
     max_attempts: int = 3
     backoff_factor: float = 2.0
     initial_delay: float = 1.0
     max_delay: float = 60.0
-    retryable_errors: List[str] = field(default_factory=lambda: ['ConnectionError', 'TimeoutError', 'RateLimitError'])
+    retryable_errors: list[str] = field(
+        default_factory=lambda: ["ConnectionError", "TimeoutError", "RateLimitError"]
+    )
 
 
 @dataclass
 class ResourceLimits:
     """Resource usage limits for tools."""
+
     max_cpu_percent: float = 80.0
     max_memory_percent: float = 80.0
     max_execution_time: float = 300.0  # 5 minutes
@@ -83,7 +88,10 @@ class ResourceLimits:
 
 class ToolError(Exception):
     """Base exception for tool-related errors."""
-    def __init__(self, message: str, tool_name: str = "", execution_id: str = "", recoverable: bool = True):
+
+    def __init__(
+        self, message: str, tool_name: str = "", execution_id: str = "", recoverable: bool = True
+    ):
         super().__init__(message)
         self.tool_name = tool_name
         self.execution_id = execution_id
@@ -92,12 +100,10 @@ class ToolError(Exception):
 
 class ValidationError(ToolError):
     """Raised when input validation fails."""
-    pass
 
 
 class ResourceError(ToolError):
     """Raised when resource limits are exceeded."""
-    pass
 
 
 class RobustTool(ABC):
@@ -106,7 +112,7 @@ class RobustTool(ABC):
     Provides comprehensive error handling, validation, monitoring, and fallback strategies.
     """
 
-    def __init__(self, name: str, description: str, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, name: str, description: str, config: dict[str, Any] | None = None):
         """Initialize the robust tool.
 
         Args:
@@ -136,32 +142,34 @@ class RobustTool(ABC):
 
         # Monitoring
         self.monitoring_active = False
-        self.monitoring_thread: Optional[threading.Thread] = None
-        self.resource_usage_history: List[Dict[str, Any]] = []
+        self.monitoring_thread: threading.Thread | None = None
+        self.resource_usage_history: list[dict[str, Any]] = []
 
     def _load_retry_policy(self) -> RetryPolicy:
         """Load retry policy from config."""
-        retry_config = self.config.get('retry_policy', {})
+        retry_config = self.config.get("retry_policy", {})
         return RetryPolicy(
-            max_attempts=retry_config.get('max_attempts', 3),
-            backoff_factor=retry_config.get('backoff_factor', 2.0),
-            initial_delay=retry_config.get('initial_delay', 1.0),
-            max_delay=retry_config.get('max_delay', 60.0),
-            retryable_errors=retry_config.get('retryable_errors', ['ConnectionError', 'TimeoutError', 'RateLimitError'])
+            max_attempts=retry_config.get("max_attempts", 3),
+            backoff_factor=retry_config.get("backoff_factor", 2.0),
+            initial_delay=retry_config.get("initial_delay", 1.0),
+            max_delay=retry_config.get("max_delay", 60.0),
+            retryable_errors=retry_config.get(
+                "retryable_errors", ["ConnectionError", "TimeoutError", "RateLimitError"]
+            ),
         )
 
     def _load_resource_limits(self) -> ResourceLimits:
         """Load resource limits from config."""
-        limits_config = self.config.get('resource_limits', {})
+        limits_config = self.config.get("resource_limits", {})
         return ResourceLimits(
-            max_cpu_percent=limits_config.get('max_cpu_percent', 80.0),
-            max_memory_percent=limits_config.get('max_memory_percent', 80.0),
-            max_execution_time=limits_config.get('max_execution_time', 300.0),
-            max_disk_usage_percent=limits_config.get('max_disk_usage_percent', 90.0)
+            max_cpu_percent=limits_config.get("max_cpu_percent", 80.0),
+            max_memory_percent=limits_config.get("max_memory_percent", 80.0),
+            max_execution_time=limits_config.get("max_execution_time", 300.0),
+            max_disk_usage_percent=limits_config.get("max_disk_usage_percent", 90.0),
         )
 
     @abstractmethod
-    def _define_fallback_strategies(self) -> List[Dict[str, Any]]:
+    def _define_fallback_strategies(self) -> list[dict[str, Any]]:
         """Define fallback strategies for this tool.
 
         Returns:
@@ -171,18 +179,16 @@ class RobustTool(ABC):
             - action: Callable that implements the fallback
             - priority: Priority order (lower numbers = higher priority)
         """
-        pass
 
     @abstractmethod
-    def _define_validation_schema(self) -> Dict[str, Any]:
+    def _define_validation_schema(self) -> dict[str, Any]:
         """Define input validation schema.
 
         Returns:
             JSON Schema-like dictionary for parameter validation
         """
-        pass
 
-    def execute(self, parameters: Dict[str, Any]) -> ToolResult:
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
         """Execute the tool with comprehensive safety measures.
 
         Args:
@@ -208,7 +214,9 @@ class RobustTool(ABC):
             self._check_resource_availability()
 
             # Execute with retry logic
-            result_data = self._execute_with_retry(self._execute_core, validated_params, execution_id)
+            result_data = self._execute_with_retry(
+                self._execute_core, validated_params, execution_id
+            )
 
             # Perform quality assurance
             quality_score, qa_warnings = self._perform_quality_assurance(result_data)
@@ -224,10 +232,12 @@ class RobustTool(ABC):
                 execution_time=execution_time,
                 execution_id=execution_id,
                 quality_score=quality_score,
-                warnings=qa_warnings
+                warnings=qa_warnings,
             )
 
-            self.logger.info(f"Execution {execution_id} completed successfully in {execution_time:.2f}s")
+            self.logger.info(
+                f"Execution {execution_id} completed successfully in {execution_time:.2f}s"
+            )
             return result
 
         except Exception as e:
@@ -246,14 +256,14 @@ class RobustTool(ABC):
                 return fallback_result
 
             # Complete failure
-            error_msg = f"{type(e).__name__}: {str(e)}"
+            error_msg = f"{type(e).__name__}: {e!s}"
             self.logger.error(f"Execution {execution_id} failed: {error_msg}")
 
             return ToolResult(
                 success=False,
                 error=error_msg,
                 execution_time=execution_time,
-                execution_id=execution_id
+                execution_id=execution_id,
             )
 
         finally:
@@ -261,7 +271,7 @@ class RobustTool(ABC):
             self._stop_monitoring()
 
     @abstractmethod
-    def _execute_core(self, parameters: Dict[str, Any], execution_id: str) -> Any:
+    def _execute_core(self, parameters: dict[str, Any], execution_id: str) -> Any:
         """Core execution logic - implement in subclasses.
 
         Args:
@@ -271,9 +281,8 @@ class RobustTool(ABC):
         Returns:
             Tool execution result
         """
-        pass
 
-    def _validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_parameters(self, parameters: dict[str, Any]) -> dict[str, Any]:
         """Validate input parameters against schema.
 
         Args:
@@ -287,36 +296,38 @@ class RobustTool(ABC):
         """
         try:
             # Check required fields
-            required = self.validation_schema.get('required', [])
+            required = self.validation_schema.get("required", [])
             for field in required:
                 if field not in parameters:
                     raise ValidationError(f"Missing required parameter: {field}", self.name)
 
             # Validate types and constraints
-            properties = self.validation_schema.get('properties', {})
+            properties = self.validation_schema.get("properties", {})
             validated = {}
 
             for param_name, param_value in parameters.items():
                 if param_name in properties:
                     param_schema = properties[param_name]
-                    validated[param_name] = self._validate_parameter(param_name, param_value, param_schema)
+                    validated[param_name] = self._validate_parameter(
+                        param_name, param_value, param_schema
+                    )
                 else:
                     # Allow extra parameters
                     validated[param_name] = param_value
 
             # Apply defaults
             for param_name, param_schema in properties.items():
-                if param_name not in validated and 'default' in param_schema:
-                    validated[param_name] = param_schema['default']
+                if param_name not in validated and "default" in param_schema:
+                    validated[param_name] = param_schema["default"]
 
             return validated
 
         except Exception as e:
             if isinstance(e, ValidationError):
                 raise
-            raise ValidationError(f"Parameter validation failed: {str(e)}", self.name)
+            raise ValidationError(f"Parameter validation failed: {e!s}", self.name)
 
-    def _validate_parameter(self, name: str, value: Any, schema: Dict[str, Any]) -> Any:
+    def _validate_parameter(self, name: str, value: Any, schema: dict[str, Any]) -> Any:
         """Validate a single parameter.
 
         Args:
@@ -330,38 +341,42 @@ class RobustTool(ABC):
         Raises:
             ValidationError: If validation fails
         """
-        expected_type = schema.get('type')
+        expected_type = schema.get("type")
 
         # Type checking
-        if expected_type == 'string' and not isinstance(value, str):
+        if expected_type == "string" and not isinstance(value, str):
             raise ValidationError(f"Parameter {name} must be string, got {type(value)}")
-        elif expected_type == 'number' and not isinstance(value, (int, float)):
+        elif expected_type == "number" and not isinstance(value, (int, float)):
             raise ValidationError(f"Parameter {name} must be number, got {type(value)}")
-        elif expected_type == 'boolean' and not isinstance(value, bool):
+        elif expected_type == "boolean" and not isinstance(value, bool):
             raise ValidationError(f"Parameter {name} must be boolean, got {type(value)}")
-        elif expected_type == 'array' and not isinstance(value, list):
+        elif expected_type == "array" and not isinstance(value, list):
             raise ValidationError(f"Parameter {name} must be array, got {type(value)}")
 
         # Range constraints
-        if expected_type == 'number':
-            minimum = schema.get('minimum')
-            maximum = schema.get('maximum')
+        if expected_type == "number":
+            minimum = schema.get("minimum")
+            maximum = schema.get("maximum")
             if minimum is not None and value < minimum:
                 raise ValidationError(f"Parameter {name} must be >= {minimum}, got {value}")
             if maximum is not None and value > maximum:
                 raise ValidationError(f"Parameter {name} must be <= {maximum}, got {value}")
 
         # String constraints
-        if expected_type == 'string':
-            min_length = schema.get('minLength')
-            max_length = schema.get('maxLength')
+        if expected_type == "string":
+            min_length = schema.get("minLength")
+            max_length = schema.get("maxLength")
             if min_length is not None and isinstance(value, str) and len(value) < min_length:
-                raise ValidationError(f"Parameter {name} length must be >= {min_length}, got {len(value)}")
+                raise ValidationError(
+                    f"Parameter {name} length must be >= {min_length}, got {len(value)}"
+                )
             if max_length is not None and isinstance(value, str) and len(value) > max_length:
-                raise ValidationError(f"Parameter {name} length must be <= {max_length}, got {len(value)}")
+                raise ValidationError(
+                    f"Parameter {name} length must be <= {max_length}, got {len(value)}"
+                )
 
         # Enum constraints
-        enum_values = schema.get('enum')
+        enum_values = schema.get("enum")
         if enum_values and value not in enum_values:
             raise ValidationError(f"Parameter {name} must be one of {enum_values}, got {value}")
 
@@ -395,7 +410,9 @@ class RobustTool(ABC):
 
                 if attempt < self.retry_policy.max_attempts - 1:
                     delay = self._calculate_backoff_delay(attempt)
-                    self.logger.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.2f}s: {error_type}")
+                    self.logger.warning(
+                        f"Attempt {attempt + 1} failed, retrying in {delay:.2f}s: {error_type}"
+                    )
                     time.sleep(delay)
                 else:
                     self.logger.error(f"All {self.retry_policy.max_attempts} attempts failed")
@@ -427,10 +444,12 @@ class RobustTool(ABC):
         Returns:
             Delay in seconds
         """
-        delay = self.retry_policy.initial_delay * (self.retry_policy.backoff_factor ** attempt)
+        delay = self.retry_policy.initial_delay * (self.retry_policy.backoff_factor**attempt)
         return min(delay, self.retry_policy.max_delay)
 
-    def _apply_fallback_strategies(self, error: Exception, parameters: Dict[str, Any], execution_id: str) -> Optional[ToolResult]:
+    def _apply_fallback_strategies(
+        self, error: Exception, parameters: dict[str, Any], execution_id: str
+    ) -> ToolResult | None:
         """Apply fallback strategies for failed execution.
 
         Args:
@@ -442,13 +461,13 @@ class RobustTool(ABC):
             ToolResult if fallback succeeds, None otherwise
         """
         # Sort strategies by priority
-        sorted_strategies = sorted(self.fallback_strategies, key=lambda s: s.get('priority', 999))
+        sorted_strategies = sorted(self.fallback_strategies, key=lambda s: s.get("priority", 999))
 
         for strategy in sorted_strategies:
             try:
-                if strategy['condition'](error, parameters):
+                if strategy["condition"](error, parameters):
                     self.logger.info(f"Applying fallback strategy: {strategy['name']}")
-                    result_data = strategy['action'](error, parameters, execution_id)
+                    result_data = strategy["action"](error, parameters, execution_id)
 
                     # Validate fallback result
                     quality_score, warnings = self._perform_quality_assurance(result_data)
@@ -459,7 +478,7 @@ class RobustTool(ABC):
                         execution_time=0.0,  # Fallback time not tracked separately
                         execution_id=f"{execution_id}_fallback_{strategy['name']}",
                         quality_score=quality_score,
-                        warnings=warnings + [f"Used fallback strategy: {strategy['name']}"]
+                        warnings=warnings + [f"Used fallback strategy: {strategy['name']}"],
                     )
             except Exception as fb_error:
                 self.logger.warning(f"Fallback strategy {strategy['name']} failed: {fb_error}")
@@ -467,7 +486,7 @@ class RobustTool(ABC):
 
         return None
 
-    def _perform_quality_assurance(self, result: Any) -> tuple[float, List[str]]:
+    def _perform_quality_assurance(self, result: Any) -> tuple[float, list[str]]:
         """Perform quality assurance checks on result.
 
         Args:
@@ -487,16 +506,25 @@ class RobustTool(ABC):
         """
         cpu_percent = psutil.cpu_percent(interval=1)
         memory_percent = psutil.virtual_memory().percent
-        disk_percent = psutil.disk_usage('/').percent
+        disk_percent = psutil.disk_usage("/").percent
 
         if cpu_percent > self.resource_limits.max_cpu_percent:
-            raise ResourceError(f"CPU usage too high: {cpu_percent}% > {self.resource_limits.max_cpu_percent}%", self.name)
+            raise ResourceError(
+                f"CPU usage too high: {cpu_percent}% > {self.resource_limits.max_cpu_percent}%",
+                self.name,
+            )
 
         if memory_percent > self.resource_limits.max_memory_percent:
-            raise ResourceError(f"Memory usage too high: {memory_percent}% > {self.resource_limits.max_memory_percent}%", self.name)
+            raise ResourceError(
+                f"Memory usage too high: {memory_percent}% > {self.resource_limits.max_memory_percent}%",
+                self.name,
+            )
 
         if disk_percent > self.resource_limits.max_disk_usage_percent:
-            raise ResourceError(f"Disk usage too high: {disk_percent}% > {self.resource_limits.max_disk_usage_percent}%", self.name)
+            raise ResourceError(
+                f"Disk usage too high: {disk_percent}% > {self.resource_limits.max_disk_usage_percent}%",
+                self.name,
+            )
 
     def _start_monitoring(self) -> None:
         """Start resource monitoring thread."""
@@ -518,10 +546,10 @@ class RobustTool(ABC):
         while self.monitoring_active:
             try:
                 usage = {
-                    'timestamp': datetime.now(timezone.utc).isoformat(),
-                    'cpu_percent': psutil.cpu_percent(interval=0.1),
-                    'memory_percent': psutil.virtual_memory().percent,
-                    'disk_percent': psutil.disk_usage('/').percent
+                    "timestamp": datetime.now(UTC).isoformat(),
+                    "cpu_percent": psutil.cpu_percent(interval=0.1),
+                    "memory_percent": psutil.virtual_memory().percent,
+                    "disk_percent": psutil.disk_usage("/").percent,
                 }
                 self.resource_usage_history.append(usage)
                 time.sleep(1.0)
@@ -537,9 +565,11 @@ class RobustTool(ABC):
         """
         # Simple moving average
         alpha = 0.1
-        self.average_execution_time = (alpha * execution_time) + ((1 - alpha) * self.average_execution_time)
+        self.average_execution_time = (alpha * execution_time) + (
+            (1 - alpha) * self.average_execution_time
+        )
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get tool execution statistics.
 
         Returns:
@@ -549,22 +579,22 @@ class RobustTool(ABC):
         success_rate = (self.success_count / total_attempts) * 100 if total_attempts > 0 else 0
 
         return {
-            'name': self.name,
-            'description': self.description,
-            'total_executions': self.execution_count,
-            'success_count': self.success_count,
-            'failure_count': self.failure_count,
-            'success_rate': success_rate,
-            'average_execution_time': self.average_execution_time,
-            'retry_policy': {
-                'max_attempts': self.retry_policy.max_attempts,
-                'backoff_factor': self.retry_policy.backoff_factor
+            "name": self.name,
+            "description": self.description,
+            "total_executions": self.execution_count,
+            "success_count": self.success_count,
+            "failure_count": self.failure_count,
+            "success_rate": success_rate,
+            "average_execution_time": self.average_execution_time,
+            "retry_policy": {
+                "max_attempts": self.retry_policy.max_attempts,
+                "backoff_factor": self.retry_policy.backoff_factor,
             },
-            'resource_limits': {
-                'max_cpu_percent': self.resource_limits.max_cpu_percent,
-                'max_memory_percent': self.resource_limits.max_memory_percent,
-                'max_execution_time': self.resource_limits.max_execution_time
-            }
+            "resource_limits": {
+                "max_cpu_percent": self.resource_limits.max_cpu_percent,
+                "max_memory_percent": self.resource_limits.max_memory_percent,
+                "max_execution_time": self.resource_limits.max_execution_time,
+            },
         }
 
     def reset_stats(self) -> None:

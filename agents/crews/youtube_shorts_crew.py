@@ -4,10 +4,10 @@ CrewAI crew configuration for automated YouTube shorts creation
 from long-form video content.
 """
 
-from crewai import Crew, Agent, Task, Process
-from agents.video_editing_agent import VideoEditingAgent
-from agents.transcription_agent import TranscriptionAgent
 from agents.funny_moment_agent import FunnyMomentAgent
+from agents.transcription_agent import TranscriptionAgent
+from agents.video_editing_agent import VideoEditingAgent
+from crewai import Agent, Crew, Process, Task
 
 
 class YouTubeShortsCrew:
@@ -34,7 +34,7 @@ class YouTubeShortsCrew:
                 VideoEditingAgent().get_tool("download_video"),
                 VideoEditingAgent().get_tool("extract_audio"),
                 VideoEditingAgent().get_tool("trim_video"),
-            ]
+            ],
         )
 
     def _create_transcription_agent(self) -> Agent:
@@ -50,7 +50,7 @@ class YouTubeShortsCrew:
             allow_delegation=False,
             tools=[
                 TranscriptionAgent().get_tool("transcribe_audio"),
-            ]
+            ],
         )
 
     def _create_funny_moment_agent(self) -> Agent:
@@ -69,7 +69,7 @@ class YouTubeShortsCrew:
                 FunnyMomentAgent().get_tool("analyze_transcript"),
                 FunnyMomentAgent().get_tool("detect_laughter"),
                 FunnyMomentAgent().get_tool("identify_funny_clips"),
-            ]
+            ],
         )
 
     def create_download_task(self, youtube_url: str, output_path: str) -> Task:
@@ -81,7 +81,7 @@ class YouTubeShortsCrew:
                 Ensure the video is properly formatted for further processing.
             """,
             agent=self.video_editor,
-            expected_output="Downloaded video file with metadata including title, duration, and file size."
+            expected_output="Downloaded video file with metadata including title, duration, and file size.",
         )
 
     def create_transcription_task(self, video_path: str, output_dir: str) -> Task:
@@ -93,7 +93,7 @@ class YouTubeShortsCrew:
                 Save the transcript files to {output_dir}.
             """,
             agent=self.transcriptionist,
-            expected_output="Complete transcript in VTT and JSON formats with accurate timestamps."
+            expected_output="Complete transcript in VTT and JSON formats with accurate timestamps.",
         )
 
     def create_funny_moment_analysis_task(self, transcript_path: str) -> Task:
@@ -105,11 +105,12 @@ class YouTubeShortsCrew:
                 Focus on segments that would work well for YouTube Shorts.
             """,
             agent=self.funny_moment_detector,
-            expected_output="List of funny segments with timestamps, funny scores, and context."
+            expected_output="List of funny segments with timestamps, funny scores, and context.",
         )
 
-    def create_clip_creation_task(self, video_path: str, transcript_path: str,
-                                 output_dir: str, funny_segments: list) -> Task:
+    def create_clip_creation_task(
+        self, video_path: str, transcript_path: str, output_dir: str, funny_segments: list
+    ) -> Task:
         """Create funny clip creation task."""
         return Task(
             description=f"""
@@ -120,49 +121,34 @@ class YouTubeShortsCrew:
                 Funny segments to process: {len(funny_segments)} segments
             """,
             agent=self.funny_moment_detector,
-            expected_output="Multiple video clips ready for YouTube Shorts upload, with metadata file."
+            expected_output="Multiple video clips ready for YouTube Shorts upload, with metadata file.",
         )
 
     def run_crew(self, youtube_url: str, output_dir: str = "youtube_shorts_crew") -> dict:
         """Run the complete YouTube shorts creation crew."""
 
         # Create tasks
-        download_task = self.create_download_task(
-            youtube_url,
-            f"{output_dir}/original_video.mp4"
-        )
+        download_task = self.create_download_task(youtube_url, f"{output_dir}/original_video.mp4")
 
         transcription_task = self.create_transcription_task(
-            f"{output_dir}/original_video.mp4",
-            output_dir
+            f"{output_dir}/original_video.mp4", output_dir
         )
 
-        funny_analysis_task = self.create_funny_moment_analysis_task(
-            f"{output_dir}/transcript.vtt"
-        )
+        funny_analysis_task = self.create_funny_moment_analysis_task(f"{output_dir}/transcript.vtt")
 
         clip_creation_task = self.create_clip_creation_task(
             f"{output_dir}/original_video.mp4",
             f"{output_dir}/transcript.vtt",
             f"{output_dir}/clips",
-            []  # This would be populated with actual segments in runtime
+            [],  # This would be populated with actual segments in runtime
         )
 
         # Create crew
         crew = Crew(
-            agents=[
-                self.video_editor,
-                self.transcriptionist,
-                self.funny_moment_detector
-            ],
-            tasks=[
-                download_task,
-                transcription_task,
-                funny_analysis_task,
-                clip_creation_task
-            ],
+            agents=[self.video_editor, self.transcriptionist, self.funny_moment_detector],
+            tasks=[download_task, transcription_task, funny_analysis_task, clip_creation_task],
             process=Process.sequential,
-            verbose=2
+            verbose=2,
         )
 
         # Execute crew
@@ -173,7 +159,7 @@ class YouTubeShortsCrew:
             "youtube_url": youtube_url,
             "output_dir": output_dir,
             "result": result,
-            "crew_process": "sequential"
+            "crew_process": "sequential",
         }
 
 
