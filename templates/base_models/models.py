@@ -6,16 +6,18 @@ Pydantic base models for agents, tools, workflows, and skills.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Union
-from pydantic import BaseModel, Field, validator
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
+from pydantic import BaseModel, Field
 
 # ==================== Agent Models ====================
 
+
 class AgentRole(str, Enum):
     """Agent role types."""
+
     COORDINATOR = "coordinator"
     WORKER = "worker"
     REVIEWER = "reviewer"
@@ -24,6 +26,7 @@ class AgentRole(str, Enum):
 
 class ModelProvider(str, Enum):
     """LLM provider types."""
+
     OLLAMA = "ollama"
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
@@ -33,55 +36,62 @@ class ModelProvider(str, Enum):
 
 class ModelConfig(BaseModel):
     """LLM model configuration."""
+
     provider: ModelProvider
     model: str
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=2000, gt=0)
-    api_key: Optional[str] = None
-    base_url: Optional[str] = None
+    api_key: str | None = None
+    base_url: str | None = None
 
 
 class ModelPolicy(BaseModel):
     """Model selection policy with fallbacks."""
+
     preferred: ModelConfig
-    fallbacks: List[ModelConfig] = Field(default_factory=list)
+    fallbacks: list[ModelConfig] = Field(default_factory=list)
 
 
 class ToolReference(BaseModel):
     """Reference to a tool."""
+
     id: str
     type: str = "python"
     entrypoint: str
-    config: Dict[str, Any] = Field(default_factory=dict)
+    config: dict[str, Any] = Field(default_factory=dict)
 
 
 class AgentMetadata(BaseModel):
     """Agent metadata."""
+
     name: str
     version: str = "1.0.0"
     description: str = ""
-    tags: List[str] = Field(default_factory=list)
-    author: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+    author: str | None = None
 
 
 class AgentSpec(BaseModel):
     """Agent specification."""
+
     api_version: str = "v1"
     kind: str = "Agent"
     metadata: AgentMetadata
     model_policy: ModelPolicy
-    prompts: Dict[str, str]
-    tools: List[ToolReference] = Field(default_factory=list)
-    runtime: Dict[str, Any] = Field(default_factory=dict)
+    prompts: dict[str, str]
+    tools: list[ToolReference] = Field(default_factory=list)
+    runtime: dict[str, Any] = Field(default_factory=dict)
     role: AgentRole = AgentRole.WORKER
-    capabilities: List[str] = Field(default_factory=list)
+    capabilities: list[str] = Field(default_factory=list)
     confidence: float = Field(default=0.85, ge=0.0, le=1.0)
 
 
 # ==================== Tool Models ====================
 
+
 class ToolCategory(str, Enum):
     """Tool category types."""
+
     LLM = "llm"
     WEB = "web"
     FILE = "file"
@@ -93,31 +103,36 @@ class ToolCategory(str, Enum):
 
 class ToolConfig(BaseModel):
     """Base tool configuration."""
+
     timeout: int = Field(default=30, gt=0)
     retries: int = Field(default=3, ge=0)
 
 
 class ToolMetadata(BaseModel):
     """Tool metadata."""
+
     name: str
     description: str
     category: ToolCategory
     version: str = "1.0.0"
-    author: Optional[str] = None
+    author: str | None = None
 
 
 class ToolSpec(BaseModel):
     """Tool specification."""
+
     metadata: ToolMetadata
     config: ToolConfig
     entrypoint: str
-    dependencies: List[str] = Field(default_factory=list)
+    dependencies: list[str] = Field(default_factory=list)
 
 
 # ==================== Workflow Models ====================
 
+
 class CoordinationMode(str, Enum):
     """Workflow coordination modes."""
+
     SEQUENTIAL = "sequential"
     PARALLEL = "parallel"
     DEMOCRATIC = "democratic"
@@ -126,19 +141,21 @@ class CoordinationMode(str, Enum):
 
 class WorkflowStep(BaseModel):
     """Workflow step definition."""
+
     id: str
     name: str
-    agent: Optional[str] = None
-    action: Optional[str] = None
-    input: Dict[str, Any] = Field(default_factory=dict)
-    output_var: Optional[str] = None
-    depends_on: List[str] = Field(default_factory=list)
+    agent: str | None = None
+    action: str | None = None
+    input: dict[str, Any] = Field(default_factory=dict)
+    output_var: str | None = None
+    depends_on: list[str] = Field(default_factory=list)
     timeout: int = Field(default=300, gt=0)
-    parallel_group: Optional[str] = None
+    parallel_group: str | None = None
 
 
 class ErrorHandling(BaseModel):
     """Error handling configuration."""
+
     retry_failed_steps: bool = True
     max_retries: int = Field(default=2, ge=0)
     continue_on_error: bool = False
@@ -146,27 +163,31 @@ class ErrorHandling(BaseModel):
 
 class WorkflowMetadata(BaseModel):
     """Workflow metadata."""
+
     name: str
     version: str = "1.0.0"
     description: str = ""
-    tags: List[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
 
 
 class WorkflowSpec(BaseModel):
     """Workflow specification."""
+
     api_version: str = "v1"
     kind: str = "Workflow"
     metadata: WorkflowMetadata
     coordination: CoordinationMode
-    steps: List[WorkflowStep]
+    steps: list[WorkflowStep]
     error_handling: ErrorHandling = Field(default_factory=ErrorHandling)
-    outputs: Dict[str, str] = Field(default_factory=dict)
+    outputs: dict[str, str] = Field(default_factory=dict)
 
 
 # ==================== Skill Models ====================
 
+
 class SkillType(str, Enum):
     """Skill types."""
+
     COMMAND = "command"
     AUTOMATION = "automation"
     ANALYSIS = "analysis"
@@ -176,37 +197,42 @@ class SkillType(str, Enum):
 
 class SkillParameter(BaseModel):
     """Skill parameter definition."""
+
     name: str
     type: str
     description: str
     required: bool = True
-    default: Optional[Any] = None
+    default: Any | None = None
 
 
 class SkillMetadata(BaseModel):
     """Skill metadata."""
+
     name: str
     version: str = "1.0.0"
     description: str
     type: SkillType
-    tags: List[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
 
 
 class SkillSpec(BaseModel):
     """Skill specification."""
+
     api_version: str = "v1"
     kind: str = "Skill"
     metadata: SkillMetadata
-    parameters: List[SkillParameter] = Field(default_factory=list)
-    agents: List[str] = Field(default_factory=list)
-    workflow: Optional[str] = None
-    examples: List[Dict[str, Any]] = Field(default_factory=list)
+    parameters: list[SkillParameter] = Field(default_factory=list)
+    agents: list[str] = Field(default_factory=list)
+    workflow: str | None = None
+    examples: list[dict[str, Any]] = Field(default_factory=list)
 
 
 # ==================== Execution Models ====================
 
+
 class ExecutionStatus(str, Enum):
     """Execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -216,19 +242,22 @@ class ExecutionStatus(str, Enum):
 
 class ExecutionResult(BaseModel):
     """Execution result."""
+
     status: ExecutionStatus
     output: Any = None
-    error: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    duration: Optional[float] = None
+    error: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    duration: float | None = None
 
 
 # ==================== Integration Models ====================
 
+
 class IntegrationType(str, Enum):
     """AI tool integration types."""
+
     COPILOT = "copilot"
     KILOCODE = "kilocode"
     GEMINI = "gemini"
@@ -239,36 +268,37 @@ class IntegrationType(str, Enum):
 
 class IntegrationConfig(BaseModel):
     """Integration configuration."""
+
     type: IntegrationType
     enabled: bool = True
     config_path: str
-    tools: List[str] = Field(default_factory=list)
-    agents: List[str] = Field(default_factory=list)
+    tools: list[str] = Field(default_factory=list)
+    agents: list[str] = Field(default_factory=list)
 
 
 __all__ = [
+    "AgentMetadata",
     "AgentRole",
-    "ModelProvider",
+    "AgentSpec",
+    "CoordinationMode",
+    "ErrorHandling",
+    "ExecutionResult",
+    "ExecutionStatus",
+    "IntegrationConfig",
+    "IntegrationType",
     "ModelConfig",
     "ModelPolicy",
-    "ToolReference",
-    "AgentMetadata",
-    "AgentSpec",
+    "ModelProvider",
+    "SkillMetadata",
+    "SkillParameter",
+    "SkillSpec",
+    "SkillType",
     "ToolCategory",
     "ToolConfig",
     "ToolMetadata",
+    "ToolReference",
     "ToolSpec",
-    "CoordinationMode",
-    "WorkflowStep",
-    "ErrorHandling",
     "WorkflowMetadata",
     "WorkflowSpec",
-    "SkillType",
-    "SkillParameter",
-    "SkillMetadata",
-    "SkillSpec",
-    "ExecutionStatus",
-    "ExecutionResult",
-    "IntegrationType",
-    "IntegrationConfig",
+    "WorkflowStep",
 ]

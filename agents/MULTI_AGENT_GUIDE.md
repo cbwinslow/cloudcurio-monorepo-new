@@ -102,7 +102,7 @@ from cbw_foundry.swarm import Swarm, SwarmAgent, SwarmConfig, CoordinationMode
 agents = [
     SwarmAgent(name="researcher", role="worker"),
     SwarmAgent(name="writer", role="worker"),
-    SwarmAgent(name="editor", role="reviewer")
+    SwarmAgent(name="editor", role="reviewer"),
 ]
 
 config = SwarmConfig(coordination_mode=CoordinationMode.SEQUENTIAL)
@@ -119,7 +119,7 @@ spec:
     - id: research
       agent: researcher
       output_var: research_data
-    
+
     - id: write
       agent: writer
       input: "${research_data}"
@@ -142,7 +142,7 @@ Files    ─┘
 agents = [
     SwarmAgent(name="api_collector", role="worker"),
     SwarmAgent(name="db_collector", role="worker"),
-    SwarmAgent(name="file_collector", role="worker")
+    SwarmAgent(name="file_collector", role="worker"),
 ]
 
 config = SwarmConfig(coordination_mode=CoordinationMode.PARALLEL)
@@ -159,11 +159,11 @@ spec:
     - id: collect_api
       agent: api_collector
       parallel_group: collection
-    
+
     - id: collect_db
       agent: db_collector
       parallel_group: collection
-    
+
     - id: merge
       agent: data_merger
       depends_on: [collect_api, collect_db]
@@ -187,13 +187,10 @@ agents = [
     SwarmAgent(name="senior_arch", role="specialist", confidence=0.95),
     SwarmAgent(name="backend_lead", role="worker", confidence=0.85),
     SwarmAgent(name="frontend_lead", role="worker", confidence=0.85),
-    SwarmAgent(name="devops_eng", role="worker", confidence=0.80)
+    SwarmAgent(name="devops_eng", role="worker", confidence=0.80),
 ]
 
-config = SwarmConfig(
-    coordination_mode=CoordinationMode.DEMOCRATIC,
-    enable_voting=True
-)
+config = SwarmConfig(coordination_mode=CoordinationMode.DEMOCRATIC, enable_voting=True)
 swarm = Swarm(name="design_team", agents=agents, config=config)
 
 result = swarm.execute({"task": "Choose best architecture pattern"})
@@ -233,7 +230,7 @@ agents = [
     SwarmAgent(name="pm", role="coordinator"),
     SwarmAgent(name="backend_dev", role="worker"),
     SwarmAgent(name="frontend_dev", role="worker"),
-    SwarmAgent(name="devops", role="worker")
+    SwarmAgent(name="devops", role="worker"),
 ]
 
 config = SwarmConfig(coordination_mode=CoordinationMode.HIERARCHICAL)
@@ -269,38 +266,21 @@ from cbw_foundry.swarm import Swarm, SwarmAgent, SwarmConfig, CoordinationMode
 # Define agents
 agents = [
     SwarmAgent(
-        name="researcher",
-        role="worker",
-        capabilities=["research", "analysis"],
-        confidence=0.9
+        name="researcher", role="worker", capabilities=["research", "analysis"], confidence=0.9
     ),
-    SwarmAgent(
-        name="writer",
-        role="worker",
-        capabilities=["writing", "editing"],
-        confidence=0.85
-    )
+    SwarmAgent(name="writer", role="worker", capabilities=["writing", "editing"], confidence=0.85),
 ]
 
 # Configure swarm
-config = SwarmConfig(
-    coordination_mode=CoordinationMode.SEQUENTIAL,
-    max_iterations=2,
-    timeout=300
-)
+config = SwarmConfig(coordination_mode=CoordinationMode.SEQUENTIAL, max_iterations=2, timeout=300)
 
 # Create swarm
-swarm = Swarm(
-    name="my_swarm",
-    agents=agents,
-    config=config
-)
+swarm = Swarm(name="my_swarm", agents=agents, config=config)
 
 # Execute task
-result = swarm.execute({
-    "task": "Research and write about quantum computing",
-    "length": "500 words"
-})
+result = swarm.execute(
+    {"task": "Research and write about quantum computing", "length": "500 words"}
+)
 
 # Check results
 print(f"Success: {result.success}")
@@ -334,7 +314,7 @@ from cbw_foundry.swarm import Swarm, SwarmAgent, SwarmConfig, CoordinationMode
 researchers = [
     SwarmAgent(name="tech_researcher", role="worker", confidence=0.9),
     SwarmAgent(name="market_researcher", role="worker", confidence=0.85),
-    SwarmAgent(name="analyst", role="worker", confidence=0.88)
+    SwarmAgent(name="analyst", role="worker", confidence=0.88),
 ]
 
 # Sequential: research → analyze → summarize
@@ -351,7 +331,7 @@ result = pipeline.execute({"topic": "AI market trends 2024"})
 reviewers = [
     SwarmAgent(name="security_reviewer", role="reviewer", confidence=0.95),
     SwarmAgent(name="performance_reviewer", role="reviewer", confidence=0.88),
-    SwarmAgent(name="style_reviewer", role="reviewer", confidence=0.82)
+    SwarmAgent(name="style_reviewer", role="reviewer", confidence=0.82),
 ]
 
 # Parallel reviews, then aggregate feedback
@@ -369,20 +349,16 @@ committee = [
     SwarmAgent(name="cto", role="specialist", confidence=0.95),
     SwarmAgent(name="lead_architect", role="specialist", confidence=0.90),
     SwarmAgent(name="senior_dev_1", role="worker", confidence=0.85),
-    SwarmAgent(name="senior_dev_2", role="worker", confidence=0.85)
+    SwarmAgent(name="senior_dev_2", role="worker", confidence=0.85),
 ]
 
 # Democratic voting
 config = SwarmConfig(
-    coordination_mode=CoordinationMode.DEMOCRATIC,
-    enable_voting=True,
-    quality_threshold=0.80
+    coordination_mode=CoordinationMode.DEMOCRATIC, enable_voting=True, quality_threshold=0.80
 )
 committee_swarm = Swarm(name="tech_committee", agents=committee, config=config)
 
-result = committee_swarm.execute({
-    "decision": "Choose microservices architecture pattern"
-})
+result = committee_swarm.execute({"decision": "Choose microservices architecture pattern"})
 ```
 
 ## Best Practices
@@ -402,16 +378,11 @@ SwarmAgent(
     name="backend_api_developer",
     role="worker",
     capabilities=["rest_api", "database", "python"],
-    confidence=0.85
+    confidence=0.85,
 )
 
 # Avoid: Too broad or vague
-SwarmAgent(
-    name="developer",
-    role="worker",
-    capabilities=["coding"],
-    confidence=0.8
-)
+SwarmAgent(name="developer", role="worker", capabilities=["coding"], confidence=0.8)
 ```
 
 ### 3. Set Appropriate Confidence Levels

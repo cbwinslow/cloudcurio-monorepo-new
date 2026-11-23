@@ -72,7 +72,9 @@ class RobustTool(ABC):
         # Intelligent retry logic
         pass
 
-    def _apply_fallback_strategies(self, error: Exception, parameters: Dict) -> Optional[ToolResult]:
+    def _apply_fallback_strategies(
+        self, error: Exception, parameters: Dict
+    ) -> Optional[ToolResult]:
         # Multiple fallback options
         pass
 
@@ -213,7 +215,7 @@ def execute_with_retry(tool_name, parameters, retry_policy):
     attempt = 0
     last_error = None
 
-    while attempt < retry_policy['max_attempts']:
+    while attempt < retry_policy["max_attempts"]:
         try:
             return execute_tool(tool_name, parameters)
         except Exception as e:
@@ -235,13 +237,13 @@ def execute_with_retry(tool_name, parameters, retry_policy):
 def apply_fallback_strategies(error, fallback_config):
     """Apply configured fallback strategies"""
     for strategy in fallback_config:
-        if strategy['condition'](error):
+        if strategy["condition"](error):
             try:
-                result = strategy['action'](error)
+                result = strategy["action"](error)
                 if result.successful:
                     return result
             except Exception as fb_error:
-                log_fallback_failure(strategy['name'], fb_error)
+                log_fallback_failure(strategy["name"], fb_error)
                 continue
 
     raise error  # Re-raise original error if all fallbacks fail
@@ -253,19 +255,19 @@ def apply_fallback_strategies(error, fallback_config):
 def validate_parameters(validation_schema, parameters):
     """Comprehensive parameter validation"""
     # Check required fields
-    for field in validation_schema['required']:
+    for field in validation_schema["required"]:
         if field not in parameters:
             raise ValidationError(f"Missing required field: {field}")
 
     # Validate types and constraints
-    for field, config in validation_schema['properties'].items():
+    for field, config in validation_schema["properties"].items():
         if field in parameters:
             validate_field(parameters[field], config)
 
     # Apply defaults
-    for field, config in validation_schema['properties'].items():
-        if field not in parameters and 'default' in config:
-            parameters[field] = config['default']
+    for field, config in validation_schema["properties"].items():
+        if field not in parameters and "default" in config:
+            parameters[field] = config["default"]
 ```
 
 ## Integration Patterns
@@ -276,9 +278,9 @@ def validate_parameters(validation_schema, parameters):
 class VideoEditorAgent:
     def __init__(self):
         self.tools = {
-            'video_analysis': VideoAnalysisTool(),
-            'auto_cut': AutoCutTool(),
-            'create_short': ShortFormCreator()
+            "video_analysis": VideoAnalysisTool(),
+            "auto_cut": AutoCutTool(),
+            "create_short": ShortFormCreator(),
         }
         self.workflow_executor = WorkflowExecutor()
 
@@ -288,8 +290,7 @@ class VideoEditorAgent:
 
         for step in workflow.steps:
             tool_result = self._execute_tool_safely(
-                step.tool,
-                self._prepare_parameters(step, parameters, results)
+                step.tool, self._prepare_parameters(step, parameters, results)
             )
 
             results[step.tool] = tool_result
@@ -306,9 +307,9 @@ class VideoEditorAgent:
 class ProductionOrchestrator:
     def __init__(self):
         self.agents = {
-            'video_editor': VideoEditorAgent(),
-            'audio_engineer': AudioEngineerAgent(),
-            'content_distributor': ContentDistributorAgent()
+            "video_editor": VideoEditorAgent(),
+            "audio_engineer": AudioEngineerAgent(),
+            "content_distributor": ContentDistributorAgent(),
         }
 
     def execute_protocol(self, protocol_name, parameters):
@@ -319,7 +320,7 @@ class ProductionOrchestrator:
             agent_result = self._execute_agent_phase(
                 phase.agent,
                 phase.workflow,
-                self._prepare_phase_parameters(phase, parameters, results)
+                self._prepare_phase_parameters(phase, parameters, results),
             )
 
             results[phase.name] = agent_result
