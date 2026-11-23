@@ -31,7 +31,7 @@ tools:
     env:
       PYTHONPATH: "${workspaceFolder}/src:${workspaceFolder}"
       OLLAMA_HOST: "http://localhost:11434"
-  
+
   available:
     - llm_completion
     - web_search
@@ -68,7 +68,7 @@ skills:
 models:
   default: gemini-pro
   fallback: gemini-pro-vision
-  
+
 # Integration Settings
 settings:
   auto_load_tools: true
@@ -200,8 +200,9 @@ register_tool("custom_tool", custom_tool())
 
 ```python
 # Run multi-agent workflow
-client.run_workflow("workflows/library/research_and_report.workflow.yaml", 
-                   vars={"topic": "AI trends"})
+client.run_workflow(
+    "workflows/library/research_and_report.workflow.yaml", vars={"topic": "AI trends"}
+)
 ```
 
 ## Support

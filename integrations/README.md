@@ -329,10 +329,8 @@ skill = Skill(
     name="my_skill",
     command="/myskill",
     description="My custom skill",
-    parameters=[
-        SkillParameter(name="input", type="string", required=True)
-    ],
-    handler=my_handler_function
+    parameters=[SkillParameter(name="input", type="string", required=True)],
+    handler=my_handler_function,
 )
 
 # Register
